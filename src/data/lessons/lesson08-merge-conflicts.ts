@@ -1,4 +1,4 @@
-import type { Lesson } from '../../types'
+import type { Lesson } from '@/types'
 export default {
   id: 8,
   title: 'Merge Conflicts',
@@ -105,7 +105,7 @@ export default {
       acceptableResolutions: ['Welcome to our amazing website!'],
       hints: [
         'The team wants the feature branch version',
-        'Click "Keep Theirs" to use the incoming changes',
+        'Click "Keep theirs" to use the incoming changes',
       ],
     },
     {
@@ -123,7 +123,7 @@ export default {
       ],
       hints: [
         'Both imports are needed — the project uses components and dark mode',
-        'Click "Keep Both" to include both lines',
+        'Click "Keep both" to include both lines',
       ],
     },
     {

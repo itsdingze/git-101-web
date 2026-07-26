@@ -1,5 +1,5 @@
 import { HelpCircle, RotateCcw } from 'lucide-react'
-import Button from '../ui/Button'
+import Button from '@/components/ui/Button'
 
 interface ExerciseControlsProps {
   hints?: readonly string[]
@@ -23,7 +23,7 @@ export default function ExerciseControls({ hints, hintIndex, showHint, solved, o
                 className="!text-sm !gap-1.5 !px-3 !py-1.5"
               >
                 <HelpCircle size={14} />
-                {showHint ? 'Hide hint' : 'Show hint'}
+                {showHint ? 'Hide hint' : 'Need a hint?'}
               </Button>
             )}
           </div>
@@ -33,7 +33,7 @@ export default function ExerciseControls({ hints, hintIndex, showHint, solved, o
             className="!text-sm !gap-1.5 !px-3 !py-1.5"
           >
             <RotateCcw size={14} />
-            Reset
+            Start over
           </Button>
         </div>
       )}

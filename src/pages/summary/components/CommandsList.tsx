@@ -8,7 +8,7 @@ export default function CommandsList({ commands }: CommandsListProps) {
   return (
     <div className="border border-border rounded-xl p-6 mt-12">
       <h2 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-4">
-        Commands Covered
+        Commands You Learned
       </h2>
       <div className="flex flex-wrap gap-2">
         {commands.map((cmd) => (

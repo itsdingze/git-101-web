@@ -62,7 +62,7 @@ export default function FakeTerminal({ ref, onSubmit, successOutput, disabled, i
       entry.output = successOutput || 'Command executed successfully.'
       entry.type = 'success'
     } else {
-      entry.output = result.hint || 'Error: command not recognized. Try again.'
+      entry.output = result.hint || "That's not quite it — give it another try."
       entry.type = 'error'
     }
 

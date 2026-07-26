@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import NotFound from '@/components/ui/NotFound'
 import useSummaryPage from './hooks/useSummaryPage'
 import SummaryHero from './components/SummaryHero'
 import CommandsList from './components/CommandsList'
@@ -8,14 +8,7 @@ export default function SummaryPage() {
   const { lesson, commands, nextLesson } = useSummaryPage()
 
   if (!lesson) {
-    return (
-      <div className="w-full max-w-2xl mx-auto px-6 sm:px-8 py-20 text-center">
-        <h2 className="text-xl font-semibold text-text-primary mb-3">Lesson Not Found</h2>
-        <Link to="/" className="text-text-muted hover:text-text-primary underline text-sm rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary">
-          Back to lessons
-        </Link>
-      </div>
-    )
+    return <NotFound message="The link may be out of date, or that lesson may have moved." />
   }
 
   return (

@@ -46,7 +46,7 @@ export default function ThreePlaceModel() {
           className="text-xs text-text-muted hover:text-text-secondary cursor-pointer
             focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary rounded"
         >
-          Reset
+          Start over
         </button>
       </div>
 
@@ -86,7 +86,6 @@ export default function ThreePlaceModel() {
 
       {stage < STAGES.length - 1 ? (
         <button
-          key={`cmd-${stage}`}
           onClick={advance}
           className="w-full py-2 bg-bg-secondary hover:bg-bg-card border border-border rounded-lg text-sm font-mono text-text-primary cursor-pointer transition-colors
             focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
@@ -95,7 +94,7 @@ export default function ThreePlaceModel() {
         </button>
       ) : (
         <div className="text-center text-sm text-accent-green font-medium">
-          All files committed
+          All files committed — nothing left to stage
         </div>
       )}
     </div>

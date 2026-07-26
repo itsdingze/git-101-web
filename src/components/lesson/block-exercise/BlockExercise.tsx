@@ -1,10 +1,10 @@
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react'
-import type { BlockExerciseStep } from '../../../types'
+import type { BlockExerciseStep } from '@/types'
 import GlossaryBlock from './components/GlossaryBlock'
 import OverlayBlock from './components/OverlayBlock'
 import SolutionDropZone from './components/SolutionDropZone'
 import SolutionBlocks from './components/SolutionBlocks'
-import ExerciseControls from '../ExerciseControls'
+import ExerciseControls from '@/components/lesson/ExerciseControls'
 import useBlockDrag from './hooks/useBlockDrag'
 
 interface BlockExerciseProps {
@@ -38,7 +38,7 @@ export default function BlockExercise({ step, lessonId }: BlockExerciseProps) {
       <DragDropProvider {...dragProviderProps}>
         <SolutionDropZone solved={solved} shakeSlots={shakeSlots} overSolution={overSolution}>
           {answer.length === 0 && insertIndex === null ? (
-            <span className="py-2 text-text-muted text-sm">Click or drag blocks to build the command...</span>
+            <span className="py-2 text-text-muted text-sm">Tap the blocks below, or drag them here, to build the command</span>
           ) : (
             <SolutionBlocks
               answer={answer}

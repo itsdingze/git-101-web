@@ -28,6 +28,7 @@ export default function SortableBlock({ id, index, children, onRemove, disabled 
       ref={ref}
       type="button"
       data-block
+      aria-label={`Remove ${id} from your answer`}
       onClick={onRemove}
       onKeyDown={(e) => { if (e.key === ' ') e.preventDefault() }}
       className="px-4 py-2 rounded-lg font-mono text-sm bg-text-primary text-white cursor-grab active:cursor-grabbing select-none

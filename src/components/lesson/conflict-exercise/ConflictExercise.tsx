@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { CheckCircle } from 'lucide-react'
-import type { ConflictExerciseStep } from '../../../types'
-import useProgressStore from '../../../stores/progressStore'
-import useExerciseNav from '../../../hooks/useExerciseNav'
-import ExerciseControls from '../ExerciseControls'
+import type { ConflictExerciseStep } from '@/types'
+import useProgressStore from '@/stores/progressStore'
+import useExerciseNav from '@/hooks/useExerciseNav'
+import ExerciseControls from '@/components/lesson/ExerciseControls'
 
 type Resolution = 'ours' | 'theirs' | 'both'
 
@@ -69,9 +69,10 @@ export default function ConflictExercise({ step, lessonId }: ConflictExercisePro
   useExerciseNav({ solved: isCompleted, checkFn: handleCheck, checkDisabled: resolution === null })
 
   const buttons: { key: Resolution; label: string; preview: string; activeColor: string }[] = [
-    { key: 'ours', label: 'Keep Ours', preview: step.oursContent, activeColor: 'border-accent-green bg-accent-green/5' },
-    { key: 'theirs', label: 'Keep Theirs', preview: step.theirsContent, activeColor: 'border-accent-blue bg-accent-blue/5' },
-    { key: 'both', label: 'Keep Both', preview: step.oursContent + '\n' + step.theirsContent, activeColor: 'border-text-primary bg-bg-secondary' },
+    // Labels mirror the lesson's wording: "ours" is the current branch, "theirs" is incoming
+    { key: 'ours', label: 'Keep ours (current)', preview: step.oursContent, activeColor: 'border-accent-green bg-accent-green/5' },
+    { key: 'theirs', label: 'Keep theirs (incoming)', preview: step.theirsContent, activeColor: 'border-accent-blue bg-accent-blue/5' },
+    { key: 'both', label: 'Keep both', preview: step.oursContent + '\n' + step.theirsContent, activeColor: 'border-text-primary bg-bg-secondary' },
   ]
 
   return (
@@ -96,7 +97,7 @@ export default function ConflictExercise({ step, lessonId }: ConflictExercisePro
       </div>
 
       <motion.div
-        className="flex gap-3"
+        className="flex flex-col sm:flex-row gap-3"
         animate={shake && !prefersReduced ? { x: [-4, 4, -4, 4, 0] } : {}}
         transition={{ duration: 0.4 }}
       >
@@ -113,7 +114,7 @@ export default function ConflictExercise({ step, lessonId }: ConflictExercisePro
               key={key}
               onClick={() => setResolution(key)}
               disabled={isCompleted}
-              className={`flex-1 text-left px-4 py-3 rounded-xl border transition-colors text-sm
+              className={`flex-1 flex flex-col items-start text-left px-4 py-3 rounded-xl border transition-colors text-sm
                 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary
                 ${styles}
                 ${!isCompleted ? 'cursor-pointer hover:border-text-muted' : 'cursor-default'}

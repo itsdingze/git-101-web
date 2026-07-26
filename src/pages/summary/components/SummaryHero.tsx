@@ -12,7 +12,7 @@ export default function SummaryHero({ lessonTitle }: SummaryHeroProps) {
       </div>
 
       <h1 className="text-2xl font-semibold text-text-primary mb-2 tracking-tight">
-        Lesson Complete
+        Nice work!
       </h1>
 
       <p className="text-base text-text-secondary leading-relaxed">
