@@ -1,4 +1,4 @@
-import type { Lesson } from '../../types'
+import type { Lesson } from '@/types'
 export default {
   id: 10,
   title: 'Common Git Problems',
@@ -273,6 +273,22 @@ export default {
           type: 'text',
           value:
             'When in doubt, use `git revert` instead — it undoes changes without rewriting history.',
+        },
+        {
+          type: 'text',
+          value:
+            'If you *do* rewrite a commit you already pushed — say you amended it on your own feature branch — a normal push is rejected, because the remote no longer matches. The fix is **not** `--force`:',
+        },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            '# Refuses if someone else pushed in the meantime:\ngit push --force-with-lease\n\n# Overwrites whatever is there — avoid:\ngit push --force',
+        },
+        {
+          type: 'text',
+          value:
+            '`--force-with-lease` only overwrites the remote if it still looks the way you last saw it. If a teammate pushed something you have not seen, the push is rejected instead of silently destroying their work. Use it on your own branches, and never on shared ones like `main`.',
         },
       ],
     },

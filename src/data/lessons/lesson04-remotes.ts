@@ -1,4 +1,4 @@
-import type { Lesson } from '../../types'
+import type { Lesson } from '@/types'
 export default {
   id: 4,
   title: 'Remotes & GitHub',
@@ -181,6 +181,45 @@ export default {
           type: 'text',
           value:
             '`git fetch` is always safe — it never changes your working directory or current branch. It just updates your local knowledge of what the remote looks like. Use it when you want to check for updates without modifying your code.',
+        },
+      ],
+    },
+    {
+      type: 'reading',
+      id: 'pull-divergent',
+      title: 'A Pull Error You Will Probably Hit',
+      content: [
+        {
+          type: 'text',
+          value:
+            'Sooner or later `git pull` will stop and show you this:',
+        },
+        {
+          type: 'code',
+          language: 'text',
+          value:
+            'fatal: Need to specify how to reconcile divergent branches.',
+        },
+        {
+          type: 'text',
+          value:
+            'This is not a bug and nothing is broken. It means you and the remote both have new commits, so Git wants to know how you would like to combine them — and modern Git refuses to guess.',
+        },
+        {
+          type: 'text',
+          value:
+            'Pick one and set it once. **Merge** is the safer default while you are learning, because it never rewrites history:',
+        },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            '# Combine with a merge commit (recommended to start):\ngit config --global pull.rebase false\n\n# Or replay your commits on top for a linear history:\ngit config --global pull.rebase true',
+        },
+        {
+          type: 'text',
+          value:
+            'You only have to do this once per machine. We cover what rebasing actually does in the last lesson.',
         },
       ],
     },

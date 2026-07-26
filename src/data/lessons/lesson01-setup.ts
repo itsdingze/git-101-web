@@ -1,4 +1,4 @@
-import type { Lesson } from '../../types'
+import type { Lesson } from '@/types'
 export default {
   id: 1,
   title: 'Setting Up Git',
@@ -69,7 +69,7 @@ export default {
       prompt: 'Check your Git version by running the version command:',
       expectedCommand: 'git --version',
       acceptableVariants: ['git -v', 'git version'],
-      successOutput: 'git version 2.43.0',
+      successOutput: 'git version 2.51.0',
       hints: ['The flag for version is --version'],
     },
     {
