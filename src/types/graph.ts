@@ -9,12 +9,14 @@ export type Branch = {
   name: string
   color: string
   lane: number
-  head?: string
+  /** Commit this branch points at while it has no commits of its own. */
+  startsAt?: string
 }
 
 export type Stage = {
   commits: Commit[]
   branches: Branch[]
+  /** Name of the checked-out branch. */
   head: string
 }
 

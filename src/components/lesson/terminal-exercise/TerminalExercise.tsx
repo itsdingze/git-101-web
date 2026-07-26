@@ -1,11 +1,11 @@
 import { useState, useRef, useCallback } from 'react'
-import type { TerminalExerciseStep } from '../../../types'
-import FakeTerminal, { type FakeTerminalHandle } from '../components/FakeTerminal'
-import ExerciseControls from '../ExerciseControls'
-import useProgressStore from '../../../stores/progressStore'
-import useExerciseNav from '../../../hooks/useExerciseNav'
-import { useLessonNav } from '../../../hooks/useLessonNav'
-import getCommandFeedback from '../../../utils/commandDiff'
+import type { TerminalExerciseStep } from '@/types'
+import FakeTerminal, { type FakeTerminalHandle } from '@/components/lesson/components/FakeTerminal'
+import ExerciseControls from '@/components/lesson/ExerciseControls'
+import useProgressStore from '@/stores/progressStore'
+import useExerciseNav from '@/hooks/useExerciseNav'
+import { useLessonNav } from '@/hooks/useLessonNav'
+import getCommandFeedback from '@/utils/commandDiff'
 
 function normalizeCommand(cmd: string): string {
   return cmd.trim().replace(/\s+/g, ' ').toLowerCase()

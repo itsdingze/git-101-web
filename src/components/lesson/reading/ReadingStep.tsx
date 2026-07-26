@@ -1,16 +1,17 @@
 import { lazy, Suspense, type ComponentType } from 'react'
-import type { ReadingStep as ReadingStepType } from '../../../types'
-import useExerciseNav from '../../../hooks/useExerciseNav'
+import type { ReadingStep as ReadingStepType, VisualizationType } from '@/types'
+import useExerciseNav from '@/hooks/useExerciseNav'
 import ContentBlock from './components/ContentBlock'
 
-const ThreePlaceModel = lazy(() => import('../../visualization/ThreePlaceModel'))
-const GitGraph = lazy(() => import('../../visualization/git-graph/GitGraph'))
-const ConflictMarkers = lazy(() => import('../../visualization/ConflictMarkers'))
-const DiffWalkthrough = lazy(() => import('../../visualization/DiffWalkthrough'))
-const ResetWalkthrough = lazy(() => import('../../visualization/ResetWalkthrough'))
-const RestoreWalkthrough = lazy(() => import('../../visualization/RestoreWalkthrough'))
+const ThreePlaceModel = lazy(() => import('@/components/visualization/ThreePlaceModel'))
+const GitGraph = lazy(() => import('@/components/visualization/git-graph/GitGraph'))
+const ConflictMarkers = lazy(() => import('@/components/visualization/ConflictMarkers'))
+const DiffWalkthrough = lazy(() => import('@/components/visualization/DiffWalkthrough'))
+const ResetWalkthrough = lazy(() => import('@/components/visualization/ResetWalkthrough'))
+const RestoreWalkthrough = lazy(() => import('@/components/visualization/RestoreWalkthrough'))
 
-const VISUALIZATIONS: Record<string, ComponentType> = {
+/** git-graph is handled separately — it is the only visualization taking a prop. */
+const VISUALIZATIONS: Record<Exclude<VisualizationType, 'git-graph'>, ComponentType> = {
   'three-place-model': ThreePlaceModel,
   'conflict-markers': ConflictMarkers,
   'diff-walkthrough': DiffWalkthrough,
@@ -25,7 +26,10 @@ interface ReadingStepProps {
 export default function ReadingStep({ step }: ReadingStepProps) {
   useExerciseNav({ solved: true })
 
-  const Visualization = step.visualization ? VISUALIZATIONS[step.visualization] : undefined
+  const Visualization =
+    step.visualization && step.visualization !== 'git-graph'
+      ? VISUALIZATIONS[step.visualization]
+      : undefined
 
   return (
     <div className="space-y-6">

@@ -1,4 +1,4 @@
-import type { Stage, Position, Connection } from '../../../types'
+import type { Stage, Position, Connection } from '@/types'
 import {
   COMMIT_RADIUS,
   COMMIT_SPACING_Y,
@@ -83,7 +83,7 @@ export function computeFixedDimensions(stages: Stage[]): { svgHeight: number; sv
 
     // Detect empty branches (phantom commits add an extra row)
     const emptyBranches = s.branches.filter(
-      (b) => b.head && !s.commits.some((c) => c.branch === b.name),
+      (b) => b.startsAt && !s.commits.some((c) => c.branch === b.name),
     )
     const phantomRows = emptyBranches.length > 0 ? 1 : 0
     maxCommits = Math.max(maxCommits, s.commits.length + phantomRows)

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { CheckCircle } from 'lucide-react'
-import type { QuizStep as QuizStepType } from '../../../types'
-import useProgressStore from '../../../stores/progressStore'
-import useExerciseNav from '../../../hooks/useExerciseNav'
+import type { QuizStep as QuizStepType } from '@/types'
+import useProgressStore from '@/stores/progressStore'
+import useExerciseNav from '@/hooks/useExerciseNav'
 
 interface QuizStepProps {
   step: QuizStepType

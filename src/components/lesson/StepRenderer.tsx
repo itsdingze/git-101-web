@@ -1,4 +1,4 @@
-import type { Step } from '../../types'
+import type { Step } from '@/types'
 import ReadingStep from './reading/ReadingStep'
 import BlockExercise from './block-exercise/BlockExercise'
 import TerminalExercise from './terminal-exercise/TerminalExercise'
@@ -21,7 +21,7 @@ export default function StepRenderer({ step, lessonId }: StepRendererProps) {
       return <TerminalExercise step={step} lessonId={lessonId} />
     case 'quiz':
       return <QuizStep step={step} lessonId={lessonId} />
-case 'conflict-exercise':
+    case 'conflict-exercise':
       return <ConflictExercise step={step} lessonId={lessonId} />
     case 'workflow-exercise':
       return <WorkflowExercise step={step} lessonId={lessonId} />

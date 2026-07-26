@@ -1,5 +1,5 @@
-import useProgressStore from '../../stores/progressStore'
-import cheatsheet from '../../data/cheatsheet'
+import useProgressStore from '@/stores/progressStore'
+import cheatsheet from '@/data/cheatsheet'
 import CheatsheetCategory from './components/CheatsheetCategory'
 
 export default function CheatsheetPage() {

@@ -13,7 +13,7 @@ export type CodeBlock = {
 
 export type ContentBlock = TextBlock | CodeBlock
 
-type VisualizationType =
+export type VisualizationType =
   | 'three-place-model'
   | 'git-graph'
   | 'conflict-markers'
@@ -55,6 +55,8 @@ export type BlockExerciseStep = {
   prompt: string
   availableBlocks: readonly string[]
   correctAnswer: readonly string[]
+  /** Equally valid answers buildable from `availableBlocks`, e.g. `git checkout -b` for `git switch -c`. */
+  acceptableAnswers?: readonly (readonly string[])[]
   hints?: readonly string[]
 }
 

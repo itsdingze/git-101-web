@@ -1,4 +1,4 @@
-import type { Lesson } from '../../types'
+import type { Lesson } from '@/types'
 import lesson00 from './lesson00-what-is-git'
 import lesson01 from './lesson01-setup'
 import lesson02 from './lesson02-first-repository'

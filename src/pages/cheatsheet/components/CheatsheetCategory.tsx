@@ -1,10 +1,5 @@
+import type { CheatsheetCommand as Command } from '@/data/cheatsheet'
 import CheatsheetCommand from './CheatsheetCommand'
-
-interface Command {
-  command: string
-  description: string
-  lessonId: number
-}
 
 interface CheatsheetCategoryProps {
   name: string

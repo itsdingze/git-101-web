@@ -1,6 +1,6 @@
-import { useState, useRef, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { ScenarioKey } from '../../../types'
+import type { ScenarioKey } from '@/types'
 import { SCENARIOS } from './scenarios'
 import { computeFixedDimensions } from './layout'
 import { CONTAINER_HEIGHT } from './constants'
@@ -12,7 +12,6 @@ interface GitGraphProps {
 
 export default function GitGraph({ scenario = 'branching' }: GitGraphProps) {
   const [stageIndex, setStageIndex] = useState(0)
-  const scrollRef = useRef<HTMLDivElement>(null)
 
   const config = SCENARIOS[scenario]
 
@@ -48,11 +47,7 @@ export default function GitGraph({ scenario = 'branching' }: GitGraphProps) {
 
   return (
     <div className="border border-border rounded-lg p-4 space-y-3">
-      <div
-        ref={scrollRef}
-        className="overflow-y-auto"
-        style={{ maxHeight: `${CONTAINER_HEIGHT}px` }}
-      >
+      <div className="overflow-y-auto" style={{ maxHeight: `${CONTAINER_HEIGHT}px` }}>
         <GraphRenderer
           stage={stage}
           svgHeight={svgHeight}

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, Home } from 'lucide-react'
-import Button from '../../../components/ui/Button'
+import Button from '@/components/ui/Button'
 
 interface SummaryNavigationProps {
   nextLessonId: number | undefined

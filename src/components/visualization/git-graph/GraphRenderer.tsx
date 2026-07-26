@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import type { Stage, PhantomCommit } from '../../../types'
+import type { Stage, PhantomCommit } from '@/types'
 import { computeLayout, computeConnections } from './layout'
 import { COMMIT_RADIUS, COMMIT_SPACING_Y, LANE_SPACING_X, PADDING, TRANSITION } from './constants'
 import BranchLabel from './components/BranchLabel'
@@ -34,16 +34,16 @@ export default function GraphRenderer({ stage, svgHeight, svgWidth }: GraphRende
 
   const branchHeads = useMemo(() => {
     const heads: Record<string, string> = {}
-    for (const b of stage.branches) if (b.head) heads[b.name] = b.head
+    for (const b of stage.branches) if (b.startsAt) heads[b.name] = b.startsAt
     for (const commit of stage.commits) heads[commit.branch] = commit.id
     return heads
   }, [stage.branches, stage.commits])
 
   const phantoms = useMemo((): PhantomCommit[] => {
     return stage.branches
-      .filter((b) => b.head && !stage.commits.some((c) => c.branch === b.name))
+      .filter((b) => b.startsAt && !stage.commits.some((c) => c.branch === b.name))
       .map((branch) => {
-        const from = positions[branch.head!]
+        const from = positions[branch.startsAt!]
         if (!from) return null
         const x = PADDING.left + branch.lane * LANE_SPACING_X
         const y = from.y - COMMIT_SPACING_Y

@@ -1,4 +1,4 @@
-import type { GitScenario, ScenarioKey, Branch } from '../../../types'
+import type { GitScenario, ScenarioKey, Branch } from '@/types'
 import { COLORS } from './constants'
 
 const MAIN: Branch = { name: 'main', color: COLORS.main, lane: 0 }
@@ -29,7 +29,7 @@ const SCENARIOS = {
           { id: 'c1', message: 'Initial commit', branch: 'main', parents: [] },
           { id: 'c2', message: 'Add README', branch: 'main', parents: ['c1'] },
         ],
-        branches: [MAIN, { ...FEATURE, head: 'c2' }],
+        branches: [MAIN, { ...FEATURE, startsAt: 'c2' }],
         head: 'main',
       },
       // Stage 2: git switch feature (HEAD moves)
@@ -38,7 +38,7 @@ const SCENARIOS = {
           { id: 'c1', message: 'Initial commit', branch: 'main', parents: [] },
           { id: 'c2', message: 'Add README', branch: 'main', parents: ['c1'] },
         ],
-        branches: [MAIN, { ...FEATURE, head: 'c2' }],
+        branches: [MAIN, { ...FEATURE, startsAt: 'c2' }],
         head: 'feature',
       },
       // Stage 3: git commit on feature

@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { Lesson, Step } from '../../../types'
-import useProgressStore from '../../../stores/progressStore'
-import lessons from '../../../data/lessons/index'
-import { useLessonNav } from '../../../hooks/useLessonNav'
+import type { Lesson, Step } from '@/types'
+import useProgressStore from '@/stores/progressStore'
+import lessons from '@/data/lessons/index'
+import { useLessonNav } from '@/hooks/useLessonNav'
 
 interface UseLessonPageResult {
   lesson: Lesson | undefined

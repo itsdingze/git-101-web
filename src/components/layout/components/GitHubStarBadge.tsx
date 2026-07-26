@@ -1,5 +1,5 @@
 import { Github, Star } from 'lucide-react'
-import useGitHubStars from '../hooks/useGitHubStars'
+import useGitHubStars from '@/components/layout/hooks/useGitHubStars'
 
 const REPO = 'itsdingze/git-101-web'
 

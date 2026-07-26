@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Check, ChevronRight } from 'lucide-react'
-import type { Lesson } from '../../../types'
+import type { Lesson } from '@/types'
 
 interface LessonCardProps {
   lesson: Lesson

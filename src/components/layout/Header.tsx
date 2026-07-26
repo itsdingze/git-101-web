@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { GitBranch, ArrowLeft, ScrollText } from 'lucide-react'
-import { useLessonNav } from '../../hooks/useLessonNav'
+import { useLessonNav } from '@/hooks/useLessonNav'
 import ProgressBar from './components/ProgressBar'
 import GitHubStarBadge from './components/GitHubStarBadge'
 

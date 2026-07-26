@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode, Ref } from 'react'
+import type { ComponentProps, ElementType, ReactNode, Ref } from 'react'
 
 type ButtonVariant = 'filled' | 'outlined' | 'text' | 'filled-success' | 'filled-danger'
 
@@ -32,7 +32,7 @@ const variants: Record<ButtonVariant, string> = {
 }
 
 interface ButtonProps extends ComponentProps<'button'> {
-  as?: React.ElementType
+  as?: ElementType
   variant?: ButtonVariant
   to?: string
   ref?: Ref<HTMLButtonElement>

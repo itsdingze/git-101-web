@@ -1,6 +1,6 @@
 import { type ReactNode, useCallback, useMemo, useRef, useState } from 'react'
 import { LessonNavContext } from './lessonNavCtx'
-import type { LessonNavState } from '../types'
+import type { LessonNavState } from '@/types'
 
 const defaultNav: LessonNavState = {
   showLessonNav: false,

@@ -2,6 +2,7 @@ export type {
   TextBlock,
   CodeBlock,
   ContentBlock,
+  VisualizationType,
   ReadingStep,
   QuizStep,
   TerminalExerciseStep,
