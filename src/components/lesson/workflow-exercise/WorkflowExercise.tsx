@@ -1,11 +1,11 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { CheckCircle } from 'lucide-react'
-import type { WorkflowExerciseStep } from '../../../types'
-import FakeTerminal, { type FakeTerminalHandle } from '../components/FakeTerminal'
-import ExerciseControls from '../ExerciseControls'
-import useProgressStore from '../../../stores/progressStore'
-import useExerciseNav from '../../../hooks/useExerciseNav'
-import { useLessonNav } from '../../../hooks/useLessonNav'
+import type { WorkflowExerciseStep } from '@/types'
+import FakeTerminal, { type FakeTerminalHandle } from '@/components/lesson/components/FakeTerminal'
+import ExerciseControls from '@/components/lesson/ExerciseControls'
+import useProgressStore from '@/stores/progressStore'
+import useExerciseNav from '@/hooks/useExerciseNav'
+import { useLessonNav } from '@/hooks/useLessonNav'
 import useWorkflowExercise from './hooks/useWorkflowExercise'
 
 interface WorkflowExerciseProps {
@@ -18,7 +18,7 @@ export default function WorkflowExercise({ step, lessonId }: WorkflowExercisePro
   const isCompleted = useProgressStore((s) => !!s.completedSteps[`${lessonId}:${step.id}`])
 
   const { currentSubStep, completedSubSteps, allCompleted, handleSubmit, hintIndex, reset } =
-    useWorkflowExercise(step.steps)
+    useWorkflowExercise(step.steps, isCompleted)
 
   const terminalRef = useRef<FakeTerminalHandle>(null)
   const [hasInput, setHasInput] = useState(false)
@@ -33,7 +33,7 @@ export default function WorkflowExercise({ step, lessonId }: WorkflowExercisePro
   }, [allCompleted, isCompleted, completeStep, lessonId, step.id])
 
   useExerciseNav({
-    solved: isCompleted || allCompleted,
+    solved: allCompleted,
     checkFn: () => terminalRef.current?.submit(),
     checkDisabled: !hasInput,
   })
@@ -112,7 +112,7 @@ export default function WorkflowExercise({ step, lessonId }: WorkflowExercisePro
           />
 
           <ExerciseControls
-            hints={activeSubStep.hints as string[] | undefined}
+            hints={activeSubStep.hints}
             hintIndex={hintIndex}
             showHint={showHint}
             solved={false}
@@ -122,7 +122,7 @@ export default function WorkflowExercise({ step, lessonId }: WorkflowExercisePro
         </>
       )}
 
-      {(isCompleted || allCompleted) && (
+      {allCompleted && (
         <div className="flex items-start gap-3 p-4 rounded-xl text-sm leading-relaxed bg-accent-green/5 border border-accent-green/20">
           <CheckCircle size={18} className="text-accent-green shrink-0" />
           <p className="text-text-secondary">

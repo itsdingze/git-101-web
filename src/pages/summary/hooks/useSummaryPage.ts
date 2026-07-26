@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import type { Step, Lesson } from '../../../types'
-import useProgressStore from '../../../stores/progressStore'
-import lessons from '../../../data/lessons/index'
+import type { Step, Lesson } from '@/types'
+import useProgressStore from '@/stores/progressStore'
+import lessons from '@/data/lessons/index'
 
 interface UseSummaryPageResult {
   lesson: Lesson | undefined
@@ -30,6 +30,7 @@ export default function useSummaryPage(): UseSummaryPageResult {
   const parsedId = parseInt(lessonId ?? '', 10)
 
   const completeLesson = useProgressStore((s) => s.completeLesson)
+  const isStepCompleted = useProgressStore((s) => s.isStepCompleted)
 
   const lesson = lessons.find((l) => l.id === parsedId)
   const nextLesson = lessons.find((l) => l.id === parsedId + 1)
@@ -39,11 +40,13 @@ export default function useSummaryPage(): UseSummaryPageResult {
     return extractCommands(lesson.steps)
   }, [lesson])
 
+  // Guarded so landing on this URL directly does not credit unfinished work
   useEffect(() => {
-    if (lesson) {
+    if (!lesson) return
+    if (lesson.steps.every((step) => isStepCompleted(parsedId, step.id))) {
       completeLesson(parsedId)
     }
-  }, [lesson, parsedId, completeLesson])
+  }, [lesson, parsedId, completeLesson, isStepCompleted])
 
   return { lesson, commands, nextLesson }
 }

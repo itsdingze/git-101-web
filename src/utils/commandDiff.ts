@@ -13,68 +13,80 @@ function levenshtein(a: string, b: string): number {
   return dp[m]![n]!
 }
 
+function normalize(command: string): string {
+  return command.trim().replace(/\s+/g, ' ').toLowerCase()
+}
+
+/**
+ * Feedback is measured against whichever accepted command the learner is
+ * closest to — telling someone on the `git checkout -b` path to use
+ * `git switch` would be wrong when both are accepted.
+ */
+function closestTarget(actual: string, targets: string[]): string {
+  return targets.reduce((best, target) =>
+    levenshtein(actual, target) < levenshtein(actual, best) ? target : best,
+  )
+}
+
 export default function getCommandFeedback(
   actual: string,
   expected: string,
   variants?: readonly string[],
 ): string | null {
-  const norm = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase()
-  const actualNorm = norm(actual)
-  const expectedNorm = norm(expected)
+  const actualNorm = normalize(actual)
+  const targets = [expected, ...(variants ?? [])].map(normalize)
 
-  if (actualNorm === expectedNorm) return null
+  if (targets.includes(actualNorm)) return null
 
+  const target = closestTarget(actualNorm, targets)
   const actualTokens = actualNorm.split(' ')
-  const expectedTokens = expectedNorm.split(' ')
+  const targetTokens = target.split(' ')
 
   if (
     actualTokens[0] === 'git' &&
-    expectedTokens[0] === 'git' &&
+    targetTokens[0] === 'git' &&
     actualTokens.length > 1 &&
-    expectedTokens.length > 1 &&
-    actualTokens[1] !== expectedTokens[1]
+    targetTokens.length > 1 &&
+    actualTokens[1] !== targetTokens[1]
   ) {
     const actualSub = actualTokens[1]!
-    const expectedSub = expectedTokens[1]!
-    if (levenshtein(actualSub, expectedSub) <= 2) {
-      return `Did you mean \`${expectedSub}\` instead of \`${actualSub}\`?`
+    const targetSub = targetTokens[1]!
+    if (levenshtein(actualSub, targetSub) <= 2) {
+      return `Did you mean \`${targetSub}\` instead of \`${actualSub}\`?`
     }
-    return `The right subcommand is \`git ${expectedSub}\`, not \`git ${actualSub}\`.`
+    return `The right subcommand is \`git ${targetSub}\`, not \`git ${actualSub}\`.`
   }
 
   const actualFlags = actualTokens.filter((t) => t.startsWith('-'))
-  const expectedFlags = expectedTokens.filter((t) => t.startsWith('-'))
+  const targetFlags = targetTokens.filter((t) => t.startsWith('-'))
 
   for (const flag of actualFlags) {
     if (!flag.startsWith('--') && flag.length > 1) {
       const doubleDash = '-' + flag
-      if (expectedFlags.includes(doubleDash)) {
+      if (targetFlags.includes(doubleDash)) {
         return `Use \`${doubleDash}\` (two dashes), not \`${flag}\`.`
       }
     }
   }
 
-  for (const flag of expectedFlags) {
+  for (const flag of targetFlags) {
     if (!actualFlags.includes(flag)) {
       return `You're missing the \`${flag}\` flag.`
     }
   }
 
   for (const flag of actualFlags) {
-    if (!expectedFlags.includes(flag)) {
+    if (!targetFlags.includes(flag)) {
       return `The \`${flag}\` flag is not needed here.`
     }
   }
 
-  if (expected.includes('"') && !actual.includes('"') && !actual.includes("'")) {
+  if (target.includes('"') && !actualNorm.includes('"') && !actualNorm.includes("'")) {
     return "Don't forget to put the message in quotes."
   }
 
-  const allTargets = [expected, ...(variants || [])].map(norm)
-  for (const target of allTargets) {
-    if (levenshtein(actualNorm, target) <= 2) {
-      return 'Close! Check for typos.'
-    }
+  if (levenshtein(actualNorm, target) <= 2) {
+    return 'Close! Check for typos.'
   }
 
   return null

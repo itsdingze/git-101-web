@@ -71,7 +71,9 @@ export default function useBlockDrag(step: BlockExerciseStep, lessonId: number):
   }
 
   function handleCheck() {
-    const isCorrect = arraysEqual(answer, step.correctAnswer)
+    const isCorrect =
+      arraysEqual(answer, step.correctAnswer) ||
+      (step.acceptableAnswers?.some((alt) => arraysEqual(answer, alt)) ?? false)
 
     if (isCorrect) {
       setSolved(true)

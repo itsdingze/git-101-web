@@ -1,4 +1,4 @@
-import type { Lesson } from '../../types'
+import type { Lesson } from '@/types'
 export default {
   id: 11,
   title: 'Real-World Workflow',
@@ -259,6 +259,7 @@ export default {
       prompt: 'Build the command to create and switch to a new feature branch called "feature/add-auth":',
       availableBlocks: ['git', 'switch', '-c', 'branch', 'feature/add-auth', 'checkout', '-b', 'main'],
       correctAnswer: ['git', 'switch', '-c', 'feature/add-auth'],
+      acceptableAnswers: [['git', 'checkout', '-b', 'feature/add-auth']],
       hints: [
         'Use git switch with the -c flag to create and switch in one step',
         'The branch name follows the -c flag',

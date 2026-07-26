@@ -5,8 +5,12 @@ function normalizeCommand(cmd: string): string {
   return cmd.trim().replace(/\s+/g, ' ').toLowerCase()
 }
 
-function falseArray(length: number): boolean[] {
-  return Array.from<boolean>({ length }).fill(false)
+function filledArray(length: number, value: boolean): boolean[] {
+  return Array.from<boolean>({ length }).fill(value)
+}
+
+function lastIndex(steps: readonly WorkflowSubStep[]): number {
+  return Math.max(steps.length - 1, 0)
 }
 
 interface UseWorkflowExerciseReturn {
@@ -18,9 +22,18 @@ interface UseWorkflowExerciseReturn {
   reset: () => void
 }
 
-export default function useWorkflowExercise(steps: readonly WorkflowSubStep[]): UseWorkflowExerciseReturn {
-  const [currentSubStep, setCurrentSubStep] = useState(0)
-  const [completedSubSteps, setCompletedSubSteps] = useState<boolean[]>(() => falseArray(steps.length))
+/**
+ * `startCompleted` replays a previously finished workflow in its solved state,
+ * matching how the other exercise types hydrate from saved progress.
+ */
+export default function useWorkflowExercise(
+  steps: readonly WorkflowSubStep[],
+  startCompleted: boolean,
+): UseWorkflowExerciseReturn {
+  const [currentSubStep, setCurrentSubStep] = useState(() => (startCompleted ? lastIndex(steps) : 0))
+  const [completedSubSteps, setCompletedSubSteps] = useState<boolean[]>(() =>
+    filledArray(steps.length, startCompleted),
+  )
   const [hintIndex, setHintIndex] = useState(0)
 
   const allCompleted = completedSubSteps.every(Boolean)
@@ -59,7 +72,7 @@ export default function useWorkflowExercise(steps: readonly WorkflowSubStep[]): 
 
   const reset = useCallback(() => {
     setCurrentSubStep(0)
-    setCompletedSubSteps(falseArray(steps.length))
+    setCompletedSubSteps(filledArray(steps.length, false))
     setHintIndex(0)
   }, [steps.length])
 

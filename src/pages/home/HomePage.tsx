@@ -1,12 +1,13 @@
-import useProgressStore from '../../stores/progressStore'
-import lessons from '../../data/lessons/index'
+import useProgressStore from '@/stores/progressStore'
+import lessons from '@/data/lessons/index'
 import LessonCard from './components/LessonCard'
 
 export default function HomePage() {
-  const isLessonCompleted = useProgressStore((s) => s.isLessonCompleted)
-  const nextLessonId = useProgressStore((s) => s.nextLessonId)
+  // Subscribe to the state itself, not the action refs — those never change,
+  // so selecting them would leave the list stale after progress updates.
+  const completedLessons = useProgressStore((s) => s.completedLessons)
 
-  const nextId = nextLessonId()
+  const nextId = lessons.find((lesson) => !completedLessons.includes(lesson.id))?.id
 
   return (
     <div className="w-full max-w-2xl mx-auto px-6 sm:px-8 py-12 sm:py-16">
@@ -24,7 +25,7 @@ export default function HomePage() {
           <LessonCard
             key={lesson.id}
             lesson={lesson}
-            isCompleted={isLessonCompleted(lesson.id)}
+            isCompleted={completedLessons.includes(lesson.id)}
             isCurrent={lesson.id === nextId}
           />
         ))}

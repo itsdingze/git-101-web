@@ -11,9 +11,6 @@ export type ProgressActions = {
   getCurrentStep: (lessonId: number) => number
   completeLesson: (lessonId: number) => void
   isLessonCompleted: (lessonId: number) => boolean
-  nextLessonId: () => number
-  resetLesson: (lessonId: number, stepIds: string[]) => void
-  resetProgress: () => void
 }
 
 export type ProgressStore = ProgressState & ProgressActions

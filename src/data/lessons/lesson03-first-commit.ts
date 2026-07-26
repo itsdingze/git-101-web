@@ -1,4 +1,4 @@
-import type { Lesson } from '../../types'
+import type { Lesson } from '@/types'
 export default {
   id: 3,
   title: 'Your First Commit',
@@ -33,6 +33,7 @@ export default {
       prompt: 'Build the command to stage ALL changed files:',
       availableBlocks: ['git', 'add', 'commit', '.', '-m', '-A', 'stage'],
       correctAnswer: ['git', 'add', '.'],
+      acceptableAnswers: [['git', 'add', '-A']],
       hints: ['Start with "git add"', 'Use a dot to mean "everything"'],
     },
     {
@@ -128,6 +129,11 @@ export default {
           type: 'text',
           value: 'Lines prefixed with `+` were added, lines with `-` were removed. This is essential for reviewing your work before committing.',
         },
+        {
+          type: 'text',
+          value:
+            'You may also see `git diff --cached` in older tutorials — it does exactly the same thing as `--staged`. Both work; `--staged` is the clearer name.',
+        },
       ],
     },
     {
@@ -136,6 +142,7 @@ export default {
       prompt: 'Build the command to see staged changes:',
       availableBlocks: ['git', 'diff', '--staged', 'status', '--cached', 'log'],
       correctAnswer: ['git', 'diff', '--staged'],
+      acceptableAnswers: [['git', 'diff', '--cached']],
       hints: ['Start with "git diff"', 'Add the --staged flag'],
     },
     {

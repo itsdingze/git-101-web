@@ -1,4 +1,4 @@
-import type { Lesson } from '../../types'
+import type { Lesson } from '@/types'
 export default {
   id: 6,
   title: 'Branching',
@@ -52,6 +52,7 @@ export default {
       prompt: 'Build the command to create AND switch to a new branch called "feature":',
       availableBlocks: ['git', 'switch', '-c', 'branch', 'feature', 'checkout', '-b'],
       correctAnswer: ['git', 'switch', '-c', 'feature'],
+      acceptableAnswers: [['git', 'checkout', '-b', 'feature']],
       hints: ['Use git switch with -c flag', 'The -c flag creates the branch before switching'],
     },
     {

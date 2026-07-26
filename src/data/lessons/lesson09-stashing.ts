@@ -1,4 +1,4 @@
-import type { Lesson } from '../../types'
+import type { Lesson } from '@/types'
 export default {
   id: 9,
   title: 'Stashing',
@@ -72,6 +72,7 @@ export default {
       prompt: 'Build the command to save your current changes to the stash:',
       availableBlocks: ['git', 'stash', 'push', 'pop', 'save', 'add', 'commit'],
       correctAnswer: ['git', 'stash'],
+      acceptableAnswers: [['git', 'stash', 'push']],
       hints: [
         'You only need two blocks',
         'The simplest form of the command is just git stash',
@@ -82,7 +83,9 @@ export default {
       id: 'stash-pop',
       prompt: 'Restore your most recently stashed changes and remove them from the stash list:',
       expectedCommand: 'git stash pop',
-      acceptableVariants: ['git stash apply'],
+      // Not `apply` — the prompt asks for removal from the list, which is the
+      // exact distinction the quiz right after this one tests.
+      acceptableVariants: [],
       successOutput:
         'On branch main\nChanges not staged for commit:\n  modified:   navbar.css\n\nDropped refs/stash@{0} (a1b2c3d4e5f6)',
       hints: [
