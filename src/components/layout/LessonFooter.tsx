@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useLessonNav } from '@/hooks/useLessonNav'
 import Button from '@/components/ui/Button'
+import ContentColumn from './ContentColumn'
 
 export default function LessonFooter() {
   const {
@@ -32,11 +33,9 @@ export default function LessonFooter() {
   const disabled = isIncorrect || (!showContinue && checkDisabled)
 
   return (
-    <footer className="sticky bottom-0 z-50 w-full bg-white/95 backdrop-blur-sm border-t border-border">
-      <div className="w-full px-6 sm:px-8 h-20 flex items-center justify-center">
-        <div className="flex items-center gap-2 w-full max-w-xl">
-          {/* Back sizes to its label; the primary action takes the rest so
-              neither wraps on narrow screens */}
+    <footer className="sticky bottom-0 z-50 w-full bg-bg-primary/95 backdrop-blur-sm border-t border-border">
+      <ContentColumn className="h-20 flex items-center">
+        <div className="flex items-center gap-2 w-full">
           <Button
             variant="outlined"
             onClick={onPrev ?? undefined}
@@ -57,7 +56,7 @@ export default function LessonFooter() {
             {showContinue && <ArrowRight size={14} />}
           </Button>
         </div>
-      </div>
+      </ContentColumn>
     </footer>
   )
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import StepRenderer from '@/components/lesson/StepRenderer'
 import NotFound from '@/components/ui/NotFound'
+import ContentColumn from '@/components/layout/ContentColumn'
 import useLessonPage from './hooks/useLessonPage'
 import useLockedFlexHeight from './hooks/useLockedFlexHeight'
 
@@ -21,7 +22,7 @@ export default function LessonPage() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-6 sm:px-8 flex-1 flex flex-col">
+    <ContentColumn className="flex-1 flex flex-col">
       <div ref={topSpacerRef} className="flex-2 min-h-16 sm:min-h-24" />
       <div key={currentStepIndex} ref={stepRef} tabIndex={-1} className="outline-none">
         <StepRenderer
@@ -30,6 +31,6 @@ export default function LessonPage() {
         />
       </div>
       <div className="flex-3 min-h-16 sm:min-h-24" />
-    </div>
+    </ContentColumn>
   )
 }

@@ -1,12 +1,13 @@
 import useProgressStore from '@/stores/progressStore'
 import cheatsheet from '@/data/cheatsheet'
+import ContentColumn from '@/components/layout/ContentColumn'
 import CheatsheetCategory from './components/CheatsheetCategory'
 
 export default function CheatsheetPage() {
   const completedLessons = useProgressStore((s) => s.completedLessons)
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-6 sm:px-8 py-12 sm:py-16">
+    <ContentColumn className="py-12 sm:py-16">
       <div className="mb-10">
         <h1 className="text-3xl sm:text-4xl font-semibold text-text-primary tracking-tight leading-tight">
           Cheat Sheet
@@ -26,6 +27,6 @@ export default function CheatsheetPage() {
           />
         ))}
       </div>
-    </div>
+    </ContentColumn>
   )
 }

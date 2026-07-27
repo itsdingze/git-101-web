@@ -1,5 +1,6 @@
 import useProgressStore from '@/stores/progressStore'
 import lessons from '@/data/lessons/index'
+import ContentColumn from '@/components/layout/ContentColumn'
 import LessonCard from './components/LessonCard'
 
 export default function HomePage() {
@@ -10,7 +11,7 @@ export default function HomePage() {
   const nextId = lessons.find((lesson) => !completedLessons.includes(lesson.id))?.id
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-6 sm:px-8 py-12 sm:py-16">
+    <ContentColumn className="py-12 sm:py-16">
       <div className="mb-10">
         <h1 className="text-3xl sm:text-4xl font-semibold text-text-primary tracking-tight leading-tight">
           Learn Git
@@ -30,6 +31,6 @@ export default function HomePage() {
           />
         ))}
       </div>
-    </div>
+    </ContentColumn>
   )
 }

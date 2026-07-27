@@ -39,6 +39,8 @@
   --color-terminal-minimize: #FEBC2E;
   --color-terminal-maximize: #28C840;
 
+  --container-content: 42rem;
+
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 }
