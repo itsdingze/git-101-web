@@ -57,6 +57,7 @@
   html {
     font-size: 1rem;
     -webkit-text-size-adjust: 100%;
+    overflow-y: scroll;
     scrollbar-gutter: stable;
   }
 
