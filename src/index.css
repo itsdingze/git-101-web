@@ -2,20 +2,25 @@
 
 @theme {
   --color-bg-primary: #ffffff;
-  --color-bg-secondary: #fafafa;
-  --color-bg-card: #f5f5f5;
-  --color-bg-elevated: #ebebeb;
-  --color-accent-green: #16a34a;
-  --color-accent-green-dark: #15803d;
-  --color-accent-yellow: #ca8a04;
-  --color-accent-red: #dc2626;
-  --color-accent-blue: #2563eb;
-  --color-text-primary: #18181b;
-  --color-text-secondary: #52525b;
-  --color-text-muted: #a1a1aa;
-  --color-border: #e4e4e7;
-  --color-btn-filled-hover: #2a2a2d;
-  --color-btn-filled-active: #343436;
+  --color-bg-secondary: #f7f7f7;
+  --color-bg-card: #f0f0f0;
+  --color-bg-elevated: #e5e5e5;
+  --color-accent-green: #58a700;
+  --color-accent-green-dark: #468f00;
+  --color-accent-yellow: #ffc800;
+  --color-accent-red: #ff4b4b;
+  --color-accent-red-dark: #ea2b2b;
+  --color-accent-blue: #1cb0f6;
+  --color-accent-blue-dark: #1899d6;
+  --color-accent-blue-tint: #ddf4ff;
+  --color-accent-blue-light: #84d8ff;
+  --color-accent-orange: #ff9600;
+  --color-text-primary: #4b4b4b;
+  --color-text-secondary: #777777;
+  --color-text-muted: #afafaf;
+  --color-border: #e5e5e5;
+  --color-btn-filled-hover: #63bd00;
+  --color-btn-filled-active: #468f00;
 
   /* Code block (ContentBlock + CodeWalkthrough) */
   --color-code-bg: #1a1a2e;

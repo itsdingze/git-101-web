@@ -102,11 +102,13 @@ export default function ConflictExercise({ step, lessonId }: ConflictExercisePro
         transition={{ duration: 0.4 }}
       >
         {buttons.map(({ key, label, preview, activeColor }) => {
-          let styles = 'border-border bg-bg-card'
+          let styles = 'border-border bg-bg-primary'
           if (isCompleted && resolution === key) {
             styles = activeColor
           } else if (!isCompleted && resolution === key) {
-            styles = shake ? 'border-accent-red bg-accent-red/5' : 'border-text-primary bg-bg-secondary'
+            styles = shake
+              ? 'border-accent-red bg-accent-red/5'
+              : 'border-accent-blue-light bg-accent-blue-tint'
           }
 
           return (

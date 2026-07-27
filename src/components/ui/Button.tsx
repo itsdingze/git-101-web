@@ -10,25 +10,25 @@ const base =
 
 const variants: Record<ButtonVariant, string> = {
   filled:
-    'bg-text-primary text-white ' +
+    'bg-accent-green text-white ' +
     'hover:bg-btn-filled-hover active:bg-btn-filled-active ' +
-    'disabled:bg-text-primary/12 disabled:text-text-primary/38 disabled:hover:bg-text-primary/12',
+    'disabled:bg-border disabled:text-text-muted disabled:hover:bg-border',
   outlined:
-    'bg-transparent text-text-primary border border-border ' +
-    'hover:bg-text-primary/8 hover:border-text-muted active:bg-text-primary/12 ' +
-    'disabled:bg-transparent disabled:text-text-primary/38 disabled:border-text-primary/12 disabled:hover:bg-transparent',
+    'bg-transparent text-text-muted border border-border ' +
+    'hover:bg-bg-secondary active:bg-bg-card ' +
+    'disabled:bg-transparent disabled:text-border disabled:hover:bg-transparent',
   text:
     'bg-transparent text-text-secondary ' +
     'hover:bg-text-secondary/8 active:bg-text-secondary/12 ' +
     'disabled:text-text-primary/38 disabled:hover:bg-transparent',
   'filled-success':
     'bg-accent-green text-white ' +
-    'hover:bg-accent-green-dark active:bg-accent-green-dark ' +
-    'disabled:bg-accent-green/40 disabled:text-white/70 disabled:hover:bg-accent-green/40',
+    'hover:bg-btn-filled-hover active:bg-accent-green-dark ' +
+    'disabled:bg-accent-green disabled:text-white',
   'filled-danger':
     'bg-accent-red text-white ' +
-    'hover:bg-accent-red/90 active:bg-accent-red/80 ' +
-    'disabled:bg-accent-red/40 disabled:text-white/70 disabled:hover:bg-accent-red/40',
+    'hover:bg-accent-red-dark active:bg-accent-red-dark ' +
+    'disabled:bg-accent-red disabled:text-white',
 }
 
 interface ButtonProps extends ComponentProps<'button'> {

@@ -41,12 +41,14 @@ export default function QuizStep({ step, lessonId }: QuizStepProps) {
         transition={{ duration: 0.4 }}
       >
         {step.options.map((option, i) => {
-          let styles = 'border-border bg-bg-card'
+          let styles = 'border-border bg-bg-primary'
 
           if (isCompleted && i === step.correctIndex) {
             styles = 'border-accent-green bg-accent-green/5'
           } else if (i === selected) {
-            styles = shake ? 'border-accent-red bg-accent-red/5' : 'border-text-primary bg-bg-secondary'
+            styles = shake
+              ? 'border-accent-red bg-accent-red/5'
+              : 'border-accent-blue-light bg-accent-blue-tint'
           }
 
           return (

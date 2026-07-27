@@ -15,7 +15,7 @@ export default function BranchLabel({ branch, isHead, x, y }: BranchLabelProps) 
           style={{
             padding: '1px 6px',
             borderRadius: 4,
-            background: `color-mix(in srgb, ${branch.color} 15%, white)`,
+            background: `color-mix(in srgb, ${branch.color} 15%, var(--color-bg-primary))`,
             color: branch.color,
             fontFamily: 'var(--font-mono, monospace)',
             fontSize: 11,
