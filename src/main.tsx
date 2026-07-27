@@ -7,7 +7,6 @@ import App from './App'
 const HomePage = lazy(() => import('./pages/home/HomePage'))
 const LessonPage = lazy(() => import('./pages/lesson/LessonPage'))
 const SummaryPage = lazy(() => import('./pages/summary/SummaryPage'))
-const CheatsheetPage = lazy(() => import('./pages/cheatsheet/CheatsheetPage'))
 
 const router = createBrowserRouter(
   [
@@ -18,7 +17,6 @@ const router = createBrowserRouter(
         { index: true, element: <HomePage /> },
         { path: 'lesson/:lessonId', element: <LessonPage /> },
         { path: 'lesson/:lessonId/summary', element: <SummaryPage /> },
-        { path: 'cheatsheet', element: <CheatsheetPage /> },
       ],
     },
   ],

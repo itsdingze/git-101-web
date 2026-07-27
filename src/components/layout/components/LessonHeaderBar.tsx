@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ScrollText } from 'lucide-react'
+import CheatsheetModal from '@/components/cheatsheet/CheatsheetModal'
 import ProgressBar from './ProgressBar'
 
 const slot = 'w-11 lg:w-32 shrink-0 flex justify-center'
@@ -16,6 +18,8 @@ interface LessonHeaderBarProps {
 }
 
 export default function LessonHeaderBar({ current, total }: LessonHeaderBarProps) {
+  const [cheatsheetOpen, setCheatsheetOpen] = useState(false)
+
   return (
     <div className="w-full h-14 flex items-center justify-center gap-2 px-6 sm:px-8 lg:gap-3 lg:px-0">
       <div className={`${slot} lg:justify-end`}>
@@ -30,18 +34,20 @@ export default function LessonHeaderBar({ current, total }: LessonHeaderBarProps
       </div>
 
       <div className={`${slot} lg:justify-start`}>
-        <Link
-          to="/cheatsheet"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Open the cheat sheet in a new tab"
+        <button
+          type="button"
+          onClick={() => setCheatsheetOpen(true)}
+          aria-label="Open the cheat sheet"
+          aria-haspopup="dialog"
           title="Cheat Sheet"
-          className={control}
+          className={`${control} cursor-pointer`}
         >
           <ScrollText size={16} />
           <span className="hidden lg:inline text-sm whitespace-nowrap">Cheat Sheet</span>
-        </Link>
+        </button>
       </div>
+
+      {cheatsheetOpen && <CheatsheetModal onClose={() => setCheatsheetOpen(false)} />}
     </div>
   )
 }

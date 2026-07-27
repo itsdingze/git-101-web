@@ -10,9 +10,9 @@ interface CheatsheetCategoryProps {
 export default function CheatsheetCategory({ name, commands, completedLessons }: CheatsheetCategoryProps) {
   return (
     <section>
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-3">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-3">
         {name}
-      </h2>
+      </h3>
       <div className="flex flex-col gap-1">
         {commands.map((cmd) => (
           <CheatsheetCommand
