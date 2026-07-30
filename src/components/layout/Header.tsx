@@ -6,7 +6,7 @@ export default function Header() {
   const { showLessonNav, current, total } = useLessonNav()
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-bg-primary/95 backdrop-blur-sm border-b border-border">
+    <header className="sticky top-0 z-50 w-full bg-bg-primary border-b border-border">
       {showLessonNav ? <LessonHeaderBar current={current} total={total} /> : <BrandHeaderBar />}
     </header>
   )

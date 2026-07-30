@@ -33,7 +33,7 @@ export default function LessonFooter() {
   const disabled = isIncorrect || (!showContinue && checkDisabled)
 
   return (
-    <footer className="sticky bottom-0 z-50 w-full bg-bg-primary/95 backdrop-blur-sm border-t border-border">
+    <footer className="sticky bottom-0 z-50 w-full bg-bg-primary border-t border-border">
       <ContentColumn className="h-20 flex items-center">
         <div className="flex items-center gap-2 w-full">
           <Button
