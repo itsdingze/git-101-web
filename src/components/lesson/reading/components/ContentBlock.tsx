@@ -1,5 +1,6 @@
 import { Info, Lightbulb, TriangleAlert, OctagonAlert, type LucideIcon } from 'lucide-react'
 import type { ContentBlock as ContentBlockType, CalloutVariant } from '@/types'
+import CodeBlock from '@/components/ui/CodeBlock'
 import InlineMarkdown from '@/components/ui/InlineMarkdown'
 
 const CALLOUT_STYLES: Record<CalloutVariant, { icon: LucideIcon; shell: string; accent: string }> = {
@@ -20,9 +21,9 @@ export default function ContentBlock({ block }: ContentBlockProps) {
 
     case 'code':
       return (
-        <pre className="bg-code-bg rounded-xl px-5 py-4 overflow-x-auto font-mono text-xs leading-relaxed">
+        <CodeBlock label="Code sample" className="bg-code-bg rounded-xl px-5 py-4 font-mono text-xs leading-relaxed">
           <code className="text-code-text">{block.value}</code>
-        </pre>
+        </CodeBlock>
       )
 
     case 'list': {

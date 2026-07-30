@@ -1,5 +1,4 @@
 import { type KeyboardEvent, type Ref, useState, useRef, useEffect, useImperativeHandle } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
 
 type HistoryEntry = {
   id: number
@@ -28,14 +27,12 @@ export interface FakeTerminalHandle {
   submit: () => boolean | undefined
 }
 
-let nextEntryId = 0
-
 export default function FakeTerminal({ ref, onSubmit, successOutput, disabled, initialHistory = [], onInputChange, onEnter, className }: FakeTerminalProps) {
-  const prefersReduced = useReducedMotion()
   const [input, setInput] = useState('')
   const [history, setHistory] = useState<HistoryEntry[]>(initialHistory)
   const inputRef = useRef<HTMLInputElement>(null)
   const terminalRef = useRef<HTMLDivElement>(null)
+  const nextEntryId = useRef(0)
 
   useEffect(() => {
     if (!disabled) inputRef.current?.focus()
@@ -56,7 +53,7 @@ export default function FakeTerminal({ ref, onSubmit, successOutput, disabled, i
     const command = input.trim()
     const result = onSubmit(command)
 
-    const entry: HistoryEntry = { id: nextEntryId++, command, output: '', type: 'command' }
+    const entry: HistoryEntry = { id: nextEntryId.current++, command, output: '', type: 'command' }
 
     if (result.correct) {
       entry.output = successOutput || 'Command executed successfully.'
@@ -93,16 +90,16 @@ export default function FakeTerminal({ ref, onSubmit, successOutput, disabled, i
         <span className="ml-2 text-terminal-muted text-sm">terminal</span>
       </div>
 
-      <div ref={terminalRef} className="p-4 h-64 overflow-y-auto space-y-1">
+      <div ref={terminalRef} className="p-4 h-[min(16rem,45dvh)] overflow-y-auto space-y-1">
         {history.map((entry) => (
           <div key={entry.id}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-baseline gap-2">
               <span className="text-terminal-prompt">$</span>
-              <span className="text-terminal-text">{entry.command}</span>
+              <span className="min-w-0 break-words text-terminal-text">{entry.command}</span>
             </div>
             {entry.output && (
               <div
-                className={`ml-4 mt-0.5 whitespace-pre-wrap ${
+                className={`ml-4 mt-0.5 whitespace-pre-wrap break-words ${
                   entry.type === 'success' ? 'text-terminal-muted' : 'text-terminal-error'
                 }`}
               >
@@ -113,27 +110,21 @@ export default function FakeTerminal({ ref, onSubmit, successOutput, disabled, i
         ))}
 
         {!disabled && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-baseline gap-2">
             <span className="text-terminal-prompt">$</span>
-            <div className="relative flex-1">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full bg-transparent text-terminal-text outline-none caret-transparent"
-                aria-label="Git command input"
-                spellCheck={false}
-                autoComplete="off"
-              />
-              <motion.span
-                className="absolute top-1/2 -translate-y-1/2 w-1.5 h-4.5 bg-terminal-text/80"
-                style={{ left: `${input.length * 0.6}em` }}
-                animate={prefersReduced ? { opacity: 1 } : { opacity: [1, 0] }}
-                transition={prefersReduced ? undefined : { duration: 0.53, repeat: Infinity, repeatType: 'reverse' }}
-              />
-            </div>
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="min-h-7 min-w-0 flex-1 bg-transparent text-terminal-text caret-terminal-text outline-none"
+              aria-label="Git command input"
+              spellCheck={false}
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+            />
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
+import { REPO_API_URL } from '@/data/repo'
 
-const REPO = 'itsdingze/git-101-web'
 const CACHE_KEY = 'gh-stars'
 
 export default function useGitHubStars(): number | null {
@@ -12,7 +12,9 @@ export default function useGitHubStars(): number | null {
   useEffect(() => {
     if (stars !== null) return
 
-    fetch(`https://api.github.com/repos/${REPO}`)
+    const controller = new AbortController()
+
+    fetch(REPO_API_URL, { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((data: { stargazers_count: number }) => {
         const count = data.stargazers_count
@@ -20,6 +22,8 @@ export default function useGitHubStars(): number | null {
         setStars(count)
       })
       .catch(() => {})
+
+    return () => controller.abort()
   }, [stars])
 
   return stars

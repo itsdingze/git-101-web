@@ -1,9 +1,12 @@
 import useProgressStore from '@/stores/progressStore'
 import lessons from '@/data/lessons/index'
 import ContentColumn from '@/components/layout/ContentColumn'
+import useDocumentTitle from '@/hooks/useDocumentTitle'
 import LessonCard from './components/LessonCard'
 
 export default function HomePage() {
+  useDocumentTitle('Git 101 — Interactive Tutorial')
+
   // Subscribe to the state itself, not the action refs — those never change,
   // so selecting them would leave the list stale after progress updates.
   const completedLessons = useProgressStore((s) => s.completedLessons)

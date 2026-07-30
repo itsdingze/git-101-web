@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { ScenarioKey } from '@/types'
+import useScrollableRegion from '@/hooks/useScrollableRegion'
+import WalkthroughStepper from '@/components/visualization/WalkthroughStepper'
 import { SCENARIOS } from './scenarios'
 import { computeFixedDimensions } from './layout'
 import { CONTAINER_HEIGHT } from './constants'
@@ -12,6 +13,7 @@ interface GitGraphProps {
 
 export default function GitGraph({ scenario = 'branching' }: GitGraphProps) {
   const [stageIndex, setStageIndex] = useState(0)
+  const { ref, regionProps } = useScrollableRegion<HTMLDivElement>('Commit graph', stageIndex)
 
   const config = SCENARIOS[scenario]
 
@@ -47,7 +49,12 @@ export default function GitGraph({ scenario = 'branching' }: GitGraphProps) {
 
   return (
     <div className="border border-border rounded-lg p-4 space-y-3">
-      <div className="overflow-y-auto" style={{ maxHeight: `${CONTAINER_HEIGHT}px` }}>
+      <div
+        ref={ref}
+        {...regionProps}
+        className="overflow-auto rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
+        style={{ maxHeight: `${CONTAINER_HEIGHT}px` }}
+      >
         <GraphRenderer
           stage={stage}
           svgHeight={svgHeight}
@@ -55,35 +62,9 @@ export default function GitGraph({ scenario = 'branching' }: GitGraphProps) {
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <button
-          onClick={goBackward}
-          disabled={atStart}
-          aria-label="Previous step"
-          className="p-1.5 rounded-md border border-border text-text-secondary
-            enabled:hover:bg-bg-card enabled:cursor-pointer
-            disabled:opacity-30 disabled:cursor-not-allowed
-            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary
-            transition-colors"
-        >
-          <ChevronLeft size={16} />
-        </button>
-
-        <div className="flex-1 text-center truncate">{commandDisplay}</div>
-
-        <button
-          onClick={goForward}
-          disabled={atEnd}
-          aria-label="Next step"
-          className="p-1.5 rounded-md border border-border text-text-secondary
-            enabled:hover:bg-bg-card enabled:cursor-pointer
-            disabled:opacity-30 disabled:cursor-not-allowed
-            focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary
-            transition-colors"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
+      <WalkthroughStepper onPrev={goBackward} onNext={goForward} atStart={atStart} atEnd={atEnd}>
+        {commandDisplay}
+      </WalkthroughStepper>
     </div>
   )
 }

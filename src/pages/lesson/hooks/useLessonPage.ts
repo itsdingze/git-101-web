@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useLayoutEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Lesson, Step } from '@/types'
 import useProgressStore from '@/stores/progressStore'
@@ -55,7 +55,7 @@ export default function useLessonPage(lessonId: string | undefined): UseLessonPa
     }
   }, [currentStepIndex, parsedId, setCurrentStep])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!lesson) {
       clearLessonNav()
       return clearLessonNav

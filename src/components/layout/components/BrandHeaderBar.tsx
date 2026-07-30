@@ -1,5 +1,5 @@
 import { GitBranch } from 'lucide-react'
-import ContentColumn from '../ContentColumn'
+import ContentColumn from '@/components/layout/ContentColumn'
 import GitHubStarBadge from './GitHubStarBadge'
 
 export default function BrandHeaderBar() {

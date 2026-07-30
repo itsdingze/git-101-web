@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import type { Stage, PhantomCommit } from '@/types'
 import { computeLayout, computeConnections } from './layout'
 import { COMMIT_RADIUS, COMMIT_SPACING_Y, LANE_SPACING_X, PADDING, TRANSITION } from './constants'
+import describeStage from './describeStage'
 import BranchLabel from './components/BranchLabel'
 
 interface GraphRendererProps {
@@ -60,8 +61,10 @@ export default function GraphRenderer({ stage, svgHeight, svgWidth }: GraphRende
     <svg
       width={svgWidth}
       height={svgHeight}
+      viewBox={`0 0 ${svgWidth} ${svgHeight}`}
       className="mx-auto"
-      aria-hidden="true"
+      role="img"
+      aria-label={describeStage(stage)}
     >
       {/* Layer 1: Connections */}
       <AnimatePresence>

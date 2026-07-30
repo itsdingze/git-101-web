@@ -83,6 +83,7 @@ export default function QuizStep({ step, lessonId }: QuizStepProps) {
           return (
             <button
               key={option.text}
+              type="button"
               onClick={() => handleSelect(slot)}
               className={`w-full text-left px-4 py-3 rounded-xl border transition-colors text-sm leading-relaxed
                 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary

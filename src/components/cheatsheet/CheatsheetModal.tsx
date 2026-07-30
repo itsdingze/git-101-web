@@ -18,13 +18,10 @@ export default function CheatsheetModal({ onClose }: CheatsheetModalProps) {
     if (!dialog?.open) dialog?.showModal()
 
     const root = document.documentElement
-    const widthBeforeLock = document.body.clientWidth
     root.style.overflow = 'hidden'
-    root.style.paddingRight = `${document.body.clientWidth - widthBeforeLock}px`
 
     return () => {
       root.style.overflow = ''
-      root.style.paddingRight = ''
     }
   }, [])
 
@@ -62,8 +59,13 @@ export default function CheatsheetModal({ onClose }: CheatsheetModalProps) {
           </h2>
         </div>
 
-        <div className="overflow-auto">
-          <div className="w-max min-w-full px-6 py-6 sm:px-8">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-labelledby="cheatsheet-title"
+          className="overflow-y-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-blue"
+        >
+          <div className="px-6 py-6 sm:px-8">
             <p className="text-sm text-text-muted mb-8 leading-relaxed">
               Quick reference for Git commands
             </p>

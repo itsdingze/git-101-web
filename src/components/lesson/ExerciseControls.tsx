@@ -21,7 +21,7 @@ export default function ExerciseControls({ hints, hintIndex, showHint, solved, o
               <Button
                 variant="text"
                 onClick={onToggleHint}
-                className="!text-sm !gap-1.5 !px-3 !py-1.5"
+                size="sm"
               >
                 <HelpCircle size={14} />
                 {showHint ? 'Hide hint' : 'Need a hint?'}
@@ -31,7 +31,7 @@ export default function ExerciseControls({ hints, hintIndex, showHint, solved, o
           <Button
             variant="text"
             onClick={onReset}
-            className="!text-sm !gap-1.5 !px-3 !py-1.5"
+            size="sm"
           >
             <RotateCcw size={14} />
             Start over

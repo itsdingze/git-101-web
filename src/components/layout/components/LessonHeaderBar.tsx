@@ -29,7 +29,7 @@ export default function LessonHeaderBar({ current, total }: LessonHeaderBarProps
         </Link>
       </div>
 
-      <div className="w-full max-w-content min-w-0 lg:px-8">
+      <div className="w-full max-w-content min-w-0 min-[840px]:px-8">
         <ProgressBar current={current} total={total} />
       </div>
 

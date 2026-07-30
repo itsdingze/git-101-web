@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import blockShell from './blockShell'
 import SortableBlock from './SortableBlock'
 
 interface SolutionBlocksProps {
@@ -20,7 +21,7 @@ export default function SolutionBlocks({ answer, insertIndex, isActiveFromGlossa
       children.push(
         <div
           key="insert-placeholder"
-          className="px-4 py-2 rounded-lg font-mono text-sm bg-border"
+          className={`${blockShell} bg-border`}
         >
           <span className="invisible">{activeBlock}</span>
         </div>

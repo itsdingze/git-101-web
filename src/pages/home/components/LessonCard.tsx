@@ -13,7 +13,7 @@ export default function LessonCard({ lesson, isCompleted, isCurrent }: LessonCar
     <Link to={`/lesson/${lesson.id}`} className="no-underline block rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary">
       <div
         className={`
-          flex items-center gap-4 px-5 py-4 rounded-xl border transition-all duration-150
+          flex items-center gap-4 px-5 py-4 rounded-xl border transition-colors duration-150
           hover:bg-bg-secondary cursor-pointer
           ${isCurrent
             ? 'border-text-primary/20 bg-bg-secondary shadow-sm'

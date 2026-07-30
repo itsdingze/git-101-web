@@ -14,7 +14,7 @@ export default function CommandsList({ commands }: CommandsListProps) {
         {commands.map((cmd) => (
           <code
             key={cmd}
-            className="bg-bg-card text-text-primary px-3 py-1.5 rounded-lg text-sm font-mono"
+            className="min-w-0 break-words bg-bg-card text-text-primary px-3 py-1.5 rounded-lg text-sm font-mono"
           >
             {cmd}
           </code>

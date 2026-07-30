@@ -35,6 +35,7 @@ export default function BlockExercise({ step, lessonId }: BlockExerciseProps) {
   return (
     <div className="space-y-6">
       <InlineMarkdown
+        as="h2"
         className="text-base font-medium text-text-primary leading-snug"
         value={step.prompt}
       />

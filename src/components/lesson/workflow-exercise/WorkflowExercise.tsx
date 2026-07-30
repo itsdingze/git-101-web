@@ -3,6 +3,7 @@ import { CheckCircle } from 'lucide-react'
 import type { WorkflowExerciseStep } from '@/types'
 import FakeTerminal, { type FakeTerminalHandle } from '@/components/lesson/components/FakeTerminal'
 import ExerciseControls from '@/components/lesson/ExerciseControls'
+import CodeBlock from '@/components/ui/CodeBlock'
 import InlineMarkdown from '@/components/ui/InlineMarkdown'
 import useProgressStore from '@/stores/progressStore'
 import useExerciseNav from '@/hooks/useExerciseNav'
@@ -87,10 +88,12 @@ export default function WorkflowExercise({ step, lessonId }: WorkflowExercisePro
           completedSubSteps[i] && (i !== currentSubStep || allCompleted) && (
             <div key={`done-${i}`} className="flex items-start gap-2 text-sm">
               <CheckCircle size={14} className="text-accent-green shrink-0 mt-0.5" />
-              <div>
-                <code className="font-mono text-xs text-text-primary">{substep.expectedCommand}</code>
+              <div className="min-w-0 flex-1">
+                <code className="break-words font-mono text-xs text-text-primary">{substep.expectedCommand}</code>
                 {substep.successOutput && (
-                  <pre className="text-xs text-text-muted mt-1 font-mono">{substep.successOutput}</pre>
+                  <CodeBlock label={`Output of ${substep.expectedCommand}`} className="mt-1 font-mono text-xs text-text-muted">
+                    {substep.successOutput}
+                  </CodeBlock>
                 )}
               </div>
             </div>

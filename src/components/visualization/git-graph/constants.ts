@@ -5,6 +5,11 @@ export const PADDING = { top: 24, bottom: 16, left: 20 } as const
 export const CHAR_WIDTH = 7
 export const CONTAINER_HEIGHT = 360
 
+export const HEAD_LABEL = 'HEAD'
+export const LABEL_CHAR_WIDTH = 6.6
+export const LABEL_PILL_PADDING = 6
+export const LABEL_PILL_GAP = 4
+
 export const COLORS = {
   main: 'var(--color-accent-blue)',
   feature: 'var(--color-accent-green)',

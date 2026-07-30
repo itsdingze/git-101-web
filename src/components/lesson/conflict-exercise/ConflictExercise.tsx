@@ -5,6 +5,7 @@ import type { ConflictExerciseStep } from '@/types'
 import useProgressStore from '@/stores/progressStore'
 import useExerciseNav from '@/hooks/useExerciseNav'
 import ExerciseControls from '@/components/lesson/ExerciseControls'
+import CodeBlock from '@/components/ui/CodeBlock'
 import InlineMarkdown from '@/components/ui/InlineMarkdown'
 
 type Resolution = 'ours' | 'theirs' | 'both'
@@ -86,7 +87,7 @@ export default function ConflictExercise({ step, lessonId }: ConflictExercisePro
 
       <div>
         <div className="text-xs font-mono text-text-muted mb-2">{step.fileName}</div>
-        <pre className="bg-code-bg rounded-xl px-5 py-4 font-mono text-xs leading-relaxed overflow-x-auto">
+        <CodeBlock label={`${step.fileName} with conflict markers`} className="bg-code-bg rounded-xl px-5 py-4 font-mono text-xs leading-relaxed">
           {step.surroundingBefore && (
             <span className="text-code-text">{step.surroundingBefore + '\n'}</span>
           )}
@@ -98,7 +99,7 @@ export default function ConflictExercise({ step, lessonId }: ConflictExercisePro
           {step.surroundingAfter && (
             <span className="text-code-text">{'\n' + step.surroundingAfter}</span>
           )}
-        </pre>
+        </CodeBlock>
       </div>
 
       <motion.div
@@ -119,16 +120,17 @@ export default function ConflictExercise({ step, lessonId }: ConflictExercisePro
           return (
             <button
               key={key}
+              type="button"
               onClick={() => setResolution(key)}
               disabled={isCompleted}
-              className={`flex-1 flex flex-col items-start text-left px-4 py-3 rounded-xl border transition-colors text-sm
+              className={`min-w-0 flex-1 flex flex-col items-start text-left px-4 py-3 rounded-xl border transition-colors text-sm
                 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary
                 ${styles}
                 ${!isCompleted ? 'cursor-pointer hover:border-text-muted' : 'cursor-default'}
               `}
             >
               <span className="font-medium text-text-primary">{label}</span>
-              <p className="text-xs text-text-muted mt-1 whitespace-pre-wrap">{preview}</p>
+              <p className="text-xs text-text-muted mt-1 whitespace-pre-wrap break-words">{preview}</p>
             </button>
           )
         })}
@@ -141,7 +143,7 @@ export default function ConflictExercise({ step, lessonId }: ConflictExercisePro
             Resolved
           </div>
           <div className="text-xs font-mono text-text-muted mb-1">{step.fileName}</div>
-          <pre className="bg-code-bg rounded-xl px-5 py-4 font-mono text-xs leading-relaxed border border-accent-green/30 overflow-x-auto">
+          <CodeBlock label={`${step.fileName} after resolving`} className="bg-code-bg rounded-xl px-5 py-4 font-mono text-xs leading-relaxed border border-accent-green/30">
             {step.surroundingBefore && (
               <span className="text-code-text">{step.surroundingBefore + '\n'}</span>
             )}
@@ -149,7 +151,7 @@ export default function ConflictExercise({ step, lessonId }: ConflictExercisePro
             {step.surroundingAfter && (
               <span className="text-code-text">{'\n' + step.surroundingAfter}</span>
             )}
-          </pre>
+          </CodeBlock>
         </div>
       )}
 

@@ -1,4 +1,11 @@
 import type { Branch } from '@/types'
+import { LABEL_CHAR_WIDTH, LABEL_PILL_PADDING, LABEL_PILL_GAP, HEAD_LABEL } from '@/components/visualization/git-graph/constants'
+
+const pill = 'rounded px-1.5 py-px font-mono text-[11px] font-semibold whitespace-nowrap'
+
+function pillWidth(text: string): number {
+  return text.length * LABEL_CHAR_WIDTH + LABEL_PILL_PADDING * 2
+}
 
 interface BranchLabelProps {
   branch: Branch
@@ -8,37 +15,30 @@ interface BranchLabelProps {
 }
 
 export default function BranchLabel({ branch, isHead, x, y }: BranchLabelProps) {
+  const width =
+    pillWidth(branch.name) + (isHead ? LABEL_PILL_GAP + pillWidth(HEAD_LABEL) : 0)
+
   return (
-    <foreignObject x={x} y={y - 11} width={1} height={22} style={{ overflow: 'visible' }}>
-      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+    <foreignObject x={x} y={y - 11} width={Math.ceil(width)} height={22}>
+      <div className="flex items-center gap-1">
         <span
+          className={pill}
           style={{
-            padding: '1px 6px',
-            borderRadius: 4,
             background: `color-mix(in srgb, ${branch.color} 15%, var(--color-bg-primary))`,
             color: branch.color,
-            fontFamily: 'var(--font-mono, monospace)',
-            fontSize: 11,
-            fontWeight: 600,
-            whiteSpace: 'nowrap',
           }}
         >
           {branch.name}
         </span>
         {isHead && (
           <span
+            className={pill}
             style={{
-              padding: '1px 6px',
-              borderRadius: 4,
-              background: 'color-mix(in srgb, var(--color-accent-yellow) 15%, white)',
+              background: 'color-mix(in srgb, var(--color-accent-yellow) 15%, var(--color-bg-primary))',
               color: 'var(--color-accent-yellow)',
-              fontFamily: 'var(--font-mono, monospace)',
-              fontSize: 11,
-              fontWeight: 600,
-              whiteSpace: 'nowrap',
             }}
           >
-            HEAD
+            {HEAD_LABEL}
           </span>
         )}
       </div>

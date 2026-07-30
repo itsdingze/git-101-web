@@ -1,12 +1,18 @@
-import type { ComponentProps, ElementType, ReactNode, Ref } from 'react'
+import type { ComponentPropsWithRef, ElementType } from 'react'
 
 type ButtonVariant = 'filled' | 'outlined' | 'text' | 'filled-success' | 'filled-danger'
+type ButtonSize = 'sm' | 'md'
 
 const base =
-  'inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium ' +
+  'inline-flex items-center justify-center rounded-lg font-medium ' +
   'transition-colors duration-150 cursor-pointer select-none no-underline ' +
   'disabled:cursor-not-allowed ' +
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary'
+
+const sizes: Record<ButtonSize, string> = {
+  sm: 'gap-1.5 px-3 py-1.5 text-sm',
+  md: 'min-h-11 gap-2 px-4 py-2.5 text-sm sm:px-5',
+}
 
 const variants: Record<ButtonVariant, string> = {
   filled:
@@ -31,20 +37,23 @@ const variants: Record<ButtonVariant, string> = {
     'disabled:bg-accent-red disabled:text-white',
 }
 
-interface ButtonProps extends ComponentProps<'button'> {
-  as?: ElementType
+type ButtonProps<T extends ElementType> = {
+  as?: T
   variant?: ButtonVariant
-  to?: string
-  ref?: Ref<HTMLButtonElement>
-  children?: ReactNode
-}
+  size?: ButtonSize
+} & Omit<ComponentPropsWithRef<T>, 'as' | 'className'> & { className?: string }
 
-export default function Button({
-  as: Tag = 'button', variant = 'filled', className = '', ref, children, ...rest
-}: ButtonProps) {
+export default function Button<T extends ElementType = 'button'>({
+  as, variant = 'filled', size = 'md', className = '', ...rest
+}: ButtonProps<T>) {
+  const Tag = as ?? 'button'
+  const nativeType = Tag === 'button' ? { type: 'button' as const } : {}
+
   return (
-    <Tag ref={ref} className={`${base} ${variants[variant]} ${className}`} {...rest}>
-      {children}
-    </Tag>
+    <Tag
+      {...nativeType}
+      className={`${base} ${sizes[size]} ${variants[variant]} ${className}`}
+      {...rest}
+    />
   )
 }

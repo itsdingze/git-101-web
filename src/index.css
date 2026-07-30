@@ -65,16 +65,13 @@
     font-family: var(--font-sans);
     background-color: var(--color-bg-primary);
     color: var(--color-text-primary);
-    min-height: 100vh;
-    width: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.6;
   }
 
   #root {
-    min-height: 100vh;
-    width: 100%;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
   }
@@ -100,6 +97,7 @@
 }
 
 /* Code block horizontal scrollbar — inset from rounded corners */
-pre::-webkit-scrollbar-track {
+pre::-webkit-scrollbar-track,
+[data-code-scroll]::-webkit-scrollbar-track {
   margin-inline: 0.75rem;
 }

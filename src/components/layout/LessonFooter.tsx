@@ -2,35 +2,13 @@ import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useLessonNav } from '@/hooks/useLessonNav'
 import Button from '@/components/ui/Button'
 import ContentColumn from './ContentColumn'
+import useLessonFooterAction from './hooks/useLessonFooterAction'
 
 export default function LessonFooter() {
-  const {
-    showLessonNav,
-    onPrev,
-    onNext,
-    canGoPrev,
-    isLastStep,
-    stepCompleted,
-    checkDisabled,
-    checkResult,
-    triggerCheck,
-  } = useLessonNav()
+  const { showLessonNav, onPrev, canGoPrev } = useLessonNav()
+  const { variant, label, showContinue, disabled, onClick } = useLessonFooterAction()
 
   if (!showLessonNav) return null
-
-  const isIncorrect = checkResult === 'incorrect'
-  const showContinue = checkResult === 'correct' || stepCompleted
-
-  const variant = checkResult === 'correct' ? 'filled-success' : isIncorrect ? 'filled-danger' : 'filled'
-  const label = showContinue
-    ? isLastStep
-      ? 'Finish Lesson'
-      : 'Continue'
-    : isIncorrect
-      ? 'Try Again'
-      : 'Check Answer'
-  const onClick = showContinue ? onNext ?? undefined : triggerCheck
-  const disabled = isIncorrect || (!showContinue && checkDisabled)
 
   return (
     <footer className="sticky bottom-0 z-50 w-full bg-bg-primary border-t border-border">
@@ -40,7 +18,7 @@ export default function LessonFooter() {
             variant="outlined"
             onClick={onPrev ?? undefined}
             disabled={!canGoPrev}
-            className="shrink-0 whitespace-nowrap !px-4 sm:!px-5"
+            className="shrink-0 whitespace-nowrap"
           >
             <ArrowLeft size={14} />
             Go Back
