@@ -13,8 +13,8 @@ export default function LessonPage() {
   const stepRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    stepRef.current?.focus()
-    stepRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' })
+    stepRef.current?.focus({ preventScroll: true })
+    window.scrollTo({ top: 0, behavior: 'instant' })
   }, [currentStepIndex])
 
   if (!lesson || !step) {
