@@ -11,7 +11,22 @@ export type CodeBlock = {
   value: string
 }
 
-export type ContentBlock = TextBlock | CodeBlock
+export type ListBlock = {
+  type: 'list'
+  ordered?: boolean
+  items: readonly string[]
+}
+
+export type CalloutVariant = 'info' | 'tip' | 'warning' | 'danger'
+
+export type CalloutBlock = {
+  type: 'callout'
+  variant: CalloutVariant
+  title?: string
+  value: string
+}
+
+export type ContentBlock = TextBlock | CodeBlock | ListBlock | CalloutBlock
 
 export type VisualizationType =
   | 'three-place-model'
@@ -30,11 +45,16 @@ export type ReadingStep = {
   visualizationVariant?: ScenarioKey
 }
 
+export type QuizOption = {
+  text: string
+  whyWrong?: string
+}
+
 export type QuizStep = {
   type: 'quiz'
   id: string
   question: string
-  options: string[]
+  options: readonly QuizOption[]
   correctIndex: number
   explanation: string
 }

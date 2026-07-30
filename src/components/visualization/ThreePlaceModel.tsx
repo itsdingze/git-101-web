@@ -94,7 +94,7 @@ export default function ThreePlaceModel() {
         </button>
       ) : (
         <div className="text-center text-sm text-accent-green font-medium">
-          All files committed — nothing left to stage
+          All files committed, nothing left to stage
         </div>
       )}
     </div>

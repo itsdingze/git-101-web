@@ -2,27 +2,68 @@ import type { Lesson } from '@/types'
 export default {
   id: 6,
   title: 'Branching',
-  description: 'Create and switch between parallel lines of development',
+  description: 'Work on something new without risking the version that already works',
   steps: [
     {
       type: 'reading',
-      id: 'what-are-branches',
-      title: 'What Are Branches?',
+      id: 'why-branches',
+      title: 'The problem branches solve',
       content: [
         {
           type: 'text',
           value:
-            'A **branch** is a parallel line of development. It lets you work on something new — like a feature or a fix — in isolation, without affecting the `main` branch. When you\'re done, you can bring the changes back (we\'ll cover how in the next lesson).',
+            'You have a class project in a folder. It works. It is not amazing, but it runs, and you could hand it in tomorrow if you had to.',
         },
         {
           type: 'text',
           value:
-            "Branches are incredibly lightweight in Git — they're just pointers to a commit. Creating a branch is nearly instant.",
+            'Now you want to try something big. Rewrite the layout. Restructure how the pages fit together. You are honestly not sure it will work, and you might throw the whole attempt away. Without Git you have two choices:',
+        },
+        {
+          type: 'list',
+          items: [
+            'Change the working version in place, and hope you can undo it all if the experiment fails.',
+            'Copy the whole folder to `project-v2-FINAL`, work in there, and figure out later which copy was the real one.',
+          ],
         },
         {
           type: 'text',
           value:
-            'Git uses a special pointer called **HEAD** to track which branch you\'re currently on. When you switch branches, HEAD moves to the new branch — it always points at wherever you\'re working right now.',
+            'Both are bad. The first puts the version you can hand in at risk. The second is how you end up with `project-v2-FINAL`, then `project-v2-FINAL-actual`, then `project-v2-use-this-one` — with no way to tell what is different between them.',
+        },
+        {
+          type: 'text',
+          value:
+            'A **branch** is the clean version of that second idea. Git keeps one folder on your computer and lets you keep two separate lines of work inside it. You experiment as recklessly as you like. The version you could hand in tomorrow sits untouched, and you can be back on it in about a second.',
+        },
+      ],
+    },
+    {
+      type: 'reading',
+      id: 'what-are-branches',
+      title: 'What a branch is',
+      content: [
+        {
+          type: 'text',
+          value:
+            'A **branch** is a name for one line of work. You have been using one this whole course without thinking about it: `main` is a branch, and every commit you have made has gone onto it.',
+        },
+        {
+          type: 'text',
+          value:
+            'The important part is that a branch moves forward with you. Every time you commit while you are on a branch called `add-navbar`, that branch advances to your new commit. `main` stays exactly where you left it. Two names, each remembering a different point in your project.',
+        },
+        {
+          type: 'text',
+          value:
+            'Git also keeps a marker called **HEAD**, which is its "you are here" sign. HEAD says which branch you are on right now, so Git knows which branch to move forward when you commit, and which version of your files to show you. Switching branches is nothing more than moving that marker.',
+        },
+        {
+          type: 'callout',
+          variant: 'info',
+          title: 'Why creating a branch is instant',
+          value:
+            'Creating a branch copies nothing. Underneath, a branch is a **pointer**: a tiny file holding the ID of one commit. Making a new one writes about forty characters to disk, which is why creating a branch finishes before you have let go of the Enter key — even on a huge project.',
         },
       ],
       visualization: 'git-graph',
@@ -31,70 +72,263 @@ export default {
     {
       type: 'reading',
       id: 'creating-branches',
-      title: 'Creating & Switching Branches',
+      title: 'Creating and switching',
       content: [
         {
           type: 'code',
           language: 'bash',
           value:
-            'git branch feature-login      # Create a new branch\ngit switch feature-login      # Switch to it\n\n# Or do both in one command:\ngit switch -c feature-login',
+            'git branch feature-login      # Create the branch, stay where you are\ngit switch feature-login      # Move onto it\n\n# Or both at once:\ngit switch -c feature-login',
         },
         {
           type: 'text',
           value:
-            'The `-c` flag (short for `--create`) creates the branch and switches to it in one step. Older tutorials use `git checkout -b` — it still works, but `git switch` is the modern replacement (introduced in Git 2.23).',
+            'The `-c` flag (short for `--create`) makes the branch and moves you onto it in one step. It is what you will reach for almost every time.',
+        },
+        {
+          type: 'text',
+          value:
+            'Branch names cannot contain spaces, so use dashes: `add-navbar`, `fix-login-bug`, `try-dark-mode`. Name the branch after the work. A name you wrote today should still tell you what it was for when you come back to it next week.',
+        },
+        {
+          type: 'text',
+          value:
+            'Older tutorials write `git checkout -b add-navbar` instead. It does the same thing and still works. `git switch` arrived in Git 2.23 and exists because `checkout` had been given too many unrelated jobs over the years. If you find `checkout -b` in an answer online, it is not wrong, only old.',
         },
       ],
     },
     {
       type: 'block-exercise',
       id: 'build-switch-c',
-      prompt: 'Build the command to create AND switch to a new branch called "feature":',
+      prompt: 'Build the command that creates a new branch called "feature" and moves you onto it:',
       availableBlocks: ['git', 'switch', '-c', 'branch', 'feature', 'checkout', '-b'],
       correctAnswer: ['git', 'switch', '-c', 'feature'],
       acceptableAnswers: [['git', 'checkout', '-b', 'feature']],
-      hints: ['Use git switch with -c flag', 'The -c flag creates the branch before switching'],
+      hints: [
+        'You want the one command that creates and moves in a single step',
+        'Start with `git switch`, then the flag that means create',
+        'It is `git switch -c feature`',
+      ],
     },
     {
       type: 'terminal-exercise',
       id: 'create-branch',
-      prompt: 'Create and switch to a new branch called "add-navbar":',
+      prompt:
+        'You are on `main` in your project, about to start work on a navbar. Create a branch called "add-navbar" and switch to it:',
       expectedCommand: 'git switch -c add-navbar',
       acceptableVariants: ['git checkout -b add-navbar'],
       successOutput: "Switched to a new branch 'add-navbar'",
-      hints: ['Use git switch with -c to create and switch in one step'],
-    },
-    {
-      type: 'reading',
-      id: 'listing-branches',
-      title: 'Listing & Deleting Branches',
-      content: [
-        {
-          type: 'code',
-          language: 'bash',
-          value:
-            'git branch          # List all local branches\ngit branch -a       # List all branches (including remote)\ngit branch -d done  # Delete a branch you are done with',
-        },
-        {
-          type: 'text',
-          value:
-            'The current branch is marked with an asterisk `*`. Clean up branches when you no longer need them to keep your repo tidy.',
-        },
+      hints: [
+        'Use `git switch` with the flag that creates the branch first',
+        'It is `git switch -c add-navbar`',
       ],
     },
     {
       type: 'quiz',
-      id: 'quiz-branch',
-      question: 'What is a Git branch, technically?',
+      id: 'quiz-new-branch-contents',
+      question:
+        'You are on `main` and your project has ten commits behind it. You run `git switch -c fix-typo`. What does the new `fix-typo` branch contain right now?',
       options: [
-        'A lightweight pointer to a specific commit',
-        'A complete copy of the entire repository',
-        'A separate folder on your hard drive',
-        'A tag that marks an important commit',
+        {
+          text: 'Nothing yet. A new branch starts empty, so you build your files up on it again.',
+          whyWrong:
+            'A new branch starts at the commit you were standing on, not at zero. `fix-typo` begins with every file and all ten commits already there. Git would be painful to use if branching meant starting over.',
+        },
+        {
+          text: 'Only the changes you have made but not committed yet.',
+          whyWrong:
+            'Uncommitted edits are not what a branch is made of. `fix-typo` starts with the whole project as of the latest commit on `main`, and any uncommitted edits you had come along with you.',
+        },
+        {
+          text: 'Everything `main` has: all ten commits and every file. It starts identical, and only differs once you commit on it.',
+        },
+        {
+          text: 'A copy of your files, but no history. The ten commits belong to `main` only.',
+          whyWrong:
+            'Branches share history rather than owning it. `fix-typo` can see all ten commits. Only the new commits you make after branching end up on one branch and not the other.',
+        },
       ],
-      correctIndex: 0,
+      correctIndex: 2,
       explanation:
-        'A branch is just a movable pointer (reference) to a commit. This is why creating branches in Git is nearly instantaneous.',
+        'Creating a branch starts a new name at the exact commit you were standing on, so `fix-typo` and `main` are identical the moment it exists. Nothing is copied, nothing is lost, and `main` is not touched at all. The two only begin to differ when you make a commit. Whichever branch you are on is the one that moves.',
+    },
+    {
+      type: 'workflow-exercise',
+      id: 'branch-isolation-walkthrough',
+      title: 'Watch a branch keep work separate',
+      scenario:
+        'You are in a project that already has one commit on `main`, holding `index.html` and `style.css`. You have also written `navbar.html`, about a dozen lines of markup, and it is sitting in the folder with nothing about it saved to Git yet. This walkthrough starts from there. You are going to put that file on its own branch, then watch it vanish and come back as you switch branches. This is the part that makes branches finally click, so read each line before you type.',
+      steps: [
+        {
+          narration:
+            'You are on `main`, and the site currently works. Start a branch for the navbar work and move onto it in one step. Call it `add-navbar`.',
+          expectedCommand: 'git switch -c add-navbar',
+          acceptableVariants: ['git checkout -b add-navbar'],
+          successOutput: "Switched to a new branch 'add-navbar'",
+          hints: [
+            '`git switch` moves you between branches, and one flag creates the branch first',
+            'It is `git switch -c add-navbar`',
+          ],
+        },
+        {
+          narration:
+            '`navbar.html` came along with you, because Git leaves a file it is not tracking yet exactly where it is. Stage it now, so Git knows it belongs in your next commit.',
+          expectedCommand: 'git add .',
+          acceptableVariants: ['git add -A', 'git add --all', 'git add navbar.html'],
+          successOutput: '',
+          hints: [
+            'Staging is the step between editing and committing',
+            '`git add .` stages everything you changed in this folder',
+          ],
+        },
+        {
+          narration: 'Save that work as a commit, with a message describing what you did.',
+          expectedCommand: 'git commit -m "Add navbar"',
+          acceptPrefix: 'git commit -m',
+          successOutput:
+            '[add-navbar 7f3c2a1] Add navbar\n 1 file changed, 12 insertions(+)\n create mode 100644 navbar.html',
+          hints: [
+            '`git commit -m "your message"` saves what you staged',
+            'Try `git commit -m "Add navbar"`',
+          ],
+        },
+        {
+          narration:
+            'Look at that output: it starts with `[add-navbar]`. Git is telling you which branch the commit landed on. Now go back to `main`.',
+          expectedCommand: 'git switch main',
+          acceptableVariants: ['git checkout main'],
+          successOutput: "Switched to branch 'main'",
+          hints: ['`git switch` followed by the name of the branch you want to be on'],
+        },
+        {
+          narration:
+            'You are on `main` now. List the files sitting in your folder with `ls`. That works on Windows too, as long as you are in Git Bash the way lesson 1 set up.',
+          expectedCommand: 'ls',
+          acceptableVariants: ['dir'],
+          successOutput: 'index.html   style.css',
+          hints: ['`ls` prints the files in the folder you are in'],
+        },
+        {
+          narration:
+            '`navbar.html` is not in that list. Read this carefully: the file has not been deleted and nothing has gone wrong. It is safe inside the commit on `add-navbar`. It is not in your folder because the `main` version of the project has never included it, and your folder always shows the branch you are standing on. Switch back to `add-navbar`.',
+          expectedCommand: 'git switch add-navbar',
+          acceptableVariants: ['git checkout add-navbar'],
+          successOutput: "Switched to branch 'add-navbar'",
+          hints: ['Switch by name: `git switch add-navbar`'],
+        },
+        {
+          narration: 'List the files one more time and watch the navbar come back.',
+          expectedCommand: 'ls',
+          acceptableVariants: ['dir'],
+          successOutput: 'index.html   navbar.html   style.css',
+          hints: ['Same command as before'],
+        },
+      ],
+      completionMessage:
+        'That disappearing act is the entire point of branches. One folder, and Git swaps its contents to match whichever branch you are on. Your navbar work is sitting safely on `add-navbar`, and `main` is still the version you could hand in tomorrow, exactly as you left it.',
+    },
+    {
+      type: 'quiz',
+      id: 'quiz-switching-files',
+      question:
+        'You committed `navbar.html` on the `add-navbar` branch, then ran `git switch main`. `navbar.html` is no longer in your project folder. What happened to it?',
+      options: [
+        {
+          text: 'Git deleted it, so you would have to write the file again.',
+          whyWrong:
+            'Nothing was deleted. The commit on `add-navbar` still holds the file, and `git switch add-navbar` brings it right back into your folder.',
+        },
+        {
+          text: 'It is safe in the commit on `add-navbar`. Git rewrote your folder to match `main`, and `main` has never had that file.',
+        },
+        {
+          text: 'It was moved somewhere hidden, and you need a special recovery command to get it back.',
+          whyWrong:
+            'No rescue command is needed, because the file was never in danger. Switching back with `git switch add-navbar` is the whole recovery.',
+        },
+        {
+          text: 'It is still there. `git switch` only changes history, never the files in your folder.',
+          whyWrong:
+            'Switching does change the files in your folder, and that is deliberate. Showing you the version of the project that belongs to that branch is exactly what a branch is for.',
+        },
+      ],
+      correctIndex: 1,
+      explanation:
+        'Your folder always shows the version of the project belonging to whichever branch HEAD is pointing at. When you switch, Git rewrites the folder to match: adding files, removing files, changing lines. Every version still exists in the commits. You are only ever looking at one of them at a time.',
+    },
+    {
+      type: 'reading',
+      id: 'listing-branches',
+      title: 'Listing and deleting branches',
+      content: [
+        {
+          type: 'text',
+          value:
+            'Once you have a few branches, you will want to see what exists and tidy away the ones you have finished with.',
+        },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            'git branch               # List the branches on your computer\ngit branch -a            # List those plus the remote branches as of your last fetch or pull\ngit branch -d old-idea   # Delete a branch you are finished with',
+        },
+        {
+          type: 'text',
+          value:
+            'That remote list is a snapshot, not a live view of GitHub. A branch a teammate pushed five minutes ago will not appear until you run `git fetch`, which refreshes it.',
+        },
+        {
+          type: 'text',
+          value: 'On its own, `git branch` prints one name per line and marks where you are with an asterisk:',
+        },
+        {
+          type: 'code',
+          language: 'text',
+          value: '  add-navbar\n* main',
+        },
+        {
+          type: 'text',
+          value:
+            'You cannot delete the branch you are currently standing on. Switch to `main` first, then delete. Deleting a branch removes the name, not your project. The commits it pointed at are still in the repository.',
+        },
+        {
+          type: 'callout',
+          variant: 'warning',
+          title: 'When `-d` refuses, that is a safety feature',
+          value:
+            'If the branch still holds commits you have not brought into another branch yet, `git branch -d` stops and says `error: the branch \'old-idea\' is not fully merged`. That is not a bug and you did nothing wrong. Git is asking whether you really mean to throw that work away. If you do, `git branch -D` (capital D) deletes it anyway, and those commits become much harder to find. If you are unsure, leave the branch alone. Keeping it costs you nothing.',
+        },
+      ],
+    },
+    {
+      type: 'reading',
+      id: 'recap',
+      title: 'Recap',
+      content: [
+        { type: 'text', value: 'You can now:' },
+        {
+          type: 'list',
+          items: [
+            'Say why a branch beats copying your project folder to `project-v2-FINAL`',
+            'Create a branch and move onto it with a single command',
+            'Switch between branches, knowing your folder changes to match the one you are on',
+            'Trust that work committed on one branch is still there when you leave it and come back',
+            'List your branches and delete the ones you have finished with',
+          ],
+        },
+        { type: 'text', value: '**Commands from this lesson**' },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            'git switch -c add-navbar   # Create a branch and move onto it\ngit switch main            # Move to a branch that already exists\ngit branch                 # List your branches (* marks where you are)\ngit branch -d add-navbar   # Delete a branch you have finished with',
+        },
+        {
+          type: 'text',
+          value:
+            'Next up is merging: how you take the navbar work sitting on `add-navbar` and fold it into `main`, so the version you hand in finally includes it.',
+        },
+      ],
     },
   ],
 } satisfies Lesson

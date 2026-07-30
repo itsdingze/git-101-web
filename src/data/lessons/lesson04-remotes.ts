@@ -7,282 +7,408 @@ export default {
     {
       type: 'reading',
       id: 'why-remotes',
-      title: 'Time to Go Online!',
+      title: 'Time to go online',
       content: [
         {
           type: 'text',
           value:
-            "You've been working locally — creating commits and tracking changes. Now let's put your code on **GitHub** so it's backed up, shareable, and part of your portfolio.",
+            'Everything you have built so far lives in exactly one place: the computer in front of you. If that machine is lost, dropped, or reformatted, the project goes with it.',
         },
         {
           type: 'text',
           value:
-            "Pushing your code to GitHub is one of the most satisfying milestones in learning Git. You only need `init`, `add`, and `commit` knowledge to do it — so let's get started!",
+            'In this lesson you put your project on **GitHub**, a website that stores Git projects for you. Once it is up there, your work is backed up, you can share it with a link, and other people can work on it with you.',
+        },
+        {
+          type: 'text',
+          value:
+            'Your first push to GitHub is one of the most satisfying moments in learning Git, and you already know everything you need for it: `git init`, `git add`, and `git commit`. Three more steps and your code is online.',
         },
       ],
     },
     {
       type: 'reading',
       id: 'remotes-concept',
-      title: 'What Are Remotes?',
+      title: 'What a remote is',
       content: [
         {
           type: 'text',
           value:
-            'A **remote** is a version of your repository hosted on a server (like GitHub, GitLab, or Bitbucket). It allows you to collaborate with others and back up your work.',
+            "A **remote** is a copy of your project that lives on someone else's computer, usually GitHub's. You keep your copy, the remote keeps its own, and you send changes back and forth between the two.",
         },
         {
           type: 'text',
           value:
-            'Think of a remote as the shared copy that keeps everyone in sync — each person works on their own local copy, and the remote is where they share their changes.',
+            'Nothing moves between them on its own. Git talks to the remote only when you run a command that tells it to. That is worth remembering: work can be completely finished on your machine and still be invisible on GitHub.',
         },
         {
           type: 'text',
           value:
-            'By convention, the main remote is called **`origin`**. When you connect your local repo to GitHub, Git uses this name by default.',
+            'The first remote you connect is called **`origin`** by default. `origin` is a nickname for a long URL, so you can type one short word instead of `https://github.com/your-name/your-project.git` every single time. There is nothing magic about the word. It is the name Git picks by default.',
         },
         {
           type: 'code',
           language: 'bash',
           value:
-            'git remote -v                  # List all remotes with their URLs\ngit remote add origin <url>    # Add a new remote called "origin"',
+            'git remote -v                  # list the remotes this project knows about\ngit remote add origin <url>    # give a URL the nickname "origin"',
         },
       ],
     },
     {
       type: 'reading',
       id: 'github-setup',
-      title: 'Pushing Your First Repo to GitHub',
+      title: 'Put your project on GitHub',
       content: [
         {
           type: 'text',
           value:
-            'Here is the step-by-step workflow to get your local project onto GitHub:',
+            'Three steps, in this order. Run the commands from inside your project folder, the one where you ran `git init`.',
         },
         {
-          type: 'text',
-          value:
-            '1. **Create a new repository on GitHub** — Click the "+" button on GitHub and choose "New repository." Give it a name, leave it empty (no README, no .gitignore), and click "Create."\n2. **Connect your local repo** — Copy the URL GitHub gives you, then run:\n3. **Push your commits** — Upload your local history to GitHub.',
+          type: 'list',
+          ordered: true,
+          items: [
+            'Sign in at [github.com](https://github.com), click the **+** in the top-right corner, and choose **New repository**. Give it a name, leave every "initialize this repository with" box unchecked so it is created completely empty, and click **Create repository**.',
+            'GitHub now shows you a URL ending in `.git`. Copy it, and run `git remote add origin` followed by that URL. This is how your project learns where its remote lives.',
+            'Run `git push -u origin main` to upload every commit you have made so far.',
+          ],
         },
         {
           type: 'code',
           language: 'bash',
           value:
-            '# Step 2: Connect to GitHub\ngit remote add origin https://github.com/your-username/your-repo.git\n\n# Step 3: Push your code\ngit push -u origin main',
+            '# step 2: paste your own URL here\ngit remote add origin https://github.com/your-username/your-repo.git\n\n# step 3: send your commits up\ngit push -u origin main',
+        },
+        {
+          type: 'callout',
+          variant: 'info',
+          title: 'That first push will ask who you are',
+          value:
+            'GitHub has to check that you are allowed to write to this repository, so the push either opens a login prompt or is rejected outright. Your GitHub website password will not work. The next step covers how to log in properly. Jump to it the moment Git asks, then come back and run the push again.',
         },
         {
           type: 'text',
           value:
-            'The `-u` flag sets up **tracking** so future pushes and pulls just need `git push` and `git pull` — no extra arguments. Refresh your GitHub page and you should see your code!',
+            'Once the push goes through, refresh the GitHub page. Your files are there, with your commit messages next to them. That is the milestone: your project is online and backed up.',
         },
         {
           type: 'text',
           value:
-            "**Tip:** If your commits on GitHub show up as an unknown user, your `git config user.email` probably doesn't match any email on your GitHub account. Go to **GitHub Settings > Emails** and add the email you used in Git. GitHub will retroactively link those commits to your profile.",
-        },
-      ],
-    },
-    {
-      type: 'reading',
-      id: 'authentication',
-      title: 'Authentication: HTTPS vs. SSH',
-      content: [
-        {
-          type: 'text',
-          value:
-            'When you push to or clone from a private remote, Git needs to verify your identity. There are two common ways to authenticate:',
-        },
-        {
-          type: 'text',
-          value:
-            '**HTTPS** — The simplest option. Git asks for your username and a **personal access token** (not your regular password). You create the token in your GitHub account settings.',
-        },
-        {
-          type: 'text',
-          value:
-            '**SSH** — Uses a key pair on your machine for silent authentication. It takes more setup but is more convenient long-term. SSH URLs look like `git@github.com:user/repo.git` instead of `https://...`.',
-        },
-        {
-          type: 'code',
-          language: 'bash',
-          value:
-            '# HTTPS URL (uses token for auth):\ngit clone https://github.com/user/repo.git\n\n# SSH URL (uses SSH key for auth):\ngit clone git@github.com:user/repo.git',
-        },
-        {
-          type: 'text',
-          value:
-            'For beginners, we recommend HTTPS or the GitHub CLI (next section). You can always switch to SSH later.',
-        },
-      ],
-    },
-    {
-      type: 'reading',
-      id: 'gh-cli',
-      title: 'The Easy Way: GitHub CLI',
-      content: [
-        {
-          type: 'text',
-          value:
-            'The [GitHub CLI](https://cli.github.com) (`gh`) is an official tool that simplifies authentication and many GitHub operations. Instead of setting up tokens or SSH keys manually, you can authenticate with a single command:',
-        },
-        {
-          type: 'code',
-          language: 'bash',
-          value:
-            '# Install GitHub CLI:\n# macOS:   brew install gh\n# Windows: winget install --id GitHub.cli\n# Linux:   See https://cli.github.com\n\n# Authenticate with GitHub:\ngh auth login\n# Follow the prompts — it opens a browser to log you in.',
-        },
-        {
-          type: 'text',
-          value:
-            'Once authenticated, `gh` handles credentials for all future Git operations automatically.',
-        },
-      ],
-    },
-    {
-      type: 'reading',
-      id: 'clone-push-pull',
-      title: 'Clone, Push, and Pull',
-      content: [
-        {
-          type: 'text',
-          value:
-            'Three essential commands for working with remotes:',
-        },
-        {
-          type: 'text',
-          value:
-            '- **`git clone <url>`** — Download a remote repository to your machine. This creates a local copy with full history.\n- **`git push`** — Upload your local commits to the remote.\n- **`git pull`** — Download new commits from the remote and combine them with your current branch.',
-        },
-        {
-          type: 'code',
-          language: 'bash',
-          value:
-            'git clone https://github.com/user/repo.git   # Clone a repo\ngit push origin main                           # Push to main branch on origin\ngit pull origin main                           # Pull latest changes from main',
-        },
-      ],
-    },
-    {
-      type: 'reading',
-      id: 'fetch-vs-pull',
-      title: 'Fetch vs. Pull',
-      content: [
-        {
-          type: 'text',
-          value:
-            '`git pull` actually does two things: it **fetches** new commits from the remote, then **combines** them with your current branch. You can separate these steps if you want to review changes before combining them:',
-        },
-        {
-          type: 'code',
-          language: 'bash',
-          value:
-            'git fetch origin           # Download new commits but do NOT combine\ngit log origin/main        # See what changed on the remote\ngit pull origin main       # Combine when you are ready (fetch + merge in one step)',
-        },
-        {
-          type: 'text',
-          value:
-            '`git fetch` is always safe — it never changes your working directory or current branch. It just updates your local knowledge of what the remote looks like. Use it when you want to check for updates without modifying your code.',
-        },
-      ],
-    },
-    {
-      type: 'reading',
-      id: 'pull-divergent',
-      title: 'A Pull Error You Will Probably Hit',
-      content: [
-        {
-          type: 'text',
-          value:
-            'Sooner or later `git pull` will stop and show you this:',
-        },
-        {
-          type: 'code',
-          language: 'text',
-          value:
-            'fatal: Need to specify how to reconcile divergent branches.',
-        },
-        {
-          type: 'text',
-          value:
-            'This is not a bug and nothing is broken. It means you and the remote both have new commits, so Git wants to know how you would like to combine them — and modern Git refuses to guess.',
-        },
-        {
-          type: 'text',
-          value:
-            'Pick one and set it once. **Merge** is the safer default while you are learning, because it never rewrites history:',
-        },
-        {
-          type: 'code',
-          language: 'bash',
-          value:
-            '# Combine with a merge commit (recommended to start):\ngit config --global pull.rebase false\n\n# Or replay your commits on top for a linear history:\ngit config --global pull.rebase true',
-        },
-        {
-          type: 'text',
-          value:
-            'You only have to do this once per machine. We cover what rebasing actually does in the last lesson.',
-        },
-      ],
-    },
-    {
-      type: 'reading',
-      id: 'upstream-tracking',
-      title: 'Upstream Tracking',
-      content: [
-        {
-          type: 'text',
-          value:
-            'When you push a branch for the first time, use the `-u` flag (short for `--set-upstream`) to link your local branch to its remote counterpart:',
-        },
-        {
-          type: 'code',
-          language: 'bash',
-          value:
-            '# First push — set up tracking:\ngit push -u origin feature-login\n\n# After that, just use:\ngit push\ngit pull',
-        },
-        {
-          type: 'text',
-          value:
-            'Once tracking is set up, Git knows where to push and pull without you specifying the remote and branch every time. You can check which branches are tracking which remotes with `git branch -vv`.',
+            'The `-u` in that last command sets up a shortcut so later pushes are shorter. We come back to it near the end of this lesson.',
         },
       ],
     },
     {
       type: 'block-exercise',
       id: 'build-push',
-      prompt: 'Build the command to push your commits to the main branch on origin:',
+      prompt: 'Build the command that sends your commits to the `main` branch on `origin`:',
       availableBlocks: ['git', 'push', 'pull', 'origin', 'main', 'remote', 'clone', '-u'],
       correctAnswer: ['git', 'push', 'origin', 'main'],
+      acceptableAnswers: [['git', 'push', '-u', 'origin', 'main']],
       hints: [
-        'You need four blocks: git, the action, the remote name, and the branch',
-        'The remote is called "origin"',
+        'Four blocks: the program, the action, where it goes, and which branch',
+        'The remote is called "origin" and the branch is called "main"',
+      ],
+    },
+    {
+      type: 'reading',
+      id: 'authentication',
+      title: 'Proving that you are you',
+      content: [
+        {
+          type: 'text',
+          value:
+            'The first time you push, GitHub has to check that you are allowed to. Typing your GitHub website password will not work, because GitHub stopped accepting account passwords for Git over HTTPS in 2021. Here are your options, easiest first.',
+        },
+        {
+          type: 'text',
+          value:
+            '**Start with the GitHub CLI.** The [GitHub CLI](https://cli.github.com) is an official tool called `gh`. You install it once, run one command, and it logs in through your browser and hands the credentials to Git for you. After that, pushing and pulling never ask you for anything.',
+        },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            '# install it\n# macOS:   brew install gh\n# Windows: winget install --id GitHub.cli\n# Linux:   instructions at https://cli.github.com\n\ngh auth login   # opens your browser, then follow the prompts',
+        },
+        {
+          type: 'text',
+          value:
+            '**HTTPS with a token.** If you would rather not install anything, GitHub accepts a **personal access token**. That is a long generated string that works as a password for Git only, and you can cancel it at any time. Create one under **Settings > Developer settings > Personal access tokens** on GitHub, then paste it when Git asks for a password. Your terminal will not show the characters as you paste, which is normal, not a failure.',
+        },
+        {
+          type: 'text',
+          value:
+            'In other tutorials you will see addresses like `git@github.com:user/repo.git`. That is **SSH**, another way to log in — one that takes more setup and that you do not need today.',
+        },
+      ],
+    },
+    {
+      type: 'reading',
+      id: 'github-identity',
+      title: 'When GitHub does not recognise you',
+      content: [
+        {
+          type: 'text',
+          value:
+            'Your code is up — but sometimes the commits are credited to a grey silhouette with no link to your profile, as if a stranger wrote them.',
+        },
+        {
+          type: 'callout',
+          variant: 'info',
+          title: 'Your commits show up as an unknown user',
+          value:
+            'GitHub matches commits to accounts by email address. If the email stored in `git config user.email` is not listed on your GitHub account, GitHub cannot tell that the commit is yours. Add that exact email under **GitHub Settings > Emails** and GitHub links every past commit to your profile straight away. You do not have to redo any work.',
+        },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            'git config user.email    # shows the email Git stamps on your commits',
+        },
+        {
+          type: 'text',
+          value:
+            'The other route is to point Git at the address your GitHub account already knows about, so your commits are stamped with it from now on.',
+        },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            'git config --global user.email "your-github-email@example.com"',
+        },
+        {
+          type: 'text',
+          value:
+            'The two routes do different things, so pick the one that matches what you need. Adding the address under **GitHub Settings > Emails** links every commit you have already made, including the ones already pushed. Changing your Git config affects only the commits you make from then on, and it never relinks the old ones.',
+        },
+      ],
+    },
+    {
+      type: 'quiz',
+      id: 'quiz-commit-vs-push',
+      question:
+        'You edited a file, ran `git add`, then `git commit`, and Git replied `1 file changed`. You refresh your GitHub page and the change is not there. What is going on?',
+      options: [
+        {
+          text: 'The commit silently failed, so you need to run `git commit` again.',
+          whyWrong:
+            'It did not fail. Git said `1 file changed`, which is its way of confirming the commit was saved. It was saved on your computer, which is somewhere GitHub cannot see.',
+        },
+        {
+          text: 'GitHub takes a few minutes to catch up after you commit.',
+          whyWrong:
+            'GitHub is not watching your computer at all, so there is nothing for it to catch up on. Waiting will not help, because commits move only when a command sends them.',
+        },
+        {
+          text: 'The commit exists only on your computer. `git push` is what sends it to GitHub.',
+        },
+        {
+          text: 'You forgot `git add`, so the change was never included in the commit.',
+          whyWrong:
+            'You did run `git add`, and `1 file changed` confirms the file made it in. The change is safely inside the commit. It is the commit that has not left your machine.',
+        },
+      ],
+      correctIndex: 2,
+      explanation:
+        'Committing and publishing are two separate acts. `git commit` saves a snapshot in your own copy of the project. `git push` is a deliberate second step that sends saved commits to the remote. That separation is a feature: it is why you can commit all afternoon on a plane with no internet.',
+    },
+    {
+      type: 'reading',
+      id: 'clone-push-pull',
+      title: 'Living with a remote from here on',
+      content: [
+        {
+          type: 'text',
+          value:
+            'The milestone is behind you. The rest of this lesson is the everyday part: what you will actually run next week, once the project has moved on and so have you.',
+        },
+        {
+          type: 'text',
+          value: 'Three commands cover almost all of it.',
+        },
+        {
+          type: 'list',
+          items: [
+            '**`git clone <url>`** copies a whole project down from GitHub onto your machine, full history included. You run it once, in the folder where you want the project to appear. It replaces `git init` for projects that already exist, so you never need both.',
+            '**`git push`** sends the commits you have finished up to the remote. Nothing leaves your machine until you run it.',
+            '**`git pull`** brings down commits that appeared on the remote and folds them into the branch you are on.',
+          ],
+        },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            'git clone https://github.com/user/repo.git   # copy a project down\ngit push origin main                         # send your commits up\ngit pull origin main                         # bring their commits down',
+        },
       ],
     },
     {
       type: 'terminal-exercise',
       id: 'clone-repo',
-      prompt: 'Clone the repository at "https://github.com/user/repo.git" to your machine:',
+      prompt:
+        "You are in your home folder, outside `my-project`, and you want your own copy of someone else's repository. Copy down the project at `https://github.com/user/repo.git`, which stands in for the real URL you would paste:",
       expectedCommand: 'git clone https://github.com/user/repo.git',
       acceptableVariants: [],
       successOutput:
         "Cloning into 'repo'...\nremote: Enumerating objects: 42, done.\nremote: Total 42 (delta 0), reused 0 (delta 0)\nReceiving objects: 100% (42/42), done.",
       hints: [
-        'Use git clone followed by the full URL',
-        'The URL ends with .git',
+        'The command that copies a project down is git clone',
+        'Follow git clone with the full URL, ending in .git',
+      ],
+    },
+    {
+      type: 'reading',
+      id: 'fetch-vs-pull',
+      title: 'Fetch versus pull',
+      content: [
+        {
+          type: 'text',
+          value:
+            '`git pull` is really two actions in one. It **fetches** the new commits from the remote, then **combines** them with the branch you are on. You can do the first half by itself when you want to look before you leap:',
+        },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            'git fetch origin        # download the new commits, change nothing\ngit log origin/main     # read what other people did\ngit pull origin main    # combine when you are ready',
+        },
+        {
+          type: 'text',
+          value:
+            '`origin/main` in that middle command is not a folder or part of a URL. It is Git\'s own record of where `main` sat on the remote the last time you fetched, and it lives on your machine like everything else in your repository. Nothing refreshes it on its own, so it only catches up when you run `git fetch` or `git pull`.',
+        },
+        {
+          type: 'text',
+          value:
+            '`git fetch` is always safe. It never edits your files and never moves your branch. All it does is update what Git knows about the remote. Reach for it when you want to check whether anything has changed without letting it into your project yet.',
+        },
+      ],
+    },
+    {
+      type: 'reading',
+      id: 'upstream-tracking',
+      title: 'What the `-u` was for',
+      content: [
+        {
+          type: 'text',
+          value:
+            'Back at the milestone you ran `git push -u origin main`. The `-u` (short for `--set-upstream`) told Git that this local branch belongs with that branch on the remote. That pairing is called **tracking**.',
+        },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            '# first push of a branch the remote has never seen:\ngit push -u origin feature-login\n\n# every push and pull after that:\ngit push\ngit pull',
+        },
+        {
+          type: 'text',
+          value:
+            'Once a branch is tracked, `git push` and `git pull` already know where to go, so you can drop the remote and branch names. You need `-u` only the first time you push a given branch. To see which of your branches are paired with which remote branch, run `git branch -vv`.',
+        },
       ],
     },
     {
       type: 'quiz',
       id: 'quiz-origin',
-      question: 'What is "origin" in Git?',
+      question: 'In the command `git push origin main`, what is `origin`?',
       options: [
-        'The default name for the remote repository you cloned from',
-        'The first commit in the repository',
-        'The main branch of the repository',
-        'The local copy of the repository',
+        {
+          text: 'The name of the branch the commits are being pushed to.',
+          whyWrong:
+            'That is `main`, the word after it. `origin` answers "where do these commits go?" and `main` answers "which branch?"',
+        },
+        {
+          text: "The nickname for the remote copy of the project, the GitHub repository's URL.",
+        },
+        {
+          text: 'The very first commit in the history, the one everything else grew from.',
+          whyWrong:
+            'Git has no special name for the first commit. `origin` is about a remote copy of the project, not about a point in history.',
+        },
+        {
+          text: 'The copy of the project sitting on your own computer.',
+          whyWrong:
+            'Your own copy needs no name, since it is where you already are. `origin` names the copy somewhere else, the one you are sending commits to.',
+        },
       ],
-      correctIndex: 0,
+      correctIndex: 1,
       explanation:
-        '"origin" is simply the default name Git gives to the remote repository when you clone it. It is a shorthand alias for the remote URL. You can rename it or add other remotes with different names.',
+        "When you connect a project to GitHub, Git stores the URL under a short name so you never have to type the URL again, and `origin` is the name it uses by default. Nothing reserves that word: you can rename it, and a project can hold several remotes under different names, which is how contributing to other people's projects works.",
+    },
+    {
+      type: 'reading',
+      id: 'pull-divergent',
+      title: 'A pull error you will meet one day',
+      content: [
+        {
+          type: 'text',
+          value:
+            'One day `git pull` may stop and print this:',
+        },
+        {
+          type: 'code',
+          language: 'text',
+          value: 'fatal: Need to specify how to reconcile divergent branches.',
+        },
+        {
+          type: 'text',
+          value:
+            'Nothing is broken and nothing is lost. Git is asking you a question, not failing: the remote has commits you do not have, and you have commits the remote does not have. Answer once and Git stops asking. While you are learning, answer `false`, which combines the two sides with a merge and never rewrites your history.',
+        },
+        {
+          type: 'code',
+          language: 'bash',
+          value: 'git config --global pull.rebase false',
+        },
+        {
+          type: 'text',
+          value:
+            'That is a one-time setting per computer, not per project. Lesson 7 explains what that setting actually chose.',
+        },
+        {
+          type: 'text',
+          value:
+            'On **Windows** the Git installer has usually answered this for you already, in the same silent way it picked a branch name back in lesson 1, so this error is mostly a macOS and Linux experience. Run `git config --get pull.rebase` to check. It prints `false` if the answer is already set, and nothing at all if it is not.',
+        },
+        {
+          type: 'text',
+          value:
+            'You do not need any of this today. File it away, so that the day the error turns up you recognise it instead of panicking.',
+        },
+      ],
+    },
+    {
+      type: 'reading',
+      id: 'recap',
+      title: 'Recap',
+      content: [
+        { type: 'text', value: 'You can now:' },
+        {
+          type: 'list',
+          items: [
+            'Explain what a remote is, and why `origin` keeps showing up in commands',
+            'Create an empty repository on GitHub and connect your local project to it',
+            'Push your project online and see your files on the web',
+            'Log in to GitHub from the terminal with the GitHub CLI, or with a personal access token',
+            'Fix commits that show up on GitHub as an unknown user',
+            'Say what separates committing from pushing, and fetching from pulling',
+            'Recognise the divergent branches error and settle it with one setting',
+          ],
+        },
+        { type: 'text', value: '**Commands from this lesson**' },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            'gh auth login                  # log in to GitHub from the terminal\ngit remote -v                  # list the remotes this project knows about\ngit remote add origin <url>    # give a URL the nickname "origin"\ngit push -u origin main        # first push, and pair the branch with the remote\ngit push                       # send new commits up, once the pairing exists\ngit pull                       # bring new commits down and combine them\ngit fetch origin               # look at what is new without touching your files\ngit clone <url>                # copy an existing project down from GitHub',
+        },
+        {
+          type: 'text',
+          value:
+            'Next up: some files should never be pushed anywhere, such as passwords, huge build folders, and notes to yourself. Next lesson you write a `.gitignore` so Git stops offering to commit them.',
+        },
+      ],
     },
   ],
 } satisfies Lesson

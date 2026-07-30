@@ -3,6 +3,7 @@ import { CheckCircle } from 'lucide-react'
 import type { WorkflowExerciseStep } from '@/types'
 import FakeTerminal, { type FakeTerminalHandle } from '@/components/lesson/components/FakeTerminal'
 import ExerciseControls from '@/components/lesson/ExerciseControls'
+import InlineMarkdown from '@/components/ui/InlineMarkdown'
 import useProgressStore from '@/stores/progressStore'
 import useExerciseNav from '@/hooks/useExerciseNav'
 import { useLessonNav } from '@/hooks/useLessonNav'
@@ -63,7 +64,7 @@ export default function WorkflowExercise({ step, lessonId }: WorkflowExercisePro
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-text-primary tracking-tight">{step.title}</h2>
 
-      <p className="text-sm text-text-secondary leading-relaxed">{step.scenario}</p>
+      <InlineMarkdown className="text-sm text-text-secondary leading-relaxed" value={step.scenario} />
 
       {/* eslint-disable react-x/no-array-index-key -- static lesson data, order never changes */}
       <div className="flex items-center gap-2">
@@ -99,7 +100,10 @@ export default function WorkflowExercise({ step, lessonId }: WorkflowExercisePro
 
       {!allCompleted && activeSubStep && (
         <>
-          <p className="text-sm text-text-secondary leading-relaxed">{activeSubStep.narration}</p>
+          <InlineMarkdown
+            className="text-sm text-text-secondary leading-relaxed"
+            value={activeSubStep.narration}
+          />
 
           <FakeTerminal
             key={`${currentSubStep}-${resetKey}`}
@@ -125,9 +129,10 @@ export default function WorkflowExercise({ step, lessonId }: WorkflowExercisePro
       {allCompleted && (
         <div className="flex items-start gap-3 p-4 rounded-xl text-sm leading-relaxed bg-accent-green/5 border border-accent-green/20">
           <CheckCircle size={18} className="text-accent-green shrink-0" />
-          <p className="text-text-secondary">
-            {step.completionMessage ?? 'Workflow complete!'}
-          </p>
+          <InlineMarkdown
+            className="text-text-secondary"
+            value={step.completionMessage ?? 'Workflow complete!'}
+          />
         </div>
       )}
     </div>

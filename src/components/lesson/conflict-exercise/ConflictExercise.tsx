@@ -5,6 +5,7 @@ import type { ConflictExerciseStep } from '@/types'
 import useProgressStore from '@/stores/progressStore'
 import useExerciseNav from '@/hooks/useExerciseNav'
 import ExerciseControls from '@/components/lesson/ExerciseControls'
+import InlineMarkdown from '@/components/ui/InlineMarkdown'
 
 type Resolution = 'ours' | 'theirs' | 'both'
 
@@ -77,7 +78,11 @@ export default function ConflictExercise({ step, lessonId }: ConflictExercisePro
 
   return (
     <div className="space-y-6">
-      <h2 className="text-base font-semibold text-text-primary leading-snug">{step.prompt}</h2>
+      <InlineMarkdown
+        as="h2"
+        className="text-base font-semibold text-text-primary leading-snug"
+        value={step.prompt}
+      />
 
       <div>
         <div className="text-xs font-mono text-text-muted mb-2">{step.fileName}</div>

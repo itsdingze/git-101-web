@@ -1,5 +1,6 @@
 import { HelpCircle, RotateCcw } from 'lucide-react'
 import Button from '@/components/ui/Button'
+import InlineMarkdown from '@/components/ui/InlineMarkdown'
 
 interface ExerciseControlsProps {
   hints?: readonly string[]
@@ -39,9 +40,11 @@ export default function ExerciseControls({ hints, hintIndex, showHint, solved, o
       )}
 
       {showHint && !solved && hints && (
-        <div className="bg-bg-secondary border border-border rounded-xl px-5 py-3.5 text-sm text-text-secondary leading-relaxed">
-          {hints[Math.min(hintIndex, hints.length - 1)]}
-        </div>
+        <InlineMarkdown
+          as="div"
+          className="bg-bg-secondary border border-border rounded-xl px-5 py-3.5 text-sm text-text-secondary leading-relaxed"
+          value={hints[Math.min(hintIndex, hints.length - 1)] ?? ''}
+        />
       )}
     </>
   )

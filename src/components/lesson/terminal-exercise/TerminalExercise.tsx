@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import type { TerminalExerciseStep } from '@/types'
 import FakeTerminal, { type FakeTerminalHandle } from '@/components/lesson/components/FakeTerminal'
 import ExerciseControls from '@/components/lesson/ExerciseControls'
+import InlineMarkdown from '@/components/ui/InlineMarkdown'
 import useProgressStore from '@/stores/progressStore'
 import useExerciseNav from '@/hooks/useExerciseNav'
 import { useLessonNav } from '@/hooks/useLessonNav'
@@ -69,7 +70,10 @@ export default function TerminalExercise({ step, lessonId }: TerminalExercisePro
 
   return (
     <div className="space-y-6">
-      <p className="text-base font-medium text-text-primary leading-snug">{step.prompt}</p>
+      <InlineMarkdown
+        className="text-base font-medium text-text-primary leading-snug"
+        value={step.prompt}
+      />
 
       <FakeTerminal
         key={resetKey}

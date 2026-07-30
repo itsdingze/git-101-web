@@ -27,7 +27,7 @@ const STAGES: WalkthroughStage[] = [
     ],
   },
   {
-    label: 'Conflict resolved — markers removed',
+    label: 'Conflict resolved, markers removed',
     lines: [
       { text: '<html>', kind: 'normal' },
       { text: '  <body>', kind: 'normal' },

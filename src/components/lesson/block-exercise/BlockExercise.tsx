@@ -5,6 +5,7 @@ import OverlayBlock from './components/OverlayBlock'
 import SolutionDropZone from './components/SolutionDropZone'
 import SolutionBlocks from './components/SolutionBlocks'
 import ExerciseControls from '@/components/lesson/ExerciseControls'
+import InlineMarkdown from '@/components/ui/InlineMarkdown'
 import useBlockDrag from './hooks/useBlockDrag'
 
 interface BlockExerciseProps {
@@ -33,7 +34,10 @@ export default function BlockExercise({ step, lessonId }: BlockExerciseProps) {
 
   return (
     <div className="space-y-6">
-      <p className="text-base font-medium text-text-primary leading-snug">{step.prompt}</p>
+      <InlineMarkdown
+        className="text-base font-medium text-text-primary leading-snug"
+        value={step.prompt}
+      />
 
       <DragDropProvider {...dragProviderProps}>
         <SolutionDropZone solved={solved} shakeSlots={shakeSlots} overSolution={overSolution}>

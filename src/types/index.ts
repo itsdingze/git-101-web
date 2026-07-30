@@ -1,9 +1,13 @@
 export type {
   TextBlock,
   CodeBlock,
+  ListBlock,
+  CalloutVariant,
+  CalloutBlock,
   ContentBlock,
   VisualizationType,
   ReadingStep,
+  QuizOption,
   QuizStep,
   TerminalExerciseStep,
   BlockExerciseStep,

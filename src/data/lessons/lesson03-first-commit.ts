@@ -7,44 +7,52 @@ export default {
     {
       type: 'reading',
       id: 'staging-files',
-      title: 'Staging Files',
+      title: 'Staging files',
       content: [
         {
           type: 'text',
           value:
-            'Before committing, you need to **stage** your changes. This tells Git which files to include in the next commit:',
+            'Before you can save a snapshot, you have to **stage** your changes. Staging means telling Git "include this file in the next snapshot". You choose what goes in, one file at a time if you want:',
         },
         {
           type: 'code',
           language: 'bash',
           value:
-            'git add filename.txt    # Stage a specific file\ngit add .               # Stage all changes in the current directory',
+            'git add filename.txt    # Stage one specific file\ngit add .               # Stage everything in the folder you are in',
         },
         {
           type: 'text',
           value:
-            'Staging lets you commit only some changes while keeping others as work-in-progress.',
+            'You will also see `git add -A` written down. The difference is small: `git add .` stages everything inside the folder you are currently standing in, while `git add -A` stages everything in the whole project no matter which folder you run it from. Run either one from the top folder of your project and they do the same thing.',
+        },
+        {
+          type: 'text',
+          value:
+            'Why bother staging at all? Because you often change five things and only two of them are finished. Staging lets you commit the finished work and leave the rest sitting there, still in progress.',
         },
       ],
     },
     {
       type: 'block-exercise',
       id: 'build-add',
-      prompt: 'Build the command to stage ALL changed files:',
+      prompt: 'Build the command to stage everything in the folder you are standing in:',
       availableBlocks: ['git', 'add', 'commit', '.', '-m', '-A', 'stage'],
       correctAnswer: ['git', 'add', '.'],
       acceptableAnswers: [['git', 'add', '-A']],
-      hints: ['Start with "git add"', 'Use a dot to mean "everything"'],
+      hints: [
+        'Start with "git add"',
+        'A dot means "everything here". `git add -A` is accepted too, and from the top folder of your project it does the same thing.',
+      ],
     },
     {
       type: 'reading',
       id: 'committing',
-      title: 'Making a Commit',
+      title: 'Making a commit',
       content: [
         {
           type: 'text',
           value:
-            'A **commit** is a snapshot of your staged changes. Every commit needs a message describing what changed:',
+            'A **commit** is a saved snapshot of everything you staged. Every commit needs a message describing what changed:',
         },
         {
           type: 'code',
@@ -54,35 +62,54 @@ export default {
         {
           type: 'text',
           value:
-            'The `-m` flag lets you write the message inline. Without it, Git opens a text editor for you to type a longer message.',
+            'The `-m` flag lets you write the message right there on the same line. Leave `-m` off and Git opens a text editor instead and waits for you to type a longer message.',
+        },
+        {
+          type: 'callout',
+          variant: 'warning',
+          title: 'Stuck in a screen you cannot type in?',
+          value:
+            'That editor is often **Vim**, a program where normal typing does not behave the way you expect — and there is no visible way out. To escape: press `Esc`, then type `:wq`, then press `Enter`. That saves and quits. Memorise those three keystrokes. Every developer needs them at least once.',
         },
         {
           type: 'text',
-          value:
-            '**Heads up:** The default editor is often **Vim**, which can be confusing if you have never used it. If you find yourself stuck in a terminal that won\'t let you type normally — press `Esc`, then type `:wq` and press `Enter` to save and exit. To avoid this entirely, you can set a friendlier editor:',
+          value: 'To avoid meeting Vim at all, tell Git to use an editor you already know:',
         },
         {
           type: 'code',
           language: 'bash',
           value:
-            '# Use VS Code as your Git editor:\ngit config --global core.editor "code --wait"\n\n# Or use nano (simpler terminal editor):\ngit config --global core.editor "nano"',
+            '# Use VS Code as your Git editor:\ngit config --global core.editor "code --wait"\n\n# Or use nano, a small and simple terminal editor:\ngit config --global core.editor "nano"',
+        },
+        {
+          type: 'text',
+          value:
+            'The `code --wait` line needs VS Code installed. `nano` already exists on macOS and Linux. On Windows it comes bundled with Git, so run it from Git Bash, the terminal the Git installer added in lesson 1.',
+        },
+        {
+          type: 'text',
+          value:
+            'When a commit succeeds, Git prints a line like `[main (root-commit) 7f3a9c1] Initial commit`. The words `root-commit` only show up on the very first commit in a repository, and `7f3a9c1` is the beginning of that commit\'s unique ID.',
         },
       ],
     },
     {
       type: 'reading',
       id: 'commit-messages',
-      title: 'Writing Good Commit Messages',
+      title: 'Writing good commit messages',
       content: [
         {
           type: 'text',
           value:
-            'Good commit messages make your project history useful. Here are the key conventions most teams follow:',
+            'Six months from now, your commit messages are the only explanation of what you did. Three conventions cover almost every team:',
         },
         {
-          type: 'text',
-          value:
-            '- **Use imperative mood** — Write "Add feature" not "Added feature." Think of it as completing the sentence: "If applied, this commit will *add feature*."\n- **Keep the subject line under 50 characters** — Short and scannable.\n- **Add a body after a blank line** — If the change needs explanation, leave a blank line after the subject, then write the details.',
+          type: 'list',
+          items: [
+            '**Write the message as an instruction**, so "Add contact form" rather than "Added contact form". You will also hear this called *imperative mood*. The test: the sentence "If applied, this commit will *add contact form*" should read correctly.',
+            '**Keep the first line under 50 characters** so a whole list of them is easy to scan.',
+            '**Put the detail in a body after a blank line.** The first line says what changed. The body says why.',
+          ],
         },
         {
           type: 'code',
@@ -93,46 +120,36 @@ export default {
         {
           type: 'text',
           value:
-            'Some teams use a format called **[Conventional Commits](https://www.conventionalcommits.org)**: `feat: add auth`, `fix: resolve login bug`, `docs: update README`. The prefix makes history easier to scan.',
+            'Some teams use a format called **[Conventional Commits](https://www.conventionalcommits.org)**: `feat: add auth`, `fix: resolve login bug`, `docs: update README`. The prefix makes a long history much easier to scan.',
         },
       ],
-    },
-    {
-      type: 'terminal-exercise',
-      id: 'run-commit',
-      prompt: 'Make a commit with the message "Initial commit":',
-      expectedCommand: 'git commit -m "Initial commit"',
-      acceptableVariants: [
-        "git commit -m 'Initial commit'",
-        'git commit -m "initial commit"',
-      ],
-      successOutput:
-        '[main (root-commit) a1b2c3d] Initial commit\n 1 file changed, 1 insertion(+)',
-      hints: ['Use -m flag followed by your message in quotes'],
     },
     {
       type: 'reading',
       id: 'git-diff',
-      title: 'Viewing Changes with git diff',
+      title: 'Viewing changes with git diff',
       visualization: 'diff-walkthrough',
       content: [
         {
           type: 'text',
-          value: '`git diff` shows you exactly what changed in your files, line by line:',
+          value:
+            '`git status` tells you *which* files changed. `git diff` tells you *what* changed inside them, line by line:',
         },
         {
           type: 'code',
           language: 'bash',
-          value: 'git diff              # Changes not yet staged\ngit diff --staged     # Changes staged for next commit',
-        },
-        {
-          type: 'text',
-          value: 'Lines prefixed with `+` were added, lines with `-` were removed. This is essential for reviewing your work before committing.',
+          value:
+            'git diff              # Changes you have made but not staged yet\ngit diff --staged     # Changes you have staged for the next commit',
         },
         {
           type: 'text',
           value:
-            'You may also see `git diff --cached` in older tutorials — it does exactly the same thing as `--staged`. Both work; `--staged` is the clearer name.',
+            'Lines starting with `+` were added, lines starting with `-` were removed. Reading the diff before you commit is the cheapest way to catch a mistake.',
+        },
+        {
+          type: 'text',
+          value:
+            'You may also see `git diff --cached` in older tutorials. It does exactly the same thing as `--staged`. Both work, but `--staged` is the clearer name.',
         },
       ],
     },
@@ -148,41 +165,34 @@ export default {
     {
       type: 'reading',
       id: 'git-log',
-      title: 'Viewing History with git log',
+      title: 'Viewing history with git log',
       content: [
         {
           type: 'text',
-          value: '`git log` shows the commit history of your repository:',
+          value: '`git log` shows every commit in your repository, newest first:',
         },
         {
           type: 'code',
           language: 'bash',
-          value: 'git log                    # Full log\ngit log --oneline          # Compact one-line format',
+          value:
+            'git log                    # Full history, several lines per commit\ngit log --oneline          # Compact, one line per commit',
         },
         {
           type: 'text',
-          value: 'Each commit shows its hash (a unique ID), author, date, and message. The `--oneline` flag gives you a cleaner overview.',
+          value:
+            'Each commit shows who made it, when, the message, and its **hash**. A hash is the unique ID Git generated for that commit. The `--oneline` flag trims all that down to the short hash and the message, which is what you want most of the time.',
         },
       ],
     },
     {
-      type: 'terminal-exercise',
-      id: 'run-log',
-      prompt: 'View the commit history in compact one-line format:',
-      expectedCommand: 'git log --oneline',
-      acceptableVariants: [],
-      successOutput: 'a1b2c3d Initial commit\nf4e5d6c Add README',
-      hints: ['Use git log with the --oneline flag'],
-    },
-    {
       type: 'reading',
       id: 'log-filtering',
-      title: 'Filtering History',
+      title: 'Filtering history',
       content: [
         {
           type: 'text',
           value:
-            'As your project grows, `git log` can get very long. Here are a few useful filters:',
+            'As a project grows, `git log` gets very long. A few filters keep it readable:',
         },
         {
           type: 'code',
@@ -193,37 +203,165 @@ export default {
         {
           type: 'text',
           value:
-            'You don\'t need to memorize these — just know they exist so you can look them up when needed.',
+            'You do not need to memorise these. Knowing they exist is enough, so you can look them up the day you need them.',
         },
       ],
+    },
+    {
+      type: 'workflow-exercise',
+      id: 'first-commit-loop',
+      title: 'Practice: your first commit, start to finish',
+      scenario:
+        'You are back in the my-project folder from lesson 2. It is already a repository, and index.html and style.css are both still uncommitted. Walk the whole loop from the beginning: git init, look at it, stage the files, look again, commit, and read the history back.',
+      steps: [
+        {
+          narration:
+            'Start at the top of the loop. You already ran `git init` here in lesson 2, so this folder is a repository. Running it a second time is harmless. It deletes nothing and leaves your files and your history alone. Git replies `Reinitialized` rather than `Initialized` to tell you the repository was already there.',
+          expectedCommand: 'git init',
+          successOutput: 'Reinitialized existing Git repository in /home/user/my-project/.git/',
+          hints: ['The command is two words: git + init'],
+        },
+        {
+          narration:
+            'Before changing anything, ask Git what it can see. It will report that both files exist but that it is not tracking them yet.',
+          expectedCommand: 'git status',
+          successOutput:
+            'On branch main\n\nNo commits yet\n\nUntracked files:\n\tindex.html\n\tstyle.css\n\nnothing added to commit but untracked files present',
+          hints: ['The command is two words: git + status'],
+        },
+        {
+          narration:
+            'Now move both files into the staging area, your shortlist of what the next snapshot will save. Stage everything in this folder in one go.',
+          expectedCommand: 'git add .',
+          acceptableVariants: ['git add -A', 'git add --all'],
+          successOutput: '',
+          hints: [
+            'Use git add',
+            'A dot after git add means "everything in this folder"',
+          ],
+        },
+        {
+          narration:
+            'Ask Git the same question you asked two steps ago. This is the point of the exercise: the command has not changed, but the answer has, because the files moved into staging.',
+          expectedCommand: 'git status',
+          successOutput:
+            'On branch main\n\nNo commits yet\n\nChanges to be committed:\n\tnew file:   index.html\n\tnew file:   style.css',
+          hints: [
+            'It is the same command you ran in step 2',
+            'The command is two words: git + status',
+          ],
+        },
+        {
+          narration:
+            'Both files are staged, so seal the snapshot. Give it the message: Initial commit',
+          expectedCommand: 'git commit -m "Initial commit"',
+          acceptableVariants: ["git commit -m 'Initial commit'"],
+          successOutput:
+            '[main (root-commit) 7f3a9c1] Initial commit\n 2 files changed, 2 insertions(+)\n create mode 100644 index.html\n create mode 100644 style.css',
+          hints: [
+            'Start with git commit',
+            'Add -m, then the message inside double quotes',
+          ],
+        },
+        {
+          narration:
+            'Last step: read your history back and confirm the commit is really there. Ask for the compact version, one line per commit.',
+          expectedCommand: 'git log --oneline',
+          successOutput: '7f3a9c1 Initial commit',
+          hints: ['Start with git log', 'Add the --oneline flag'],
+        },
+      ],
+      completionMessage:
+        'That is the core loop of Git, and you will run most of it thousands of times. `git init` runs once per project to create the repository, and the other four come round again and again: `git status` to see where you stand, `git add` to choose what goes in, `git commit` to save the snapshot, and `git log` to read your history back. Everything else in this course is built on top of these five commands.',
     },
     {
       type: 'quiz',
       id: 'quiz-staging',
       question:
-        'What is the correct order of operations for your first commit?',
+        'You made a new folder, put one file in it, and want Git to start keeping its history. What order do you run things in?',
       options: [
-        'git init → git add → git commit',
-        'git commit → git add → git init',
-        'git add → git init → git commit',
-        'git init → git commit → git add',
+        {
+          text: 'git add . → git init → git commit -m "Initial commit"',
+          whyWrong:
+            '`git add` only works inside a repository. Until `git init` has run there is no repository yet, so Git answers with an error instead of staging the file.',
+        },
+        {
+          text: 'git init → git commit -m "Initial commit" → git add .',
+          whyWrong:
+            'A commit saves whatever is staged. Nothing is staged yet at that point, so Git refuses with "nothing added to commit" and no snapshot is made.',
+        },
+        {
+          text: 'git init → git add . → git commit -m "Initial commit"',
+        },
+        {
+          text: 'git init → git status → git commit -m "Initial commit"',
+          whyWrong:
+            '`git status` only reports what Git sees and never moves a file into staging. The commit would still have nothing to save, so `git add` cannot be skipped.',
+        },
       ],
-      correctIndex: 0,
+      correctIndex: 2,
       explanation:
-        'First initialize the repo (init), then stage files (add), then commit them.',
+        'Each step depends on the one before it: `git init` creates the repository, `git add` chooses what goes in the snapshot, and `git commit` saves it. Skip the middle step and there is nothing for the commit to record.',
     },
     {
       type: 'quiz',
       id: 'quiz-diff',
-      question: 'What does `git diff` (with no flags) show you?',
+      question:
+        'You edited a file and have not run `git add` yet. What does plain `git diff`, with no flags, show you?',
       options: [
-        'Changes not yet staged',
-        'Changes already staged',
-        'All changes since last commit',
-        'Differences between branches',
+        {
+          text: 'The changes you have already staged with git add',
+          whyWrong:
+            'That is `git diff --staged`. Plain `git diff` deliberately shows the opposite side: the edits that have not been staged yet.',
+        },
+        {
+          text: 'The changes you have made but not staged yet',
+        },
+        {
+          text: 'A list of your recent commits and their messages',
+          whyWrong:
+            'That is `git log`. `git diff` never shows commit history, only the actual changed lines inside your files.',
+        },
+        {
+          text: 'Every change since your last commit, staged or not',
+          whyWrong:
+            'Close, but plain `git diff` leaves out anything you have already staged. To see the staged half you have to run `git diff --staged` as well.',
+        },
       ],
-      correctIndex: 0,
-      explanation: 'Plain `git diff` shows unstaged changes — modifications in your working directory that haven\'t been added to the staging area yet.',
+      correctIndex: 1,
+      explanation:
+        'Git keeps the two halves separate on purpose: `git diff` is the "what have I touched since I last staged" view, so you can review new edits without the staged ones getting in the way.',
+    },
+    {
+      type: 'reading',
+      id: 'recap',
+      title: 'Recap',
+      content: [
+        { type: 'text', value: 'You can now:' },
+        {
+          type: 'list',
+          items: [
+            'Choose which files go into your next snapshot with `git add`',
+            'Save that snapshot with `git commit -m`',
+            'Write a commit message that still makes sense to you six months later',
+            'See exactly which lines changed, staged or not, with `git diff`',
+            'Read your project history back with `git log`',
+            'Escape Vim if a commit ever drops you into it',
+          ],
+        },
+        { type: 'text', value: '**Commands from this lesson**' },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            'git add .                # stage everything in this folder\ngit add -A               # stage everything in the whole project\ngit commit -m "..."      # save a snapshot with a message\ngit diff                 # changed but not staged yet\ngit diff --staged        # staged and ready for the next commit\ngit log                  # full history\ngit log --oneline        # one line per commit',
+        },
+        {
+          type: 'text',
+          value:
+            'Next up: every commit you have made so far lives only on your own computer. In the next lesson you connect your project to GitHub, so it is backed up and other people can see it.',
+        },
+      ],
     },
   ],
 } satisfies Lesson
