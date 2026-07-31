@@ -10,6 +10,14 @@ const STAGES: WalkthroughStage[] = [
     ],
   },
   {
+    label: 'File after your edit',
+    lines: [
+      { text: 'function greet() {', kind: 'normal' },
+      { text: '  return "Hello, world!";', kind: 'normal' },
+      { text: '}', kind: 'normal' },
+    ],
+  },
+  {
     label: 'Diff output',
     command: 'git diff',
     lines: [
@@ -20,14 +28,6 @@ const STAGES: WalkthroughStage[] = [
       { text: '-  return "Hello!";', kind: 'removed' },
       { text: '+  return "Hello, world!";', kind: 'added' },
       { text: ' }', kind: 'normal' },
-    ],
-  },
-  {
-    label: 'File after changes',
-    lines: [
-      { text: 'function greet() {', kind: 'normal' },
-      { text: '  return "Hello, world!";', kind: 'normal' },
-      { text: '}', kind: 'normal' },
     ],
   },
 ]
