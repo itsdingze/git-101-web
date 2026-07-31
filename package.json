@@ -8,12 +8,16 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test": "vitest run",
     "type-check": "tsc -b --noEmit"
   },
   "dependencies": {
     "@dnd-kit/helpers": "^0.2.4",
     "@dnd-kit/react": "^0.2.4",
+    "buffer": "^6.0.3",
+    "diff": "^9.0.0",
     "framer-motion": "^12.34.0",
+    "isomorphic-git": "^1.40.0",
     "lucide-react": "^0.564.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -35,6 +39,7 @@
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.1.10"
   }
 }
