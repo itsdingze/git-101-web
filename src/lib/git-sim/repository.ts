@@ -1,0 +1,75 @@
+import git from 'isomorphic-git'
+import { gitFs } from './sandboxFs'
+import { pathExists } from './fileOperations'
+import { dirname, isInside, joinPath } from './paths'
+import { NOT_A_REPOSITORY, SandboxError, UNKNOWN_IDENTITY } from './errors'
+import type { CommandContext, UserIdentity } from './types'
+
+export async function findRepoDir(ctx: CommandContext): Promise<string | null> {
+  let candidate = ctx.cwd
+  while (isInside(candidate, ctx.root)) {
+    if (await pathExists(ctx.fs, joinPath(candidate, '.git'))) return candidate
+    if (candidate === ctx.root) return null
+    candidate = dirname(candidate)
+  }
+  return null
+}
+
+export async function requireRepoDir(ctx: CommandContext): Promise<string> {
+  const dir = await findRepoDir(ctx)
+  if (!dir) throw new SandboxError(NOT_A_REPOSITORY)
+  return dir
+}
+
+async function readConfig(ctx: CommandContext, dir: string, path: string): Promise<string | null> {
+  try {
+    const value: unknown = await git.getConfig({ fs: gitFs(ctx.fs), dir, path })
+    return typeof value === 'string' ? value : null
+  } catch {
+    return null
+  }
+}
+
+export async function resolveIdentity(ctx: CommandContext, dir: string): Promise<UserIdentity> {
+  const name = (await readConfig(ctx, dir, 'user.name')) ?? ctx.globalConfig.get('user.name')
+  const email = (await readConfig(ctx, dir, 'user.email')) ?? ctx.globalConfig.get('user.email')
+  if (!name || !email) throw new SandboxError(UNKNOWN_IDENTITY)
+  return { name, email }
+}
+
+export async function commitSignature(
+  ctx: CommandContext,
+  dir: string,
+): Promise<{ name: string; email: string; timestamp: number; timezoneOffset: number }> {
+  const identity = await resolveIdentity(ctx, dir)
+  return { ...identity, timestamp: ctx.nextTimestamp(), timezoneOffset: 0 }
+}
+
+export async function headOid(ctx: CommandContext, dir: string): Promise<string | null> {
+  try {
+    return await git.resolveRef({ fs: gitFs(ctx.fs), dir, ref: 'HEAD' })
+  } catch {
+    return null
+  }
+}
+
+export async function currentBranch(ctx: CommandContext, dir: string): Promise<string | null> {
+  const branch = await git.currentBranch({ fs: gitFs(ctx.fs), dir, fullname: false })
+  return branch ?? null
+}
+
+export async function refOid(
+  ctx: CommandContext,
+  dir: string,
+  ref: string,
+): Promise<string | null> {
+  try {
+    return await git.resolveRef({ fs: gitFs(ctx.fs), dir, ref })
+  } catch {
+    return null
+  }
+}
+
+export function shortOid(oid: string): string {
+  return oid.slice(0, 7)
+}

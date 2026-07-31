@@ -49,84 +49,97 @@ export default {
       ],
     },
     {
-      type: 'workflow-exercise',
+      type: 'sandbox-exercise',
       id: 'feature-branch-workflow-practice',
       title: 'Practice: the team workflow, start to finish',
-      scenario:
-        'You are in your team\'s shared project, cloned onto your machine, not the `my-project` you built earlier in the course. Your team lead has asked you to add a login page, and your copy of the project is two weeks behind. Walk the whole loop, from getting up to date to pushing a branch that is ready for a pull request.',
-      steps: [
-        {
-          narration:
-            'The loop starts on `main`, because that is the branch your new work should grow out of. Move onto it before anything else.',
-          expectedCommand: 'git switch main',
-          acceptableVariants: ['git checkout main'],
-          successOutput: "Switched to branch 'main'",
-          hints: [
-            'You want the command that moves you onto a branch that already exists',
-            'It is `git switch` followed by the name of the branch you want to stand on',
-            'It is `git switch main`',
+      mode: 'goal',
+      brief:
+        'Below is a shared team project, already cloned onto your machine, with a remote called `origin`. Your team lead has asked you to add a login page, and you have written it: `login.html` and `auth.js` are sitting in the folder with nothing about them saved to Git yet. Your copy of the project is two weeks behind what your teammates have pushed. **Your goal: walk the whole loop, from getting up to date to pushing a branch a teammate could review.** Call the branch `feature/add-auth`. The remote is real here, so `git pull` and `git push` genuinely move commits between the two.',
+      seed: {
+        dir: 'project',
+        remote: {
+          name: 'origin',
+          url: 'https://github.com/team/project.git',
+          setup: [
+            {
+              write: {
+                'README.md': '# Team project\n\nA small site.\n',
+                'index.html': '<h1>Team project</h1>\n',
+              },
+            },
+            { run: 'git add .' },
+            { run: 'git commit -m "Initial commit"' },
+          ],
+          ahead: [
+            {
+              write: {
+                'README.md':
+                  '# Team project\n\nA small site.\n\nRun the dev server with `npm run dev`.\n',
+              },
+            },
+            { run: 'git add .' },
+            { run: 'git commit -m "Document how to run the dev server"' },
           ],
         },
+        setup: [
+          {
+            write: {
+              'login.html': '<form id="login">\n  <input name="email" />\n</form>\n',
+              'auth.js': 'export function signIn(email) {\n  return fetch("/api/login")\n}\n',
+            },
+          },
+        ],
+      },
+      goals: [
         {
-          narration:
-            'Your copy of `main` is two weeks old. Bring down everything your teammates have pushed since then, so your branch starts from current code instead of stale code.',
-          expectedCommand: 'git pull origin main',
-          acceptableVariants: ['git pull'],
-          successOutput:
-            'From https://github.com/team/project\nUpdating 8c2f4a1..9c4f7d2\nFast-forward\n README.md | 4 ++--\n 1 file changed, 2 insertions(+), 2 deletions(-)',
+          id: 'up-to-date',
+          label: 'Your `main` has the commit your teammates pushed while you were away',
+          check: {
+            kind: 'commit-exists',
+            messageIncludes: 'dev server',
+            onBranch: 'main',
+          },
           hints: [
+            'The loop starts on `main`, because that is the branch your new work should grow out of',
             'Downloading the new commits and folding them into your branch is one single command',
-            'It is `git pull`, then the remote name, then the branch name',
-            'It is `git pull origin main`',
+            'It is `git pull origin main`. Run `git log --oneline` afterwards to see what arrived.',
           ],
         },
         {
-          narration:
-            'You are level with the team now. Make the branch for this piece of work and move onto it in one step. Name it `feature/add-auth`.',
-          expectedCommand: 'git switch -c feature/add-auth',
-          acceptableVariants: ['git checkout -b feature/add-auth'],
-          successOutput: "Switched to a new branch 'feature/add-auth'",
+          id: 'on-feature-branch',
+          label: 'You are standing on a new branch called `feature/add-auth`',
+          check: {
+            kind: 'all-of',
+            checks: [
+              { kind: 'branch-exists', name: 'feature/add-auth' },
+              { kind: 'on-branch', name: 'feature/add-auth' },
+            ],
+          },
           hints: [
             'The same command that moves you between branches can create one first',
-            'Add the flag that means create to `git switch`, then the branch name',
             'It is `git switch -c feature/add-auth`',
           ],
         },
         {
-          narration:
-            'You have written the login page. Nothing goes into a commit on its own, so mark everything you changed as ready to be saved.',
-          expectedCommand: 'git add .',
-          acceptableVariants: ['git add -A', 'git add --all'],
-          successOutput: '',
+          id: 'committed',
+          label: 'The login page is committed on that branch',
+          check: {
+            kind: 'commit-exists',
+            containing: ['login.html', 'auth.js'],
+            onBranch: 'feature/add-auth',
+          },
           hints: [
-            'This is the staging step, between editing a file and saving it',
-            'The command takes a `.` to mean everything in this folder',
-            'It is `git add .`',
+            'Two commands: stage everything you changed, then save the snapshot',
+            'Write a message a reviewer can actually read, like `git commit -m "feat: add login page"`',
           ],
         },
         {
-          narration:
-            'Staging only marks what goes in. Now save that work permanently on this branch, with a message a reviewer can actually read.',
-          expectedCommand: 'git commit -m "feat: add login page"',
-          acceptPrefix: 'git commit -m',
-          successOutput:
-            '[feature/add-auth 5d9e3b7] feat: add login page\n 2 files changed, 42 insertions(+)\n create mode 100644 auth.js\n create mode 100644 login.html',
+          id: 'pushed',
+          label: 'The branch is on the remote, where a teammate can review it',
+          check: { kind: 'pushed', branch: 'feature/add-auth' },
           hints: [
-            'This is the step that turns staged changes into a permanent snapshot',
-            'The command carries your message inline, behind the `-m` flag',
-            'Try `git commit -m "feat: add login page"`',
-          ],
-        },
-        {
-          narration:
-            'The branch exists only on your machine so far, and a teammate cannot review what they cannot see. Send it up to the remote, and pair it with the branch of the same name up there so every later push needs no extra typing.',
-          expectedCommand: 'git push -u origin feature/add-auth',
-          acceptableVariants: ['git push --set-upstream origin feature/add-auth'],
-          successOutput:
-            "branch 'feature/add-auth' set up to track 'origin/feature/add-auth'.\nTo https://github.com/team/project.git\n * [new branch]      feature/add-auth -> feature/add-auth",
-          hints: [
-            'Sending your commits up to the remote is one command',
-            'It needs the tracking flag from lesson 4, then the remote name, then the branch name',
+            'A teammate cannot review what they cannot see. Sending your commits up is one command.',
+            'It takes the flag that pairs your branch with one of the same name on the remote, then the remote name, then the branch name',
             'It is `git push -u origin feature/add-auth`',
           ],
         },

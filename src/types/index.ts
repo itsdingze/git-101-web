@@ -12,8 +12,8 @@ export type {
   TerminalExerciseStep,
   BlockExerciseStep,
   ConflictExerciseStep,
-  WorkflowSubStep,
-  WorkflowExerciseStep,
+  SandboxGoal,
+  SandboxExerciseStep,
   Step,
   Lesson,
 } from './lesson'

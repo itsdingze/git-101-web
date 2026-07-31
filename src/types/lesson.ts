@@ -1,4 +1,6 @@
 import type { ScenarioKey } from './graph'
+import type { SandboxSeed } from '@/lib/git-sim/createSandbox'
+import type { GoalCheck } from '@/lib/git-sim/goals'
 
 export type TextBlock = {
   type: 'text'
@@ -95,25 +97,27 @@ export type ConflictExerciseStep = {
   hints?: readonly string[]
 }
 
-export type WorkflowSubStep = {
-  narration: string
-  expectedCommand: string
-  acceptableVariants?: readonly string[]
-  acceptPrefix?: string
-  successOutput: string
+export type SandboxGoal = {
+  id: string
+  label: string
+  /** Shown one at a time in `guided` mode, ignored in `goal` mode. */
+  narration?: string
   hints?: readonly string[]
+  check: GoalCheck
 }
 
-export type WorkflowExerciseStep = {
-  type: 'workflow-exercise'
+export type SandboxExerciseStep = {
+  type: 'sandbox-exercise'
   id: string
   title: string
-  scenario: string
-  steps: WorkflowSubStep[]
+  brief: string
+  mode: 'goal' | 'guided'
+  seed: SandboxSeed
+  goals: readonly SandboxGoal[]
   completionMessage?: string
 }
 
-export type Step = ReadingStep | QuizStep | TerminalExerciseStep | BlockExerciseStep | ConflictExerciseStep | WorkflowExerciseStep
+export type Step = ReadingStep | QuizStep | TerminalExerciseStep | BlockExerciseStep | ConflictExerciseStep | SandboxExerciseStep
 
 export type Lesson = {
   id: number

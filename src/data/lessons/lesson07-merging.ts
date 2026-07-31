@@ -175,57 +175,90 @@ export default {
       ],
     },
     {
-      type: 'workflow-exercise',
+      type: 'sandbox-exercise',
       id: 'merge-loop-practice',
       title: 'Practice: the whole merge loop',
-      scenario:
-        'This time you are in the other situation from that same reading. The navbar is finished on your `add-navbar` branch, and while you were building it a teammate pushed a commit called `Fix broken link in header` to `main`, and you have already pulled it, so your local `main` has moved on too. That is why this merge produces a merge commit instead of a fast-forward. You want the navbar on `main` too, and then you want your branch list tidy again.',
-      steps: [
+      mode: 'goal',
+      brief:
+        'Below is a project with two branches, and you are standing on `add-navbar`, where the navbar work is finished and committed. Meanwhile a teammate added a commit called `Fix broken link in header` to `main`, so both branches have moved on since they split. That is why this one produces a merge commit instead of a fast-forward. **Your goal: get the navbar onto `main`, then leave your branch list tidy.** Run `git log --oneline --graph` when you are done to see the shape of what you built, and `git branch` at any point to see where you are.',
+      seed: {
+        dir: 'my-project',
+        setup: [
+          { run: 'git init' },
+          {
+            write: {
+              'index.html': '<h1>Hello</h1>\n<a href="/abuot">About</a>\n',
+              'style.css': 'body { font-family: sans-serif; }\n',
+            },
+          },
+          { run: 'git add .' },
+          { run: 'git commit -m "Initial commit"' },
+          { run: 'git switch -c add-navbar' },
+          {
+            write: {
+              'navbar.html': [
+                '<nav class="site-nav">',
+                '  <ul>',
+                '    <li><a href="/">Home</a></li>',
+                '    <li><a href="/about">About</a></li>',
+                '    <li><a href="/work">Work</a></li>',
+                '    <li><a href="/blog">Blog</a></li>',
+                '    <li><a href="/contact">Contact</a></li>',
+                '  </ul>',
+                '  <button class="menu-toggle" type="button">',
+                '    Menu',
+                '  </button>',
+                '</nav>',
+                '',
+              ].join('\n'),
+            },
+          },
+          { run: 'git add .' },
+          { run: 'git commit -m "Add navbar"' },
+          { run: 'git switch main' },
+          { write: { 'index.html': '<h1>Hello</h1>\n<a href="/about">About</a>\n' } },
+          { run: 'git add .' },
+          { run: 'git commit -m "Fix broken link in header"' },
+          { run: 'git switch add-navbar' },
+        ],
+      },
+      goals: [
         {
-          narration:
-            'A merge always runs from the branch that receives the work, so move over to `main` before you do anything else.',
-          expectedCommand: 'git switch main',
-          acceptableVariants: ['git checkout main'],
-          successOutput: "Switched to branch 'main'",
-          hints: ['Use `git switch` followed by the name of the branch you want to stand on'],
+          id: 'on-main',
+          label: 'You are standing on `main`, the branch that receives the work',
+          check: { kind: 'on-branch', name: 'main' },
+          hints: [
+            'A merge always runs from the branch that receives the work',
+            'Use `git switch` followed by the name of the branch you want to stand on',
+          ],
         },
         {
-          narration:
-            'You are on `main` now. Pull in the work from `add-navbar`. Because `main` moved on while you worked, Git will create a merge commit joining the two histories. Git opens your editor with the message already written. Save and close the editor, and Git prints a summary of what changed.',
-          expectedCommand: 'git merge add-navbar',
-          successOutput:
-            "Merge made by the 'ort' strategy.\n navbar.html | 12 ++++++++++++\n 1 file changed, 12 insertions(+)\n create mode 100644 navbar.html",
+          id: 'merged',
+          label: '`navbar.html` is on `main`, joined by a merge commit',
+          check: {
+            kind: 'all-of',
+            checks: [
+              { kind: 'commit-exists', containing: ['navbar.html'], onBranch: 'main' },
+              { kind: 'merge-commit-exists', onBranch: 'main' },
+            ],
+          },
           hints: [
             'Name the branch you want to pull in, not the one you are standing on',
             'The command is `git merge add-navbar`',
           ],
         },
         {
-          narration:
-            'It worked, but it is worth seeing the shape of what you just did. Ask Git to print the history one line per commit, drawn as a graph.',
-          expectedCommand: 'git log --oneline --graph',
-          acceptableVariants: ['git log --graph --oneline'],
-          successOutput:
-            "*   4f8c2a1 (HEAD -> main) Merge branch 'add-navbar'\n|\\\n| * 7f3c2a1 (add-navbar) Add navbar\n* | 7a1c3f2 Fix broken link in header\n|/\n* 7f3a9c1 Initial commit",
-          hints: [
-            'Start from `git log`, then add the flag that shortens each commit to one line and the flag that draws the graph',
-            'The command is `git log --oneline --graph`',
-          ],
-        },
-        {
-          narration:
-            'The two lines split apart and then come back together, and that fork is your merge. `add-navbar` is fully merged now, so the branch name has done its job. Delete it.',
-          expectedCommand: 'git branch -d add-navbar',
-          acceptableVariants: ['git branch --delete add-navbar'],
-          successOutput: 'Deleted branch add-navbar (was 7f3c2a1).',
+          id: 'branch-deleted',
+          label: 'The `add-navbar` branch name is gone',
+          check: { kind: 'branch-absent', name: 'add-navbar' },
           hints: [
             'The command lives under `git branch`, with the cautious delete flag',
-            'The command is `git branch -d add-navbar`',
+            'The command is `git branch -d add-navbar`. Try it before the merge too, and read what Git says.',
           ],
         },
       ],
       completionMessage:
-        'That is the entire merge loop: switch to the receiving branch, merge, look at what happened, then delete the branch you no longer need.',
+        'That is the entire merge loop: switch to the receiving branch, merge, look at what happened, then delete the branch you no longer need. In `git log --oneline --graph` the two lines split apart and then come back together, and that fork is your merge.',
     },
     {
       type: 'quiz',

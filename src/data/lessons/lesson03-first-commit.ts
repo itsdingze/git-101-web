@@ -208,71 +208,48 @@ export default {
       ],
     },
     {
-      type: 'workflow-exercise',
+      type: 'sandbox-exercise',
       id: 'first-commit-loop',
       title: 'Practice: your first commit, start to finish',
-      scenario:
-        'You are back in the my-project folder from lesson 2. It is already a repository, and index.html and style.css are both still uncommitted. Walk the whole loop from the beginning: git init, look at it, stage the files, look again, commit, and read the history back.',
-      steps: [
+      mode: 'goal',
+      brief:
+        'Below is a folder called `my-project` holding two files, `index.html` and `style.css`. Git is already watching the folder, but nothing in it has ever been saved into a commit. **Your goal: get both files into a commit.** No steps this time, and no order to follow. Every command in this lesson works down there, and `git status` will tell you where you stand whenever you lose track. It is a real Git running inside your browser on a folder of its own, so nothing you type can break anything, on your computer or anywhere else. Type `help` for the list of commands it knows.',
+      seed: {
+        dir: 'my-project',
+        setup: [
+          {
+            write: {
+              'index.html': '<h1>Hello</h1>\n',
+              'style.css': 'body { font-family: sans-serif; }\n',
+            },
+          },
+          { run: 'git init' },
+        ],
+      },
+      goals: [
         {
-          narration:
-            'Start at the top of the loop. You already ran `git init` here in lesson 2, so this folder is a repository. Running it a second time is harmless. It deletes nothing and leaves your files and your history alone. Git replies `Reinitialized` rather than `Initialized` to tell you the repository was already there.',
-          expectedCommand: 'git init',
-          successOutput: 'Reinitialized existing Git repository in /home/user/my-project/.git/',
-          hints: ['The command is two words: git + init'],
-        },
-        {
-          narration:
-            'Before changing anything, ask Git what it can see. It will report that both files exist but that it is not tracking them yet.',
-          expectedCommand: 'git status',
-          successOutput:
-            'On branch main\n\nNo commits yet\n\nUntracked files:\n\tindex.html\n\tstyle.css\n\nnothing added to commit but untracked files present',
-          hints: ['The command is two words: git + status'],
-        },
-        {
-          narration:
-            'Now move both files into the staging area, your shortlist of what the next snapshot will save. Stage everything in this folder in one go.',
-          expectedCommand: 'git add .',
-          acceptableVariants: ['git add -A', 'git add --all'],
-          successOutput: '',
+          id: 'staged',
+          label: 'Both files are in the staging area',
+          check: { kind: 'files-staged', paths: ['index.html', 'style.css'] },
           hints: [
-            'Use git add',
-            'A dot after git add means "everything in this folder"',
+            'Run `git status` first. It tells you what Git can see and what it is ignoring for now.',
+            'Staging is the step between editing and saving. The command is `git add`.',
+            'A dot means "everything in this folder", so `git add .` takes both files in one go.',
           ],
         },
         {
-          narration:
-            'Ask Git the same question you asked two steps ago. This is the point of the exercise: the command has not changed, but the answer has, because the files moved into staging.',
-          expectedCommand: 'git status',
-          successOutput:
-            'On branch main\n\nNo commits yet\n\nChanges to be committed:\n\tnew file:   index.html\n\tnew file:   style.css',
+          id: 'committed',
+          label: 'Both files are saved in a commit',
+          check: { kind: 'commit-exists', containing: ['index.html', 'style.css'] },
           hints: [
-            'It is the same command you ran in step 2',
-            'The command is two words: git + status',
+            'Staging only picks what goes in. Saving the snapshot is a separate command.',
+            'It is `git commit`, and it needs a message.',
+            'Write the message inline: `git commit -m "Initial commit"`.',
           ],
-        },
-        {
-          narration:
-            'Both files are staged, so seal the snapshot. Give it the message: Initial commit',
-          expectedCommand: 'git commit -m "Initial commit"',
-          acceptableVariants: ["git commit -m 'Initial commit'"],
-          successOutput:
-            '[main (root-commit) 7f3a9c1] Initial commit\n 2 files changed, 2 insertions(+)\n create mode 100644 index.html\n create mode 100644 style.css',
-          hints: [
-            'Start with git commit',
-            'Add -m, then the message inside double quotes',
-          ],
-        },
-        {
-          narration:
-            'Last step: read your history back and confirm the commit is really there. Ask for the compact version, one line per commit.',
-          expectedCommand: 'git log --oneline',
-          successOutput: '7f3a9c1 Initial commit',
-          hints: ['Start with git log', 'Add the --oneline flag'],
         },
       ],
       completionMessage:
-        'That is the core loop of Git, and you will run most of it thousands of times. `git init` runs once per project to create the repository, and the other four come round again and again: `git status` to see where you stand, `git add` to choose what goes in, `git commit` to save the snapshot, and `git log` to read your history back. Everything else in this course is built on top of these five commands.',
+        'That is the core loop of Git, and you will run most of it thousands of times. `git init` runs once per project to create the repository, and the other four come round again and again: `git status` to see where you stand, `git add` to choose what goes in, `git commit` to save the snapshot, and `git log` to read your history back. Try `git log --oneline` below before you move on. The terminal stays live, so keep poking at it.',
     },
     {
       type: 'quiz',

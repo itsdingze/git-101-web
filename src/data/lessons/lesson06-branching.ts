@@ -153,79 +153,112 @@ export default {
         'Creating a branch starts a new name at the exact commit you were standing on, so `fix-typo` and `main` are identical the moment it exists. Nothing is copied, nothing is lost, and `main` is not touched at all. The two only begin to differ when you make a commit. Whichever branch you are on is the one that moves.',
     },
     {
-      type: 'workflow-exercise',
+      type: 'sandbox-exercise',
       id: 'branch-isolation-walkthrough',
       title: 'Watch a branch keep work separate',
-      scenario:
-        'You are in a project that already has one commit on `main`, holding `index.html` and `style.css`. You have also written `navbar.html`, about a dozen lines of markup, and it is sitting in the folder with nothing about it saved to Git yet. This walkthrough starts from there. You are going to put that file on its own branch, then watch it vanish and come back as you switch branches. This is the part that makes branches finally click, so read each line before you type.',
-      steps: [
+      mode: 'guided',
+      brief:
+        'Below is a project with one commit on `main`, holding `index.html` and `style.css`. You have also written `navbar.html`, about a dozen lines of markup, and it is sitting in the folder with nothing about it saved to Git yet. You are going to put that file on its own branch, then watch it vanish and come back as you switch branches. This is the part that makes branches finally click, so read each line before you type. It is a real Git, so `ls` and `git status` work whenever you want to look around.',
+      seed: {
+        dir: 'my-project',
+        setup: [
+          { run: 'git init' },
+          {
+            write: {
+              'index.html': '<h1>Hello</h1>\n',
+              'style.css': 'body { font-family: sans-serif; }\n',
+            },
+          },
+          { run: 'git add .' },
+          { run: 'git commit -m "Initial commit"' },
+          {
+            write: {
+              'navbar.html': [
+                '<nav class="site-nav">',
+                '  <ul>',
+                '    <li><a href="/">Home</a></li>',
+                '    <li><a href="/about">About</a></li>',
+                '    <li><a href="/work">Work</a></li>',
+                '    <li><a href="/blog">Blog</a></li>',
+                '    <li><a href="/contact">Contact</a></li>',
+                '  </ul>',
+                '  <button class="menu-toggle" type="button">',
+                '    Menu',
+                '  </button>',
+                '</nav>',
+                '',
+              ].join('\n'),
+            },
+          },
+        ],
+      },
+      goals: [
         {
+          id: 'on-new-branch',
+          label: 'You are standing on a new branch called `add-navbar`',
           narration:
             'You are on `main`, and the site currently works. Start a branch for the navbar work and move onto it in one step. Call it `add-navbar`.',
-          expectedCommand: 'git switch -c add-navbar',
-          acceptableVariants: ['git checkout -b add-navbar'],
-          successOutput: "Switched to a new branch 'add-navbar'",
+          check: {
+            kind: 'all-of',
+            checks: [
+              { kind: 'branch-exists', name: 'add-navbar' },
+              { kind: 'on-branch', name: 'add-navbar' },
+            ],
+          },
           hints: [
             '`git switch` moves you between branches, and one flag creates the branch first',
             'It is `git switch -c add-navbar`',
           ],
         },
         {
+          id: 'navbar-committed',
+          label: '`navbar.html` is committed on `add-navbar`',
           narration:
-            '`navbar.html` came along with you, because Git leaves a file it is not tracking yet exactly where it is. Stage it now, so Git knows it belongs in your next commit.',
-          expectedCommand: 'git add .',
-          acceptableVariants: ['git add -A', 'git add --all', 'git add navbar.html'],
-          successOutput: '',
+            '`navbar.html` came along with you, because Git leaves a file it is not tracking yet exactly where it is. Stage it and commit it, so the navbar work is saved on this branch and nowhere else.',
+          check: {
+            kind: 'commit-exists',
+            containing: ['navbar.html'],
+            onBranch: 'add-navbar',
+          },
           hints: [
-            'Staging is the step between editing and committing',
-            '`git add .` stages everything you changed in this folder',
+            'Two commands: the staging one, then the saving one',
+            '`git add .` then `git commit -m "Add navbar"`',
           ],
         },
         {
-          narration: 'Save that work as a commit, with a message describing what you did.',
-          expectedCommand: 'git commit -m "Add navbar"',
-          acceptPrefix: 'git commit -m',
-          successOutput:
-            '[add-navbar 7f3c2a1] Add navbar\n 1 file changed, 12 insertions(+)\n create mode 100644 navbar.html',
+          id: 'back-on-main',
+          label: 'Back on `main`, where `navbar.html` is nowhere to be seen',
+          narration:
+            'Look at that output: it starts with `[add-navbar]`. Git is telling you which branch the commit landed on. Now go back to `main`, and once you are there run `ls` to list the files in your folder.',
+          check: {
+            kind: 'all-of',
+            checks: [
+              { kind: 'on-branch', name: 'main' },
+              { kind: 'file-absent', path: 'navbar.html' },
+            ],
+          },
           hints: [
-            '`git commit -m "your message"` saves what you staged',
-            'Try `git commit -m "Add navbar"`',
+            '`git switch` followed by the name of the branch you want to be on',
+            'It is `git switch main`, then `ls`',
           ],
         },
         {
+          id: 'navbar-returns',
+          label: 'Back on `add-navbar`, where `navbar.html` is waiting for you',
           narration:
-            'Look at that output: it starts with `[add-navbar]`. Git is telling you which branch the commit landed on. Now go back to `main`.',
-          expectedCommand: 'git switch main',
-          acceptableVariants: ['git checkout main'],
-          successOutput: "Switched to branch 'main'",
-          hints: ['`git switch` followed by the name of the branch you want to be on'],
-        },
-        {
-          narration:
-            'You are on `main` now. List the files sitting in your folder with `ls`. That works on Windows too, as long as you are in Git Bash the way lesson 1 set up.',
-          expectedCommand: 'ls',
-          acceptableVariants: ['dir'],
-          successOutput: 'index.html   style.css',
-          hints: ['`ls` prints the files in the folder you are in'],
-        },
-        {
-          narration:
-            '`navbar.html` is not in that list. Read this carefully: the file has not been deleted and nothing has gone wrong. It is safe inside the commit on `add-navbar`. It is not in your folder because the `main` version of the project has never included it, and your folder always shows the branch you are standing on. Switch back to `add-navbar`.',
-          expectedCommand: 'git switch add-navbar',
-          acceptableVariants: ['git checkout add-navbar'],
-          successOutput: "Switched to branch 'add-navbar'",
+            '`navbar.html` was not in that list. Read this carefully: the file has not been deleted and nothing has gone wrong. It is safe inside the commit on `add-navbar`. It is missing from your folder because the `main` version of the project has never included it, and your folder always shows the branch you are standing on. Switch back to `add-navbar` and run `ls` one more time.',
+          check: {
+            kind: 'all-of',
+            checks: [
+              { kind: 'on-branch', name: 'add-navbar' },
+              { kind: 'file-present', path: 'navbar.html' },
+            ],
+          },
           hints: ['Switch by name: `git switch add-navbar`'],
-        },
-        {
-          narration: 'List the files one more time and watch the navbar come back.',
-          expectedCommand: 'ls',
-          acceptableVariants: ['dir'],
-          successOutput: 'index.html   navbar.html   style.css',
-          hints: ['Same command as before'],
         },
       ],
       completionMessage:
-        'That disappearing act is the entire point of branches. One folder, and Git swaps its contents to match whichever branch you are on. Your navbar work is sitting safely on `add-navbar`, and `main` is still the version you could hand in tomorrow, exactly as you left it.',
+        'That disappearing act is the entire point of branches. One folder, and Git swaps its contents to match whichever branch you are on. Your navbar work is sitting safely on `add-navbar`, and `main` is still the version you could hand in tomorrow, exactly as you left it. Keep switching back and forth below if you want to watch it again.',
     },
     {
       type: 'quiz',
