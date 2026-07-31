@@ -11,6 +11,7 @@ export default function useStepSpacer(resetKey: unknown): StepSpacer {
 
   useLayoutEffect(() => {
     const spacer = spacerRef.current
+    const content = contentRef.current
     if (!spacer) return
 
     const release = () => {
@@ -35,18 +36,27 @@ export default function useStepSpacer(resetKey: unknown): StepSpacer {
     relock()
     window.addEventListener('resize', relock)
 
-    let lockedAgainstHeight = contentRef.current?.getBoundingClientRect().height ?? 0
+    let learnerHasActed = false
+    const markLearnerActed = () => {
+      learnerHasActed = true
+    }
+    content?.addEventListener('pointerdown', markLearnerActed)
+    content?.addEventListener('keydown', markLearnerActed)
+
+    let lockedAgainstHeight = content?.getBoundingClientRect().height ?? 0
     const observer = new ResizeObserver((entries) => {
       const height = entries[0]?.contentRect.height ?? 0
       if (Math.abs(height - lockedAgainstHeight) < 1) return
       lockedAgainstHeight = height
-      relock()
+      if (!learnerHasActed) relock()
     })
-    if (contentRef.current) observer.observe(contentRef.current)
+    if (content) observer.observe(content)
 
     return () => {
       cancelAnimationFrame(frame)
       window.removeEventListener('resize', relock)
+      content?.removeEventListener('pointerdown', markLearnerActed)
+      content?.removeEventListener('keydown', markLearnerActed)
       observer.disconnect()
       release()
     }
