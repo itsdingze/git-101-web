@@ -1,14 +1,22 @@
 import git from 'isomorphic-git'
 import { gitFs } from './sandboxFs'
-import { pathExists } from './fileOperations'
+import { isDirectory, pathExists, readText } from './fileOperations'
 import { dirname, isInside, joinPath } from './paths'
 import { NOT_A_REPOSITORY, SandboxError, UNKNOWN_IDENTITY } from './errors'
 import type { CommandContext, UserIdentity } from './types'
 
+const VALID_HEAD = /^(ref: refs\/\S+|[0-9a-f]{40})\s*$/
+
+export async function isRepository(ctx: CommandContext, dir: string): Promise<boolean> {
+  const head = joinPath(dir, '.git/HEAD')
+  if (!(await pathExists(ctx.fs, head)) || (await isDirectory(ctx.fs, head))) return false
+  return VALID_HEAD.test(await readText(ctx.fs, head))
+}
+
 export async function findRepoDir(ctx: CommandContext): Promise<string | null> {
   let candidate = ctx.cwd
   while (isInside(candidate, ctx.root)) {
-    if (await pathExists(ctx.fs, joinPath(candidate, '.git'))) return candidate
+    if (await isRepository(ctx, candidate)) return candidate
     if (candidate === ctx.root) return null
     candidate = dirname(candidate)
   }
@@ -30,9 +38,17 @@ async function readConfig(ctx: CommandContext, dir: string, path: string): Promi
   }
 }
 
+export async function readSetting(
+  ctx: CommandContext,
+  dir: string,
+  path: string,
+): Promise<string | undefined> {
+  return (await readConfig(ctx, dir, path)) ?? ctx.globalConfig.get(path)
+}
+
 export async function resolveIdentity(ctx: CommandContext, dir: string): Promise<UserIdentity> {
-  const name = (await readConfig(ctx, dir, 'user.name')) ?? ctx.globalConfig.get('user.name')
-  const email = (await readConfig(ctx, dir, 'user.email')) ?? ctx.globalConfig.get('user.email')
+  const name = await readSetting(ctx, dir, 'user.name')
+  const email = await readSetting(ctx, dir, 'user.email')
   if (!name || !email) throw new SandboxError(UNKNOWN_IDENTITY)
   return { name, email }
 }

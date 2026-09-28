@@ -4,15 +4,18 @@ import { flagValue, operandsOf } from '@/lib/git-sim/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { silent } from '@/lib/git-sim/output'
 import { refOid } from '@/lib/git-sim/repository'
-import { createAndSwitch, switchTo } from './switchBranch'
+import { resolveCommitish } from '@/lib/git-sim/resolveCommitish'
+import { createAndSwitch, detachedHead, switchTo } from './switchBranch'
 import { resolveTrackedPaths, restoreWorkdirEntries } from './restore'
 import type { GitSubcommand } from '@/lib/git-sim/types'
+
+const BRANCH_FLAGS = ['-b', '-B', '--branch']
 
 export const checkout: GitSubcommand = {
   requiresRepo: true,
   run: async (args, ctx, dir) => {
-    const created = flagValue(args, '-b', '-B', '--branch')
-    if (created) return createAndSwitch(ctx, dir, created)
+    const created = flagValue(args, ...BRANCH_FLAGS)
+    if (created) return createAndSwitch(ctx, dir, created, operandsOf(args, BRANCH_FLAGS)[0])
 
     const separator = args.indexOf('--')
     const specs = separator === -1 ? operandsOf(args) : args.slice(separator + 1)
@@ -25,7 +28,8 @@ export const checkout: GitSubcommand = {
 
     const tracked = await git.listFiles({ fs: gitFs(ctx.fs), dir })
     if (separator === -1 && !tracked.includes(target) && target !== '.') {
-      throw new SandboxError(`fatal: invalid reference: ${target}`)
+      const commit = await resolveCommitish(ctx, dir, target)
+      if (commit) throw new SandboxError(detachedHead(target, commit))
     }
 
     await restoreWorkdirEntries(ctx, dir, await resolveTrackedPaths(ctx, dir, specs))

@@ -2,6 +2,7 @@ import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/sandboxFs'
 import { flagValue, hasFlag, operandsOf } from '@/lib/git-sim/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
+import { assertNoBranchNameClash } from '@/lib/git-sim/branchNameClash'
 import { say } from '@/lib/git-sim/output'
 import { currentBranch, headOid, refOid, shortOid } from '@/lib/git-sim/repository'
 import type { CommandContext, CommandOutput, GitSubcommand } from '@/lib/git-sim/types'
@@ -75,6 +76,7 @@ export const branch: GitSubcommand = {
     if (await refOid(ctx, dir, `refs/heads/${name}`)) {
       throw new SandboxError(`fatal: a branch named '${name}' already exists`)
     }
+    await assertNoBranchNameClash(ctx, dir, name)
     if (!(await headOid(ctx, dir))) {
       throw new SandboxError(`fatal: not a valid object name: '${(await currentBranch(ctx, dir)) ?? 'main'}'`)
     }

@@ -10,10 +10,15 @@ async function shortHash(ctx: CommandContext, text: string | undefined): Promise
   return oid.slice(0, 7)
 }
 
+function hunkRange(start: number, count: number): string {
+  if (count === 0) return `${Math.max(start - 1, 0)},0`
+  return count === 1 ? `${start}` : `${start},${count}`
+}
+
 function hunkLines(before: string, after: string, path: string): string[] {
   const patch = structuredPatch(path, path, before, after, '', '', { context: 3 })
   return patch.hunks.flatMap((hunk) => [
-    `@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@`,
+    `@@ -${hunkRange(hunk.oldStart, hunk.oldLines)} +${hunkRange(hunk.newStart, hunk.newLines)} @@`,
     ...hunk.lines,
   ])
 }

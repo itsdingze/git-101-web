@@ -27,6 +27,14 @@ export async function readCommitFiles(
   return files
 }
 
+export async function readCommitFilesOrEmpty(
+  ctx: CommandContext,
+  dir: string,
+  oid: string | null,
+): Promise<Map<string, string>> {
+  return oid ? readCommitFiles(ctx, dir, oid) : new Map<string, string>()
+}
+
 export async function readIndexFiles(
   ctx: CommandContext,
   dir: string,

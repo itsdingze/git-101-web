@@ -159,3 +159,30 @@ describe('working with a remote', () => {
     expect(pushed).toContain('failed to push some refs')
   })
 })
+
+describe('a branch name that clashes with a folder of branch names', () => {
+  it.each(['git branch', 'git switch -c', 'git checkout -b'])(
+    '%s feature/add-auth is refused while a branch called feature exists',
+    async (create) => {
+      const sandbox = await createSandbox(BRANCHING_SEED)
+      await sandbox.run('git branch feature')
+
+      expect(await textOf(sandbox, `${create} feature/add-auth`)).toBe(
+        "fatal: cannot lock ref 'refs/heads/feature/add-auth': 'refs/heads/feature' exists; cannot create 'refs/heads/feature/add-auth'",
+      )
+      expect((await sandbox.snapshot()).branch).toBe('main')
+    },
+  )
+
+  it.each(['git branch', 'git switch -c', 'git checkout -b'])(
+    '%s feature is refused while feature/add-auth exists',
+    async (create) => {
+      const sandbox = await createSandbox(BRANCHING_SEED)
+      await sandbox.run('git branch feature/add-auth')
+
+      expect(await textOf(sandbox, `${create} feature`)).toBe(
+        "fatal: cannot lock ref 'refs/heads/feature': 'refs/heads/feature/add-auth' exists; cannot create 'refs/heads/feature'",
+      )
+    },
+  )
+})

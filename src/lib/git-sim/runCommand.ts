@@ -3,12 +3,33 @@ import { runGit } from './runGit'
 import { SHELL_COMMANDS } from './commands/shell/registry'
 import { describeGitError } from './errors'
 import { resolvePath } from './paths'
-import { pathExists, readText, writeText } from './fileOperations'
+import {
+  isDirectory,
+  parentFolderProblem,
+  pathExists,
+  readText,
+  writeText,
+} from './fileOperations'
+import { fail } from './output'
+import { NO_LOCKS, type CommandLocks } from './commandLocks'
 import type { CommandContext, CommandOutput } from './types'
 
 export type RunResult = {
   outputs: CommandOutput[]
   clearScreen: boolean
+}
+
+async function redirectionProblem(
+  ctx: CommandContext,
+  redirection: Redirection,
+): Promise<string | null> {
+  if (redirection.target === '') return 'bash: : No such file or directory'
+
+  const path = resolvePath(redirection.target, ctx.cwd, ctx.root)
+  if (await isDirectory(ctx.fs, path)) return `bash: ${redirection.target}: Is a directory`
+
+  const problem = await parentFolderProblem(ctx.fs, path, false)
+  return problem ? `bash: ${redirection.target}: ${problem}` : null
 }
 
 async function redirect(
@@ -33,8 +54,9 @@ async function dispatch(
   name: string,
   args: readonly string[],
   ctx: CommandContext,
+  locks: CommandLocks,
 ): Promise<CommandOutput[]> {
-  if (name === 'git') return runGit(args, ctx)
+  if (name === 'git') return runGit(args, ctx, locks)
 
   const shell = SHELL_COMMANDS[name]
   if (shell) return shell(args, ctx)
@@ -42,15 +64,25 @@ async function dispatch(
   return [{ text: `bash: ${name}: command not found`, stream: 'stderr' }]
 }
 
-export async function runCommand(line: string, ctx: CommandContext): Promise<RunResult> {
-  const { tokens, redirection } = parseLine(line)
+export async function runCommand(
+  line: string,
+  ctx: CommandContext,
+  locks: CommandLocks = NO_LOCKS,
+): Promise<RunResult> {
+  const { tokens, redirection, redirectionMissingTarget } = parseLine(line)
   const [name, ...args] = tokens
 
+  if (redirectionMissingTarget) {
+    return { outputs: fail("bash: syntax error near unexpected token `newline'"), clearScreen: false }
+  }
   if (!name) return { outputs: [], clearScreen: false }
   if (name === 'clear') return { outputs: [], clearScreen: true }
 
   try {
-    const outputs = await dispatch(name, args, ctx)
+    const problem = redirection ? await redirectionProblem(ctx, redirection) : null
+    if (problem) return { outputs: fail(problem), clearScreen: false }
+
+    const outputs = await dispatch(name, args, ctx, locks)
     return {
       outputs: redirection ? await redirect(ctx, outputs, redirection) : outputs,
       clearScreen: false,

@@ -5,16 +5,15 @@ import { flagValue, hasFlag, operandsOf } from '@/lib/git-sim/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say, silent } from '@/lib/git-sim/output'
 import { currentBranch, headOid, shortOid } from '@/lib/git-sim/repository'
+import { commitSubject } from '@/lib/git-sim/commitSubject'
 import { formatGitDate } from '@/lib/git-sim/formatDate'
 import { renderCommitGraph, topoOrderCommits } from '@/lib/git-sim/commitGraph'
+import { resolveCommitish } from '@/lib/git-sim/resolveCommitish'
 import { decorationLabel, readDecorations, type RefDecorations } from './decorations'
 import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
 
 const DEFAULT_DEPTH = 200
-
-function firstLine(message: string): string {
-  return message.split('\n')[0]?.trim() ?? ''
-}
+const VALUE_FLAGS = ['-n', '--max-count', '--grep', '--author']
 
 function countFlag(args: readonly string[]): number | undefined {
   const shorthand = args.find((arg) => /^-\d+$/.test(arg))
@@ -24,15 +23,31 @@ function countFlag(args: readonly string[]): number | undefined {
   return value === undefined ? undefined : Number(value)
 }
 
+function withoutFlagValues(args: readonly string[]): string[] {
+  const consumed = new Set(
+    args.flatMap((arg, index) => (VALUE_FLAGS.includes(arg) ? [index + 1] : [])),
+  )
+  return args.filter((_, index) => !consumed.has(index))
+}
+
+async function startingRef(
+  ctx: CommandContext,
+  dir: string,
+  args: readonly string[],
+): Promise<string> {
+  const spec = operandsOf(withoutFlagValues(args))[0]
+  if (!spec) return 'HEAD'
+  return (await resolveCommitish(ctx, dir, spec)) ?? spec
+}
+
 async function collectCommits(
   ctx: CommandContext,
   dir: string,
   args: readonly string[],
 ): Promise<ReadCommitResult[]> {
-  const explicitRef = operandsOf(args)[0]
   const refs = hasFlag(args, '--all')
     ? (await git.listBranches({ fs: gitFs(ctx.fs), dir })).map((name) => `refs/heads/${name}`)
-    : [explicitRef ?? 'HEAD']
+    : [await startingRef(ctx, dir, args)]
 
   const byOid = new Map<string, ReadCommitResult>()
   for (const ref of refs) {
@@ -60,7 +75,7 @@ function applyFilters(
 }
 
 function onelineText(entry: ReadCommitResult, decorations: RefDecorations): string {
-  return `${shortOid(entry.oid)}${decorationLabel(decorations, entry.oid)} ${firstLine(entry.commit.message)}`
+  return `${shortOid(entry.oid)}${decorationLabel(decorations, entry.oid)} ${commitSubject(entry.commit.message)}`
 }
 
 function longLines(entry: ReadCommitResult, decorations: RefDecorations): string[] {

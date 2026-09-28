@@ -53,6 +53,7 @@ describe('the first commit loop', () => {
         '  (use "git rm --cached <file>..." to unstage)',
         '\tnew file:   index.html',
         '\tnew file:   style.css',
+        '',
       ].join('\n'),
     )
   })

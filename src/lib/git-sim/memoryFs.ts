@@ -77,7 +77,7 @@ function promised<A extends unknown[], R>(
 
 function normalizePath(path: string): string {
   const segments: string[] = []
-  for (const segment of String(path).split(/[/\\]/)) {
+  for (const segment of String(path).split('/')) {
     if (!segment || segment === '.') continue
     if (segment === '..') {
       segments.pop()

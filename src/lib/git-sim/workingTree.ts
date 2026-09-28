@@ -1,5 +1,6 @@
 import git from 'isomorphic-git'
 import { gitFs } from './sandboxFs'
+import { isIgnoredPath } from './ignoredPaths'
 import type { CommandContext } from './types'
 
 export type ChangeKind = 'new' | 'modified' | 'deleted'
@@ -31,41 +32,54 @@ function stagedChange(head: number, stage: number): ChangeKind | null {
   return null
 }
 
-function unstagedChange(head: number, workdir: number, stage: number): ChangeKind | null {
+function unstagedChange(workdir: number, stage: number): ChangeKind | null {
   if (workdir === 0 && stage > 0) return 'deleted'
   if (workdir === 2 && stage === 1) return 'modified'
   if (workdir === 2 && stage === 3) return 'modified'
-  if (workdir === 2 && stage === 0 && head === 1) return 'modified'
   return null
 }
 
-function isUntracked(head: number, workdir: number, stage: number): boolean {
-  return head === 0 && stage === 0 && workdir > 0
+function isUntracked(workdir: number, stage: number): boolean {
+  return stage === 0 && workdir > 0
 }
 
 export function classifyRows(rows: readonly StatusRow[]): WorkingTree {
   const tree: WorkingTree = { staged: [], unstaged: [], untracked: [] }
 
   for (const [path, head, workdir, stage] of rows) {
-    if (isUntracked(head, workdir, stage)) {
-      tree.untracked.push(path)
-      continue
-    }
     const staged = stagedChange(head, stage)
     if (staged) tree.staged.push({ path, kind: staged })
 
-    const unstaged = unstagedChange(head, workdir, stage)
+    if (isUntracked(workdir, stage)) {
+      tree.untracked.push(path)
+      continue
+    }
+
+    const unstaged = unstagedChange(workdir, stage)
     if (unstaged) tree.unstaged.push({ path, kind: unstaged })
   }
 
   return tree
 }
 
+async function withoutIgnored(
+  ctx: CommandContext,
+  dir: string,
+  paths: readonly string[],
+): Promise<string[]> {
+  const visible: string[] = []
+  for (const path of paths) {
+    if (!(await isIgnoredPath(ctx, dir, path))) visible.push(path)
+  }
+  return visible
+}
+
 export async function readWorkingTree(
   ctx: CommandContext,
   dir: string,
 ): Promise<WorkingTree> {
-  return classifyRows(await readStatusRows(ctx, dir))
+  const tree = classifyRows(await readStatusRows(ctx, dir))
+  return { ...tree, untracked: await withoutIgnored(ctx, dir, tree.untracked) }
 }
 
 export function isClean(tree: WorkingTree): boolean {

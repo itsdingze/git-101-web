@@ -1,4 +1,10 @@
-import { isDirectory, pathExists, readText, writeText } from '@/lib/git-sim/fileOperations'
+import {
+  isDirectory,
+  parentFolderProblem,
+  pathExists,
+  readText,
+  writeText,
+} from '@/lib/git-sim/fileOperations'
 import { resolvePath } from '@/lib/git-sim/paths'
 import { operandsOf } from '@/lib/git-sim/parseArgs'
 import { fail, say, silent } from '@/lib/git-sim/output'
@@ -30,9 +36,17 @@ export const touch: CommandHandler = async (args, ctx) => {
   const targets = operandsOf(args)
   if (targets.length === 0) return fail('touch: missing file operand')
 
+  const outputs: CommandOutput[] = []
   for (const target of targets) {
     const path = resolvePath(target, ctx.cwd, ctx.root)
-    if (!(await pathExists(ctx.fs, path))) await writeText(ctx.fs, path, '')
+    if (await pathExists(ctx.fs, path)) continue
+
+    const problem = await parentFolderProblem(ctx.fs, path, false)
+    if (problem) {
+      outputs.push({ text: `touch: cannot touch '${target}': ${problem}`, stream: 'stderr' })
+      continue
+    }
+    await writeText(ctx.fs, path, '')
   }
-  return silent
+  return outputs
 }

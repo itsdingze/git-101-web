@@ -33,7 +33,7 @@ export const remote: GitSubcommand = {
     if (action === 'add') {
       if (!name || !url) throw new SandboxError('usage: git remote add <name> <url>')
       await git.addRemote({ fs: gitFs(ctx.fs), dir, remote: name, url })
-      await createRemoteRepo(ctx, name)
+      if (!ctx.remote) ctx.remote = { name, url, dir: await createRemoteRepo(ctx, name) }
       return silent
     }
 

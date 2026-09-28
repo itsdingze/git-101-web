@@ -1,10 +1,10 @@
-import git from 'isomorphic-git'
-import { createSandboxFs, gitFs } from './sandboxFs'
+import { createSandboxFs } from './sandboxFs'
 import { makeDirectory, removeTree, writeText } from './fileOperations'
 import { displayPath, joinPath, resolvePath } from './paths'
-import { currentBranch, findRepoDir, refOid } from './repository'
-import { copyObjects, createRemoteRepo } from './remoteTransfer'
+import { currentBranch, findRepoDir } from './repository'
+import { cloneInto, createRemoteRepo } from './remoteTransfer'
 import { runCommand, type RunResult } from './runCommand'
+import { NO_LOCKS, type CommandLocks } from './commandLocks'
 import { readSnapshot, type RepoSnapshot } from './snapshot'
 import type { CommandContext, UserIdentity } from './types'
 
@@ -102,42 +102,6 @@ async function applyStep(
   if (failure) throw new Error(`Sandbox seed step failed: ${step.run}\n${failure.text}`)
 }
 
-async function cloneFromRemote(
-  ctx: CommandContext,
-  remoteDir: string,
-  localDir: string,
-  remote: SeedRemote,
-): Promise<void> {
-  const fs = gitFs(ctx.fs)
-  await makeDirectory(ctx.fs, localDir)
-  await git.init({ fs, dir: localDir, defaultBranch: 'main' })
-  await copyObjects(ctx, remoteDir, localDir)
-  await git.addRemote({ fs, dir: localDir, remote: remote.name, url: remote.url })
-
-  for (const name of await git.listBranches({ fs, dir: remoteDir })) {
-    const oid = await refOid(ctx, remoteDir, `refs/heads/${name}`)
-    if (!oid) continue
-    await git.writeRef({ fs, dir: localDir, ref: `refs/heads/${name}`, value: oid, force: true })
-    await git.writeRef({
-      fs,
-      dir: localDir,
-      ref: `refs/remotes/${remote.name}/${name}`,
-      value: oid,
-      force: true,
-    })
-    await git.setConfig({ fs, dir: localDir, path: `branch.${name}.remote`, value: remote.name })
-    await git.setConfig({
-      fs,
-      dir: localDir,
-      path: `branch.${name}.merge`,
-      value: `refs/heads/${name}`,
-    })
-  }
-
-  const head = (await currentBranch(ctx, remoteDir)) ?? 'main'
-  await git.checkout({ fs, dir: localDir, ref: head, force: true })
-}
-
 async function seedContext(seed: SandboxSeed): Promise<CommandContext> {
   const ctx = createContext()
   const identity = seed.identity ?? DEFAULT_IDENTITY
@@ -155,7 +119,7 @@ async function seedContext(seed: SandboxSeed): Promise<CommandContext> {
     for (const step of seed.remote.setup ?? []) {
       await applyStep(ctx, { ...step, at: 'remote' }, dirs)
     }
-    await cloneFromRemote(ctx, remoteDir, localDir, seed.remote)
+    await cloneInto(ctx, ctx.remote, localDir)
   }
 
   for (const step of seed.setup ?? []) await applyStep(ctx, step, dirs)
@@ -166,11 +130,14 @@ async function seedContext(seed: SandboxSeed): Promise<CommandContext> {
   return ctx
 }
 
-export async function createSandbox(seed: SandboxSeed): Promise<Sandbox> {
+export async function createSandbox(
+  seed: SandboxSeed,
+  locks: CommandLocks = NO_LOCKS,
+): Promise<Sandbox> {
   let ctx = await seedContext(seed)
 
   return {
-    run: (line) => runCommand(line, ctx),
+    run: (line) => runCommand(line, ctx, locks),
     prompt: async () => {
       const dir = await findRepoDir(ctx)
       return {

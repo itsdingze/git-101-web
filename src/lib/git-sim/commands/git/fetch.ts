@@ -2,23 +2,29 @@ import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/sandboxFs'
 import { operandsOf } from '@/lib/git-sim/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
-import { say } from '@/lib/git-sim/output'
+import { say, silent } from '@/lib/git-sim/output'
 import { currentBranch, refOid } from '@/lib/git-sim/repository'
-import { copyObjects, remoteDirFor, remoteExists, remoteUrl } from '@/lib/git-sim/remoteTransfer'
+import { copyObjects } from '@/lib/git-sim/remoteTransfer'
+import { connectToRemote } from '@/lib/git-sim/remoteConnection'
 import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
 
 export type FetchResult = {
   header: string
+  url: string
   remoteName: string
   branch: string
   fetchedOid: string | null
 }
 
-export async function resolveRemoteName(ctx: CommandContext, dir: string): Promise<string> {
+export async function firstRemoteName(ctx: CommandContext, dir: string): Promise<string | null> {
   const remotes = await git.listRemotes({ fs: gitFs(ctx.fs), dir })
-  const first = remotes[0]
-  if (!first) throw new SandboxError('fatal: No remote repository specified.')
-  return first.remote
+  return remotes[0]?.remote ?? null
+}
+
+export async function resolveRemoteName(ctx: CommandContext, dir: string): Promise<string> {
+  const name = await firstRemoteName(ctx, dir)
+  if (!name) throw new SandboxError('fatal: No remote repository specified.')
+  return name
 }
 
 export async function fetchFromRemote(
@@ -27,17 +33,10 @@ export async function fetchFromRemote(
   remoteName: string,
   branch: string,
 ): Promise<FetchResult> {
-  if (!(await remoteExists(ctx, remoteName))) {
-    const url = await remoteUrl(ctx, dir, remoteName)
-    throw new SandboxError(
-      [`fatal: '${url}' does not appear to be a git repository`, 'fatal: Could not read from remote repository.'].join('\n'),
-    )
-  }
+  const remote = await connectToRemote(ctx, dir, remoteName)
+  await copyObjects(ctx, remote.dir, dir)
 
-  const remoteDir = remoteDirFor(ctx, remoteName)
-  await copyObjects(ctx, remoteDir, dir)
-
-  const fetchedOid = await refOid(ctx, remoteDir, `refs/heads/${branch}`)
+  const fetchedOid = await refOid(ctx, remote.dir, `refs/heads/${branch}`)
   const trackingRef = `refs/remotes/${remoteName}/${branch}`
   const previous = await refOid(ctx, dir, trackingRef)
 
@@ -45,13 +44,14 @@ export async function fetchFromRemote(
     await git.writeRef({ fs: gitFs(ctx.fs), dir, ref: trackingRef, value: fetchedOid, force: true })
   }
 
-  const url = await remoteUrl(ctx, dir, remoteName)
+  const url = remote.url.replace(/\.git$/, '')
   const line = previous
     ? ` * branch            ${branch.padEnd(10)} -> FETCH_HEAD`
     : ` * [new branch]      ${branch.padEnd(10)} -> ${remoteName}/${branch}`
 
   return {
-    header: fetchedOid ? [`From ${url.replace(/\.git$/, '')}`, line].join('\n') : `From ${url.replace(/\.git$/, '')}`,
+    header: fetchedOid ? [`From ${url}`, line].join('\n') : `From ${url}`,
+    url,
     remoteName,
     branch,
     fetchedOid,
@@ -62,7 +62,9 @@ export const fetch: GitSubcommand = {
   requiresRepo: true,
   run: async (args, ctx, dir) => {
     const operands = operandsOf(args)
-    const remoteName = operands[0] ?? (await resolveRemoteName(ctx, dir))
+    const remoteName = operands[0] ?? (await firstRemoteName(ctx, dir))
+    if (!remoteName) return silent
+
     const branch = operands[1] ?? (await currentBranch(ctx, dir)) ?? 'main'
 
     const result = await fetchFromRemote(ctx, dir, remoteName, branch)

@@ -6,6 +6,7 @@ export type Redirection = {
 export type ParsedLine = {
   tokens: string[]
   redirection: Redirection | null
+  redirectionMissingTarget: boolean
 }
 
 function splitTokens(line: string): string[] {
@@ -57,13 +58,16 @@ function splitTokens(line: string): string[] {
 export function parseLine(line: string): ParsedLine {
   const tokens = splitTokens(line)
   const arrow = tokens.findIndex((token) => token === '>' || token === '>>')
-  if (arrow === -1) return { tokens, redirection: null }
+  if (arrow === -1) return { tokens, redirection: null, redirectionMissingTarget: false }
 
   const target = tokens[arrow + 1]
-  if (!target) return { tokens: tokens.slice(0, arrow), redirection: null }
+  if (target === undefined) {
+    return { tokens: tokens.slice(0, arrow), redirection: null, redirectionMissingTarget: true }
+  }
 
   return {
     tokens: tokens.slice(0, arrow),
     redirection: { target, append: tokens[arrow] === '>>' },
+    redirectionMissingTarget: false,
   }
 }

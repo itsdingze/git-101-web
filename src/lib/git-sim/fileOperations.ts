@@ -23,6 +23,21 @@ export async function readText(fs: SandboxFs, path: string): Promise<string> {
   return typeof contents === 'string' ? contents : new TextDecoder().decode(contents)
 }
 
+export type ParentFolderProblem = 'No such file or directory' | 'Not a directory'
+
+export async function parentFolderProblem(
+  fs: SandboxFs,
+  path: string,
+  createMissing: boolean,
+): Promise<ParentFolderProblem | null> {
+  let nearest = dirname(path)
+  while (!(await pathExists(fs, nearest))) nearest = dirname(nearest)
+
+  if (!(await isDirectory(fs, nearest))) return 'Not a directory'
+  if (nearest !== dirname(path) && !createMissing) return 'No such file or directory'
+  return null
+}
+
 export async function makeDirectory(fs: SandboxFs, path: string): Promise<void> {
   const parent = dirname(path)
   if (parent !== path && parent !== '/' && !(await pathExists(fs, parent))) {

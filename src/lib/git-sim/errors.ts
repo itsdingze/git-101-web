@@ -19,7 +19,15 @@ export const UNKNOWN_IDENTITY = [
   "fatal: unable to auto-detect email address (got 'user@sandbox.(none)')",
 ].join('\n')
 
-type GitError = { code: string; data?: Record<string, unknown> }
+export function unknownRevision(spec: string): string {
+  return [
+    `fatal: ambiguous argument '${spec}': unknown revision or path not in the working tree.`,
+    "Use '--' to separate paths from revisions, like this:",
+    "'git <command> [<revision>...] -- [<file>...]'",
+  ].join('\n')
+}
+
+type GitError ={ code: string; data?: Record<string, unknown> }
 
 function asText(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback
@@ -68,6 +76,8 @@ export function describeGitError(error: unknown): string {
       return UNKNOWN_IDENTITY
     case 'MergeNotSupportedError':
       return 'fatal: this merge shape is not simulated in this course.'
+    case 'InternalError':
+      return 'fatal: files inside .git were edited, so this repository can no longer be read. Use Start over to reset the exercise.'
     default:
       return `fatal: ${error.message}`
   }

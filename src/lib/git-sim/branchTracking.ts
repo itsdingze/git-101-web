@@ -1,6 +1,7 @@
 import git from 'isomorphic-git'
 import { gitFs } from './sandboxFs'
 import { refOid } from './repository'
+import { readUpstream, remoteRefOf } from './upstream'
 import type { CommandContext } from './types'
 
 export type TrackingSummary = {
@@ -25,11 +26,16 @@ export async function readTracking(
   dir: string,
   branch: string,
 ): Promise<TrackingSummary | null> {
-  const remotes = await git.listRemotes({ fs: gitFs(ctx.fs), dir })
-  const remote = remotes[0]
-  if (!remote) return null
+  const upstream = await readUpstream(ctx, dir, branch)
+  return upstream ? compareWithRemote(ctx, dir, branch, remoteRefOf(upstream)) : null
+}
 
-  const remoteRef = `${remote.remote}/${branch}`
+export async function compareWithRemote(
+  ctx: CommandContext,
+  dir: string,
+  branch: string,
+  remoteRef: string,
+): Promise<TrackingSummary | null> {
   if (!(await refOid(ctx, dir, `refs/remotes/${remoteRef}`))) return null
 
   const local = await oidsFor(ctx, dir, branch)
