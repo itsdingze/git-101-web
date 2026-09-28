@@ -4,6 +4,7 @@ export default {
   id: 0,
   title: 'What is Git?',
   description: 'Understand version control and why Git matters',
+  unlocks: [],
   steps: [
     {
       type: 'reading',
@@ -14,6 +15,11 @@ export default {
           type: 'text',
           value:
             "Imagine you're writing an essay. You save it as `essay_final.doc`, then `essay_final_v2.doc`, then `essay_REALLY_final.doc`. That is version control, done the painful way. A **version control system** is a program that does it for you: it records every version of your project, so you can look back at what changed and return to any earlier version.",
+        },
+        {
+          type: 'text',
+          value:
+            'None of that is particular to one line of work. Version control tracks files, and it never asks what is inside them. People run it over a novel, a doctoral thesis, a folder of design files, a season of research data, a set of translations, a website.',
         },
         {
           type: 'text',
@@ -74,12 +80,7 @@ export default {
         {
           type: 'text',
           value:
-            "So the dependency only runs one way. GitHub needs Git, since it exists to host what Git produces. Git does not need GitHub. You can use Git for years, on every project you write, and never make an account. GitHub isn't the only site of its kind either. [GitLab](https://gitlab.com) and [Bitbucket](https://bitbucket.org) do the same job.",
-        },
-        {
-          type: 'text',
-          value:
-            'Downloading Git needs the internet once, in the next lesson. After that, lessons 2 and 3 never need the internet again, even though you will be using Git the whole time.',
+            "So the dependency only runs one way. GitHub needs Git, since it exists to host what Git produces. Git does not need GitHub. You can use Git for years, on every project you work on, and never make an account. GitHub isn't the only site of its kind either. [GitLab](https://gitlab.com) and [Bitbucket](https://bitbucket.org) do the same job.",
         },
       ],
     },
@@ -91,7 +92,7 @@ export default {
         {
           type: 'text',
           value:
-            'Git was created by **Linus Torvalds** in 2005. He is also the person who started Linux, the operating system that runs most of the servers on the internet. Linux had thousands of contributors around the world, and they managed all that code with a tool called BitKeeper. Then BitMover, the company behind BitKeeper, withdrew the free version. Linus needed a replacement — fast.',
+            'Git was created by **Linus Torvalds** in 2005. He is also the person who started Linux, the operating system that runs most of the servers on the internet. Linux had thousands of contributors around the world, and they managed all that code with a tool called BitKeeper. Then BitMover, the company behind BitKeeper, withdrew the free version. Linus needed a replacement, and he needed it fast.',
         },
         {
           type: 'text',
@@ -118,24 +119,30 @@ export default {
         {
           type: 'text',
           value:
-            'This course takes you from zero to comfortable. Here is the road ahead:',
+            'This course takes you from zero to comfortable. Twelve lessons follow this one:',
         },
         {
           type: 'list',
           ordered: true,
           items: [
-            '**Setting up Git** means installing it and telling it who you are.',
-            '**Local basics** takes you through starting a repository, making commits, and seeing what changed.',
-            '**Going remote** puts your project on GitHub so you can work with other people.',
-            '**Branching and merging** lets you build two things at once, then combine them.',
+            "**How you'll work** introduces the terminal and teaches Git your name.",
+            '**Your first repository** turns an ordinary folder into a project Git tracks.',
+            '**Your first commit** records your first snapshot and reads the history back.',
+            '**.gitignore** keeps passwords and clutter out of the history.',
+            '**Branching** lets you build something new without disturbing what already works.',
+            '**Merging** brings a finished branch back into the main line of work.',
+            '**Merge conflicts** settles matters when two people changed the same line.',
+            '**Stashing** parks half-finished work so you can deal with something urgent.',
             '**Fixing mistakes** undoes changes and recovers work you thought was gone.',
-            '**Real-world workflow** covers pull requests, code review, and how teams actually work.',
+            '**Remotes and GitHub** puts your project online and pulls other people\'s work down.',
+            "**Team workflow** covers pull requests, reviewing each other's changes, and how teams actually work.",
+            '**Ship it to GitHub** sets Git up on your own computer and pushes a project of yours for real.',
           ],
         },
         {
           type: 'text',
           value:
-            "Each lesson builds on the one before it, so go in order. Nothing here assumes you have written code before, and nothing you do in this app can break anything on your computer.",
+            'Each lesson builds on the one before it, so go in order. Nothing here assumes you have written code before, or that the project you bring is code at all.',
         },
       ],
     },
@@ -145,7 +152,7 @@ export default {
       question: 'What problem does a version control system solve?',
       options: [
         {
-          text: 'It checks your code for mistakes before you run it.',
+          text: 'It checks your files for mistakes and warns you before you save them.',
           whyWrong:
             'Git never reads or judges what is inside your files. It only records what they contained at each point in time. Whether the contents are any good is not a question it can answer.',
         },
@@ -242,7 +249,7 @@ export default {
         {
           type: 'text',
           value:
-            'Next up: you install Git on your own computer and tell it your name, so every commit you make from now on is stamped with who wrote it.',
+            'Next up: you meet the terminal, find your way around a project in it, and tell Git your name, so every commit you make from now on is stamped with who wrote it.',
         },
       ],
     },

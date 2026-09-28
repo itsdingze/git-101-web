@@ -1,8 +1,9 @@
 import type { Lesson } from '@/types'
 export default {
-  id: 6,
+  id: 5,
   title: 'Branching',
   description: 'Work on something new without risking the version that already works',
+  unlocks: ['branch', 'switch', 'checkout'],
   steps: [
     {
       type: 'reading',
@@ -12,12 +13,12 @@ export default {
         {
           type: 'text',
           value:
-            'You have a class project in a folder. It works. It is not amazing, but it runs, and you could hand it in tomorrow if you had to.',
+            'You have a class project in a folder. It works. It is not amazing, but it holds together, and you could hand it in tomorrow if you had to.',
         },
         {
           type: 'text',
           value:
-            'Now you want to try something big. Rewrite the layout. Restructure how the pages fit together. You are honestly not sure it will work, and you might throw the whole attempt away. Without Git you have two choices:',
+            'Now you want to try something big. Rewrite the layout. Restructure how the parts fit together. You are honestly not sure it will work, and you might throw the whole attempt away. Without Git you have two choices:',
         },
         {
           type: 'list',
@@ -29,7 +30,7 @@ export default {
         {
           type: 'text',
           value:
-            'Both are bad. The first puts the version you can hand in at risk. The second is how you end up with `project-v2-FINAL`, then `project-v2-FINAL-actual`, then `project-v2-use-this-one` — with no way to tell what is different between them.',
+            'Both are bad. The first puts the version you can hand in at risk. The second is how you end up with `project-v2-FINAL`, then `project-v2-FINAL-actual`, then `project-v2-use-this-one`. Nothing tells you what is different between them.',
         },
         {
           type: 'text',
@@ -46,7 +47,7 @@ export default {
         {
           type: 'text',
           value:
-            'A **branch** is a name for one line of work. You have been using one this whole course without thinking about it: `main` is a branch, and every commit you have made has gone onto it.',
+            'A **branch** is a name for one line of work. You have been using one all along without thinking about it: `main` is a branch, and every commit you have made has gone onto it.',
         },
         {
           type: 'text',
@@ -63,7 +64,7 @@ export default {
           variant: 'info',
           title: 'Why creating a branch is instant',
           value:
-            'Creating a branch copies nothing. Underneath, a branch is a **pointer**: a tiny file holding the ID of one commit. Making a new one writes about forty characters to disk, which is why creating a branch finishes before you have let go of the Enter key — even on a huge project.',
+            'Creating a branch copies nothing. Underneath, a branch is a **pointer**: a tiny file holding the ID of one commit. Making a new one writes about forty characters to disk. That is why creating a branch finishes before you have let go of the Enter key, even on a huge project.',
         },
       ],
       visualization: 'git-graph',
@@ -88,12 +89,12 @@ export default {
         {
           type: 'text',
           value:
-            'Branch names cannot contain spaces, so use dashes: `add-navbar`, `fix-login-bug`, `try-dark-mode`. Name the branch after the work. A name you wrote today should still tell you what it was for when you come back to it next week.',
+            'Branch names cannot contain spaces, so use dashes: `add-navbar`, `fix-broken-links`, `try-dark-mode`. Name the branch after the work. A name you wrote today should still tell you what it was for when you come back to it next week.',
         },
         {
           type: 'text',
           value:
-            'Older tutorials write `git checkout -b add-navbar` instead. It does the same thing and still works. `git switch` arrived in Git 2.23 and exists because `checkout` had been given too many unrelated jobs over the years. If you find `checkout -b` in an answer online, it is not wrong, only old.',
+            'Older tutorials write `git checkout -b add-navbar` instead. It does the same thing and still works. `git switch` arrived in Git 2.23 because `checkout` had been given too many unrelated jobs over the years. If you find `checkout -b` in an answer online, it is not wrong, only old.',
         },
       ],
     },
@@ -108,19 +109,6 @@ export default {
         'You want the one command that creates and moves in a single step',
         'Start with `git switch`, then the flag that means create',
         'It is `git switch -c feature`',
-      ],
-    },
-    {
-      type: 'terminal-exercise',
-      id: 'create-branch',
-      prompt:
-        'You are on `main` in your project, about to start work on a navbar. Create a branch called "add-navbar" and switch to it:',
-      expectedCommand: 'git switch -c add-navbar',
-      acceptableVariants: ['git checkout -b add-navbar'],
-      successOutput: "Switched to a new branch 'add-navbar'",
-      hints: [
-        'Use `git switch` with the flag that creates the branch first',
-        'It is `git switch -c add-navbar`',
       ],
     },
     {
@@ -158,7 +146,7 @@ export default {
       title: 'Watch a branch keep work separate',
       mode: 'guided',
       brief:
-        'Below is a project with one commit on `main`, holding `index.html` and `style.css`. You have also written `navbar.html`, about a dozen lines of markup, and it is sitting in the folder with nothing about it saved to Git yet. You are going to put that file on its own branch, then watch it vanish and come back as you switch branches. This is the part that makes branches finally click, so read each line before you type. It is a real Git, so `ls` and `git status` work whenever you want to look around.',
+        'Below is a project with one commit on `main`, holding `index.html` and `style.css`. You have also written `navbar.html`, about a dozen lines of markup, and it is sitting in the folder with nothing about it saved to Git yet. You are going to put that file on its own branch, then watch it vanish and come back as you switch branches. This is the part that makes branches finally click, so read each line before you type. Run `ls` and `git status` whenever you want to look around.',
       seed: {
         dir: 'my-project',
         setup: [
@@ -303,12 +291,7 @@ export default {
           type: 'code',
           language: 'bash',
           value:
-            'git branch               # List the branches on your computer\ngit branch -a            # List those plus the remote branches as of your last fetch or pull\ngit branch -d old-idea   # Delete a branch you are finished with',
-        },
-        {
-          type: 'text',
-          value:
-            'That remote list is a snapshot, not a live view of GitHub. A branch a teammate pushed five minutes ago will not appear until you run `git fetch`, which refreshes it.',
+            'git branch               # List your branches\ngit branch -d old-idea   # Delete a branch you are finished with',
         },
         {
           type: 'text',

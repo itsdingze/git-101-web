@@ -25,7 +25,7 @@ export default function SandboxExercise({ step, lessonId }: SandboxExerciseProps
   const isCompleted = useProgressStore((s) => !!s.completedSteps[`${lessonId}:${step.id}`])
 
   const { ready, running, lines, prompt, completedGoals, allCompleted, activeGoalIndex, submit, reset } =
-    useSandboxExercise(step)
+    useSandboxExercise(step, lessonId, isCompleted)
 
   const [hintState, setHintState] = useState<HintState>({ goalId: '', index: 0, open: false })
 
@@ -92,12 +92,12 @@ export default function SandboxExercise({ step, lessonId }: SandboxExerciseProps
         hints={activeGoal?.hints}
         hintIndex={hintIndex}
         showHint={showHint}
-        solved={allCompleted}
+        solved={solved}
         onToggleHint={handleToggleHint}
         onReset={handleReset}
       />
 
-      {allCompleted && (
+      {solved && (
         <div className="flex items-start gap-3 p-4 rounded-xl text-sm leading-relaxed bg-accent-green/5 border border-accent-green/20">
           <CheckCircle size={18} className="text-accent-green shrink-0" />
           <InlineMarkdown

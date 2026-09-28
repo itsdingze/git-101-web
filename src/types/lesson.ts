@@ -1,6 +1,7 @@
 import type { ScenarioKey } from './graph'
 import type { SandboxSeed } from '@/lib/git-sim/createSandbox'
 import type { GoalCheck } from '@/lib/git-sim/goals'
+import type { GitCommandName } from '@/lib/git-sim/commands/git/registry'
 
 export type TextBlock = {
   type: 'text'
@@ -61,16 +62,6 @@ export type QuizStep = {
   explanation: string
 }
 
-export type TerminalExerciseStep = {
-  type: 'terminal-exercise'
-  id: string
-  prompt: string
-  expectedCommand: string
-  acceptableVariants?: readonly string[]
-  successOutput: string
-  hints?: readonly string[]
-}
-
 export type BlockExerciseStep = {
   type: 'block-exercise'
   id: string
@@ -117,11 +108,12 @@ export type SandboxExerciseStep = {
   completionMessage?: string
 }
 
-export type Step = ReadingStep | QuizStep | TerminalExerciseStep | BlockExerciseStep | ConflictExerciseStep | SandboxExerciseStep
+export type Step = ReadingStep | QuizStep | BlockExerciseStep | ConflictExerciseStep | SandboxExerciseStep
 
 export type Lesson = {
   id: number
   title: string
   description: string
+  unlocks: readonly GitCommandName[]
   steps: readonly Step[]
 }

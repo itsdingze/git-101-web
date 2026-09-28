@@ -20,7 +20,7 @@ export default function HomePage() {
           Learn Git
         </h1>
         <p className="text-base text-text-muted mt-2 leading-relaxed">
-          Interactive lessons to master version control
+          Thirteen hands-on lessons, from your first commit to a real team workflow
         </p>
       </div>
 

@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PromptInfo, Sandbox } from '@/lib/git-sim/createSandbox'
 import { evaluateGoal } from '@/lib/git-sim/goals'
+import { commandLocksFor } from '@/data/lessons/commandLocks'
 import type { SandboxExerciseStep } from '@/types'
 
 export type TerminalLine = {
@@ -25,8 +26,13 @@ interface SandboxExerciseState {
   reset: () => void
 }
 
-export default function useSandboxExercise(step: SandboxExerciseStep): SandboxExerciseState {
+export default function useSandboxExercise(
+  step: SandboxExerciseStep,
+  lessonId: number,
+  previouslyCompleted: boolean,
+): SandboxExerciseState {
   const sandboxRef = useRef<Sandbox | null>(null)
+  const locks = useMemo(() => commandLocksFor(lessonId), [lessonId])
   const nextLineId = useRef(0)
 
   const [ready, setReady] = useState(false)
@@ -34,7 +40,7 @@ export default function useSandboxExercise(step: SandboxExerciseStep): SandboxEx
   const [lines, setLines] = useState<TerminalLine[]>([])
   const [prompt, setPrompt] = useState<PromptInfo>(IDLE_PROMPT)
   const [completedGoals, setCompletedGoals] = useState<boolean[]>(() =>
-    step.goals.map(() => false),
+    step.goals.map(() => previouslyCompleted),
   )
 
   /**
@@ -46,11 +52,21 @@ export default function useSandboxExercise(step: SandboxExerciseStep): SandboxEx
     async (sandbox: Sandbox) => {
       const snapshot = await sandbox.snapshot()
       setPrompt(await sandbox.prompt())
-      setCompletedGoals((previous) =>
-        step.goals.map((goal, index) => previous[index] || evaluateGoal(goal.check, snapshot)),
-      )
+      setCompletedGoals((previous) => {
+        if (step.mode !== 'guided') {
+          return step.goals.map((goal, index) => previous[index] || evaluateGoal(goal.check, snapshot))
+        }
+
+        const reached = [...previous]
+        for (const [index, goal] of step.goals.entries()) {
+          if (reached[index]) continue
+          if (!evaluateGoal(goal.check, snapshot)) break
+          reached[index] = true
+        }
+        return reached
+      })
     },
-    [step.goals],
+    [step.goals, step.mode],
   )
 
   /** isomorphic-git only loads for learners who actually reach a sandbox step. */
@@ -58,7 +74,7 @@ export default function useSandboxExercise(step: SandboxExerciseStep): SandboxEx
     let cancelled = false
 
     void import('@/lib/git-sim/createSandbox')
-      .then(({ createSandbox }) => createSandbox(step.seed))
+      .then(({ createSandbox }) => createSandbox(step.seed, locks))
       .then(async (sandbox) => {
         if (cancelled) return
         sandboxRef.current = sandbox
@@ -70,7 +86,7 @@ export default function useSandboxExercise(step: SandboxExerciseStep): SandboxEx
       cancelled = true
       sandboxRef.current = null
     }
-  }, [step.seed, refresh])
+  }, [step.seed, locks, refresh])
 
   const appendLines = useCallback((entries: Omit<TerminalLine, 'id'>[]) => {
     setLines((previous) => [

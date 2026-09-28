@@ -52,7 +52,7 @@ const useProgressStore = create<ProgressStore>()(
     }),
     {
       name: 'git-101-progress',
-      version: 4,
+      version: 5,
       migrate: (): ProgressState => ({ ...initialState }),
     }
   )

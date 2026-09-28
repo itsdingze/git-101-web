@@ -3,6 +3,7 @@ export default {
   id: 3,
   title: 'Your First Commit',
   description: 'Stage files, write good commit messages, and view history',
+  unlocks: ['add', 'diff', 'log'],
   steps: [
     {
       type: 'reading',
@@ -62,34 +63,45 @@ export default {
         {
           type: 'text',
           value:
-            'The `-m` flag lets you write the message right there on the same line. Leave `-m` off and Git opens a text editor instead and waits for you to type a longer message.',
-        },
-        {
-          type: 'callout',
-          variant: 'warning',
-          title: 'Stuck in a screen you cannot type in?',
-          value:
-            'That editor is often **Vim**, a program where normal typing does not behave the way you expect — and there is no visible way out. To escape: press `Esc`, then type `:wq`, then press `Enter`. That saves and quits. Memorise those three keystrokes. Every developer needs them at least once.',
+            'The `-m` flag lets you write the message right there on the same line. Always use it.',
         },
         {
           type: 'text',
-          value: 'To avoid meeting Vim at all, tell Git to use an editor you already know:',
+          value: 'A successful commit reports what it recorded:',
+        },
+        {
+          type: 'code',
+          language: 'text',
+          value:
+            '[main (root-commit) 41d25db] Initial commit\n 2 files changed, 2 insertions(+)\n create mode 100644 chapter-one.md\n create mode 100644 outline.md',
+        },
+        {
+          type: 'text',
+          value:
+            'The words `root-commit` only show up on the very first commit in a repository. `41d25db` is the beginning of that commit\'s unique ID, and yours will be different, because the ID is generated from the contents, the author, and the moment it was made.',
+        },
+        {
+          type: 'text',
+          value:
+            'There is a shortcut for the common case. Once a file is already tracked, `-a` stages every tracked file you have changed and commits it in one step:',
         },
         {
           type: 'code',
           language: 'bash',
           value:
-            '# Use VS Code as your Git editor:\ngit config --global core.editor "code --wait"\n\n# Or use nano, a small and simple terminal editor:\ngit config --global core.editor "nano"',
+            'git commit -am "Rewrite the opening line"    # stage tracked changes and commit them',
         },
         {
           type: 'text',
           value:
-            'The `code --wait` line needs VS Code installed. `nano` already exists on macOS and Linux. On Windows it comes bundled with Git, so run it from Git Bash, the terminal the Git installer added in lesson 1.',
+            '`-a` only covers files Git already knows about. A brand-new file is untracked, so it still needs `git add` before it can go anywhere.',
         },
         {
-          type: 'text',
+          type: 'callout',
+          variant: 'info',
+          title: 'If a commit ever opens a text editor',
           value:
-            'When a commit succeeds, Git prints a line like `[main (root-commit) 7f3a9c1] Initial commit`. The words `root-commit` only show up on the very first commit in a repository, and `7f3a9c1` is the beginning of that commit\'s unique ID.',
+            'Leave `-m` off and Git opens a text editor for you to type the message in. That editor is often **Vim**, where normal typing does not behave the way you expect and there is no visible way out. To escape: press `Esc`, type `:wq`, then press `Enter`. That saves and quits. Memorise those three keystrokes. Everyone needs them at least once.',
         },
       ],
     },
@@ -106,7 +118,7 @@ export default {
         {
           type: 'list',
           items: [
-            '**Write the message as an instruction**, so "Add contact form" rather than "Added contact form". You will also hear this called *imperative mood*. The test: the sentence "If applied, this commit will *add contact form*" should read correctly.',
+            '**Write the message as an instruction**, so "Rewrite the opening scene" rather than "Rewrote the opening scene". You will also hear this called *imperative mood*. The test: the sentence "If applied, this commit will *rewrite the opening scene*" should read correctly.',
             '**Keep the first line under 50 characters** so a whole list of them is easy to scan.',
             '**Put the detail in a body after a blank line.** The first line says what changed. The body says why.',
           ],
@@ -115,12 +127,23 @@ export default {
           type: 'code',
           language: 'text',
           value:
-            'Add contact form to homepage\n\nCreate a form with name, email, and message fields.\nForm data is saved to the database and sends an email notification.',
+            'Rewrite the opening scene\n\nMove the storm to the first page so the reader meets the\nlighthouse before the keeper. Cuts about two hundred words.',
         },
         {
           type: 'text',
           value:
-            'Some teams use a format called **[Conventional Commits](https://www.conventionalcommits.org)**: `feat: add auth`, `fix: resolve login bug`, `docs: update README`. The prefix makes a long history much easier to scan.',
+            'To write a body with `-m`, give the flag twice. The first `-m` becomes the subject line, and the second becomes the body paragraph underneath it. Git puts the blank line between them for you:',
+        },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            'git commit -m "Rewrite the opening scene" -m "Move the storm to the first page so the reader meets the lighthouse before the keeper."',
+        },
+        {
+          type: 'text',
+          value:
+            'If your project is software, you may meet a format called **[Conventional Commits](https://www.conventionalcommits.org)**: `feat: add auth`, `fix: resolve login bug`, `docs: update README`. The prefix makes a long history much easier to scan, and nothing stops any project from borrowing the idea.',
         },
       ],
     },
@@ -203,7 +226,7 @@ export default {
         {
           type: 'text',
           value:
-            'You do not need to memorise these. Knowing they exist is enough, so you can look them up the day you need them.',
+            'Knowing these exist is enough. Look one up the day you need it.',
         },
       ],
     },
@@ -213,14 +236,14 @@ export default {
       title: 'Practice: your first commit, start to finish',
       mode: 'goal',
       brief:
-        'Below is a folder called `my-project` holding two files, `index.html` and `style.css`. Git is already watching the folder, but nothing in it has ever been saved into a commit. **Your goal: get both files into a commit.** No steps this time, and no order to follow. Every command in this lesson works down there, and `git status` will tell you where you stand whenever you lose track. It is a real Git running inside your browser on a folder of its own, so nothing you type can break anything, on your computer or anywhere else. Type `help` for the list of commands it knows.',
+        'Below is a folder called `my-story` holding two files, `chapter-one.md` and `outline.md`. Git is already watching the folder, but nothing in it has ever been saved into a commit. **Your goal: get both files into a commit, then record a change on top of it.** No steps this time, and no order to follow. Every command in this lesson works down there, and `git status` will tell you where you stand whenever you lose track. There is no editor here, so change a file by writing to it: `echo "new text" > chapter-one.md`. Type `help` for the list of commands available.',
       seed: {
-        dir: 'my-project',
+        dir: 'my-story',
         setup: [
           {
             write: {
-              'index.html': '<h1>Hello</h1>\n',
-              'style.css': 'body { font-family: sans-serif; }\n',
+              'chapter-one.md': 'The lighthouse had been dark for a year.\n',
+              'outline.md': 'Chapter one: the keeper finds the lighthouse dark.\n',
             },
           },
           { run: 'git init' },
@@ -230,7 +253,7 @@ export default {
         {
           id: 'staged',
           label: 'Both files are in the staging area',
-          check: { kind: 'files-staged', paths: ['index.html', 'style.css'] },
+          check: { kind: 'files-staged', paths: ['chapter-one.md', 'outline.md'] },
           hints: [
             'Run `git status` first. It tells you what Git can see and what it is ignoring for now.',
             'Staging is the step between editing and saving. The command is `git add`.',
@@ -240,16 +263,26 @@ export default {
         {
           id: 'committed',
           label: 'Both files are saved in a commit',
-          check: { kind: 'commit-exists', containing: ['index.html', 'style.css'] },
+          check: { kind: 'commit-exists', containing: ['chapter-one.md', 'outline.md'] },
           hints: [
             'Staging only picks what goes in. Saving the snapshot is a separate command.',
             'It is `git commit`, and it needs a message.',
             'Write the message inline: `git commit -m "Initial commit"`.',
           ],
         },
+        {
+          id: 'second-commit',
+          label: 'A second commit, with the message "Rewrite the opening line", records an edit',
+          check: { kind: 'commit-exists', messageIncludes: 'Rewrite the opening line' },
+          hints: [
+            'Change `chapter-one.md` first. A commit needs something new to record.',
+            '`echo "The lighthouse had been dark for a year, and nobody had asked why." > chapter-one.md` replaces the file contents. Check the edit with `git diff`.',
+            '`chapter-one.md` is tracked now, so one command stages and commits it: `git commit -am "Rewrite the opening line"`.',
+          ],
+        },
       ],
       completionMessage:
-        'That is the core loop of Git, and you will run most of it thousands of times. `git init` runs once per project to create the repository, and the other four come round again and again: `git status` to see where you stand, `git add` to choose what goes in, `git commit` to save the snapshot, and `git log` to read your history back. Try `git log --oneline` below before you move on. The terminal stays live, so keep poking at it.',
+        'That is the core loop of Git, and it comes round again and again. `git init` runs once per project to create the repository. The other four repeat for the life of the project: `git status` to see where you stand, `git add` to choose what goes in, `git commit` to save the snapshot, and `git log` to read your history back. Try `git log --oneline` before you move on, and you will see both of your commits, newest first.',
     },
     {
       type: 'quiz',
@@ -323,7 +356,7 @@ export default {
             'Write a commit message that still makes sense to you six months later',
             'See exactly which lines changed, staged or not, with `git diff`',
             'Read your project history back with `git log`',
-            'Escape Vim if a commit ever drops you into it',
+            'Escape Vim if a commit ever opens it',
           ],
         },
         { type: 'text', value: '**Commands from this lesson**' },
@@ -331,12 +364,12 @@ export default {
           type: 'code',
           language: 'bash',
           value:
-            'git add .                # stage everything in this folder\ngit add -A               # stage everything in the whole project\ngit commit -m "..."      # save a snapshot with a message\ngit diff                 # changed but not staged yet\ngit diff --staged        # staged and ready for the next commit\ngit log                  # full history\ngit log --oneline        # one line per commit',
+            'git add .                # stage everything in this folder\ngit add -A               # stage everything in the whole project\ngit commit -m "..."      # save a snapshot with a message\ngit commit -am "..."     # stage every tracked change and commit it\ngit diff                 # changed but not staged yet\ngit diff --staged        # staged and ready for the next commit\ngit log                  # full history\ngit log --oneline        # one line per commit',
         },
         {
           type: 'text',
           value:
-            'Next up: every commit you have made so far lives only on your own computer. In the next lesson you connect your project to GitHub, so it is backed up and other people can see it.',
+            'Next up: some files have no business being in your history at all, from build output to passwords. You will tell Git to ignore them with a `.gitignore` file.',
         },
       ],
     },

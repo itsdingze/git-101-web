@@ -11,18 +11,22 @@ interface UseSummaryPageResult {
 }
 
 function extractCommands(steps: readonly Step[]): string[] {
-  const commands: string[] = []
+  const recap = steps.find((step) => step.type === 'reading' && step.id === 'recap')
 
-  for (const step of steps) {
-    if (step.type === 'terminal-exercise') {
-      commands.push(step.expectedCommand)
-    }
-    if (step.type === 'block-exercise') {
-      commands.push(step.correctAnswer.join(' '))
-    }
-  }
+  const listed =
+    recap?.type === 'reading'
+      ? recap.content
+          .filter((block) => block.type === 'code' && block.language === 'bash')
+          .flatMap((block) => (block.type === 'code' ? block.value.split('\n') : []))
+          .map((line) => line.split('#')[0]?.trim() ?? '')
+          .filter(Boolean)
+      : []
 
-  return [...new Set(commands)]
+  const built = steps
+    .filter((step) => step.type === 'block-exercise')
+    .map((step) => (step.type === 'block-exercise' ? step.correctAnswer.join(' ') : ''))
+
+  return [...new Set([...listed, ...built])]
 }
 
 export default function useSummaryPage(): UseSummaryPageResult {

@@ -1,8 +1,9 @@
 import type { Lesson } from '@/types'
 export default {
-  id: 7,
+  id: 6,
   title: 'Merging',
   description: 'Combine branches together',
+  unlocks: ['merge'],
   steps: [
     {
       type: 'reading',
@@ -12,12 +13,12 @@ export default {
         {
           type: 'text',
           value:
-            '**Merging** is how you take the work sitting on one branch and fold it into another branch. When your feature branch is finished, you merge it into `main` so the finished work joins the main line of the project.',
+            '**Merging** is how you take the work sitting on one branch and fold it into another branch. When the work on a branch is finished, you merge it into `main` so it joins the main line of the project.',
         },
         {
           type: 'text',
           value:
-            'Merging has a direction, and getting the direction backwards is the single most common beginner mistake. You first switch to the branch that is going to **receive** the work. Then you name the branch you want to pull in.',
+            'Merging has a direction, and getting the direction backwards is the single most common beginner mistake. You first switch to the branch that is going to **receive** the work. Then you name the branch whose work you want to bring in.',
         },
         {
           type: 'code',
@@ -41,7 +42,7 @@ export default {
           type: 'callout',
           variant: 'tip',
           value:
-            'Commit or discard whatever you are in the middle of before you merge. Git may refuse to start if you have unsaved edits that the incoming work would overwrite, and a clean starting point makes the result far easier to read.',
+            'Commit or discard whatever you are in the middle of before you merge. Git may refuse to start if you have uncommitted edits that the incoming work would overwrite, and a clean starting point makes the result far easier to read.',
         },
       ],
       visualization: 'git-graph',
@@ -63,16 +64,33 @@ export default {
             'You get a **fast-forward** when nobody else touched `main` while you worked. `main` is still sitting exactly where it was on the day you branched off, and your branch already contains every commit `main` has, plus your new ones. There is nothing to reconcile, so Git slides the `main` label forward to your latest commit. Your history stays a straight line.',
         },
         {
+          type: 'code',
+          language: 'text',
+          value:
+            'Updating 4aa5b69..512bbb8\nFast-forward\n navbar.html | 12 ++++++++++++\n 1 file changed, 12 insertions(+)\n create mode 100644 navbar.html',
+        },
+        {
           type: 'text',
           value:
-            'A **merge commit** appears instead when `main` moved on while you worked, maybe because a teammate merged their own branch, or because you pushed a quick fix to `main` yourself. Now there are two lines of history that both need to survive, so Git creates one extra commit whose only job is to join them. Its message reads something like `Merge branch \'add-navbar\'`, and Git reports `Merge made by the \'ort\' strategy.` The word "ort" is the internal name of the algorithm Git uses to combine the two sides — you can ignore it.',
+            'A **merge commit** appears instead when `main` moved on while you worked, maybe because a teammate merged their own branch, or because you committed a quick fix to `main` yourself. Now there are two lines of history that both need to survive, so Git creates one extra commit whose only job is to join them.',
+        },
+        {
+          type: 'code',
+          language: 'text',
+          value:
+            "Merge made by the 'ort' strategy.\n footer.html | 3 +++\n 1 file changed, 3 insertions(+)\n create mode 100644 footer.html",
+        },
+        {
+          type: 'text',
+          value:
+            'Ort is the internal name of the algorithm Git uses to combine the two sides. You can ignore it.',
         },
         {
           type: 'callout',
-          variant: 'warning',
-          title: 'A merge commit opens your text editor',
+          variant: 'info',
+          title: 'Where the merge message comes from',
           value:
-            'Before Git writes the merge commit it opens your editor with the message already filled in, something like `Merge branch \'add-navbar\'`. Keep it: save and close the editor and the merge finishes. In Vim that is `Esc`, then type `:wq`, then `Enter`. Running `git merge --no-edit add-navbar` accepts that message without opening the editor at all.',
+            'A merge commit needs a message, and Git writes a sensible one for you: `Merge branch \'fix-footer\' into main`. Where a text editor is configured, Git opens it with that message already filled in so you can add to it, and the merge finishes as soon as you save and close. In Vim that is `Esc`, then `:wq`, then `Enter`. Adding `--no-edit`, as in `git merge --no-edit fix-footer`, accepts the default message and skips the editor entirely.',
         },
         {
           type: 'text',
@@ -83,11 +101,6 @@ export default {
           type: 'text',
           value:
             'You will see both within your first week on any shared project. Neither one means you did something right or wrong. The shape only describes what the branches did while you were away.',
-        },
-        {
-          type: 'text',
-          value:
-            'This is also what `git config --global pull.rebase false` chose for you back in lesson 4. That setting was answering the divergent branches error, and `false` tells `git pull` to combine the two sides with a merge, producing exactly the merge commit described above.',
         },
       ],
     },
@@ -122,26 +135,12 @@ export default {
       type: 'block-exercise',
       id: 'build-merge',
       prompt:
-        'You are already standing on `main`. Build the command that pulls the work from the `feature` branch into it:',
+        'You are already standing on `main`. Build the command that brings the work from the `feature` branch into it:',
       availableBlocks: ['git', 'merge', 'checkout', 'feature', 'main', 'branch', '-b'],
       correctAnswer: ['git', 'merge', 'feature'],
       hints: [
         'You only need three blocks',
         'You are already on the receiving branch, so name the other branch, the one whose work you want',
-      ],
-    },
-    {
-      type: 'terminal-exercise',
-      id: 'merge-branch',
-      prompt:
-        'This is the first of the two situations from the reading. Your project has one commit on `main`, and `add-navbar` adds one more: a twelve-line `navbar.html`. Nobody has touched `main` since you branched off, so this merge fast-forwards. You are standing on `main` now. Merge `add-navbar` into it:',
-      expectedCommand: 'git merge add-navbar',
-      acceptableVariants: [],
-      successOutput:
-        'Updating 7f3a9c1..7f3c2a1\nFast-forward\n navbar.html | 12 ++++++++++++\n 1 file changed, 12 insertions(+)\n create mode 100644 navbar.html',
-      hints: [
-        'The command is `git merge` followed by the name of the branch you want to pull in',
-        'You are already on the receiving branch, so you do not name `main` anywhere',
       ],
     },
     {
@@ -176,11 +175,11 @@ export default {
     },
     {
       type: 'sandbox-exercise',
-      id: 'merge-loop-practice',
-      title: 'Practice: the whole merge loop',
-      mode: 'goal',
+      id: 'merge-both-shapes',
+      title: 'Two merges, two shapes',
+      mode: 'guided',
       brief:
-        'Below is a project with two branches, and you are standing on `add-navbar`, where the navbar work is finished and committed. Meanwhile a teammate added a commit called `Fix broken link in header` to `main`, so both branches have moved on since they split. That is why this one produces a merge commit instead of a fast-forward. **Your goal: get the navbar onto `main`, then leave your branch list tidy.** Run `git log --oneline --graph` when you are done to see the shape of what you built, and `git branch` at any point to see where you are.',
+        'Below is a project with two finished branches waiting to come home. `add-navbar` holds the navbar work, and you are standing on it. `fix-footer` holds a footer that was written earlier, and `main` gained a typo fix after that branch split off. You are going to merge both, one after the other, and watch Git produce a different shape each time. Read the output after every merge. That is where the whole lesson is. Run `git branch` or `git log --oneline --graph` at any point to see where you are.',
       seed: {
         dir: 'my-project',
         setup: [
@@ -193,6 +192,14 @@ export default {
           },
           { run: 'git add .' },
           { run: 'git commit -m "Initial commit"' },
+          { run: 'git switch -c fix-footer' },
+          { write: { 'footer.html': '<footer>\n  <p>&copy; 2026 Me</p>\n</footer>\n' } },
+          { run: 'git add .' },
+          { run: 'git commit -m "Add footer"' },
+          { run: 'git switch main' },
+          { write: { 'index.html': '<h1>Hello</h1>\n<a href="/about">About</a>\n' } },
+          { run: 'git add .' },
+          { run: 'git commit -m "Fix broken link in header"' },
           { run: 'git switch -c add-navbar' },
           {
             write: {
@@ -215,50 +222,68 @@ export default {
           },
           { run: 'git add .' },
           { run: 'git commit -m "Add navbar"' },
-          { run: 'git switch main' },
-          { write: { 'index.html': '<h1>Hello</h1>\n<a href="/about">About</a>\n' } },
-          { run: 'git add .' },
-          { run: 'git commit -m "Fix broken link in header"' },
-          { run: 'git switch add-navbar' },
         ],
       },
       goals: [
         {
           id: 'on-main',
           label: 'You are standing on `main`, the branch that receives the work',
+          narration:
+            'The navbar is finished and committed, and you are standing on `add-navbar`. A merge always runs from the branch that receives the work, so move onto `main` before you do anything else.',
           check: { kind: 'on-branch', name: 'main' },
           hints: [
-            'A merge always runs from the branch that receives the work',
-            'Use `git switch` followed by the name of the branch you want to stand on',
+            'A merge runs from the branch that receives the work, not the one that supplies it',
+            'It is `git switch main`',
           ],
         },
         {
-          id: 'merged',
-          label: '`navbar.html` is on `main`, joined by a merge commit',
+          id: 'navbar-merged',
+          label: '`navbar.html` is on `main`',
+          narration:
+            'Now name the branch whose work you want. `main` has not moved since `add-navbar` split off it, so keep an eye out for the word `Fast-forward` in the output.',
+          check: { kind: 'commit-exists', containing: ['navbar.html'], onBranch: 'main' },
+          hints: [
+            'Name the branch you want to bring in, not the one you are standing on',
+            'It is `git merge add-navbar`',
+          ],
+        },
+        {
+          id: 'footer-merged',
+          label: '`footer.html` is on `main`, joined by a merge commit',
+          narration:
+            'Git said `Fast-forward`. It slid the `main` label along to your navbar commit and the history stayed a straight line. `fix-footer` is a different story. It split off earlier, and `main` gained the `Fix broken link in header` commit after that, so both sides have moved since. Merge it and read what Git says this time.',
           check: {
             kind: 'all-of',
             checks: [
-              { kind: 'commit-exists', containing: ['navbar.html'], onBranch: 'main' },
+              { kind: 'commit-exists', containing: ['footer.html'], onBranch: 'main' },
               { kind: 'merge-commit-exists', onBranch: 'main' },
             ],
           },
           hints: [
-            'Name the branch you want to pull in, not the one you are standing on',
-            'The command is `git merge add-navbar`',
+            'Same command, different branch name',
+            'It is `git merge fix-footer`',
           ],
         },
         {
-          id: 'branch-deleted',
-          label: 'The `add-navbar` branch name is gone',
-          check: { kind: 'branch-absent', name: 'add-navbar' },
+          id: 'branches-tidied',
+          label: 'Neither `add-navbar` nor `fix-footer` is left in your branch list',
+          narration:
+            '`Merge made by the \'ort\' strategy.` means Git wrote an extra commit whose job is to join the two lines together. Run `git log --oneline --graph` to see them fork apart and come back. Then delete both branch names, because everything they were holding is on `main` now.',
+          check: {
+            kind: 'all-of',
+            checks: [
+              { kind: 'branch-absent', name: 'add-navbar' },
+              { kind: 'branch-absent', name: 'fix-footer' },
+            ],
+          },
           hints: [
             'The command lives under `git branch`, with the cautious delete flag',
-            'The command is `git branch -d add-navbar`. Try it before the merge too, and read what Git says.',
+            'It is `git branch -d add-navbar`, then `git branch -d fix-footer`',
           ],
         },
       ],
       completionMessage:
-        'That is the entire merge loop: switch to the receiving branch, merge, look at what happened, then delete the branch you no longer need. In `git log --oneline --graph` the two lines split apart and then come back together, and that fork is your merge.',
+        'Two merges, two shapes, and you did not have to ask for either one. `add-navbar` fast-forwarded because `main` had stood still. `fix-footer` needed a merge commit because both sides had moved. The shape only reports what the branches did while you were away. `main` now holds the navbar, the footer and the typo fix, and your branch list is back down to one line.',
     },
     {
       type: 'quiz',
@@ -300,7 +325,7 @@ export default {
           items: [
             'Merge one branch into another, starting from the branch that should receive the work',
             'Tell a fast-forward from a merge commit, and let Git pick between them while you are learning',
-            'Save and close the editor Git opens for a merge commit, or skip it with `--no-edit`',
+            'Recognise the message Git writes for a merge commit, and accept it with `--no-edit`',
             'Read your history as a graph and spot where a merge joined two lines together',
             'Delete a branch once it is merged, knowing the commits stay safe in `main`',
           ],

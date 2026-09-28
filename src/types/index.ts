@@ -9,7 +9,6 @@ export type {
   ReadingStep,
   QuizOption,
   QuizStep,
-  TerminalExerciseStep,
   BlockExerciseStep,
   ConflictExerciseStep,
   SandboxGoal,

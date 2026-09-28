@@ -1,8 +1,9 @@
 import type { Lesson } from '@/types'
 export default {
   id: 11,
-  title: 'Real-World Workflow',
-  description: 'Put it all together with a professional Git workflow',
+  title: 'Team Workflow',
+  description: 'Feature branches, pull requests, and the rules a shared branch needs',
+  unlocks: [],
   steps: [
     {
       type: 'reading',
@@ -17,7 +18,7 @@ export default {
         {
           type: 'text',
           value:
-            'On a team, the **feature branch workflow** is how almost everyone works. The `main` branch always stays working, and every new feature or fix gets its own branch. Nothing reaches `main` until another person has looked at it.',
+            'On a team, the **feature branch workflow** is how almost everyone works. It grew up in software teams, and that is where you will meet it most. The same shape suits anyone who edits files alongside other people, from co-authors on a book to a research group sharing an analysis. The `main` branch always stays working, and every new feature or fix gets its own branch. Nothing reaches `main` until another person has looked at it.',
         },
         {
           type: 'text',
@@ -27,10 +28,10 @@ export default {
           type: 'list',
           ordered: true,
           items: [
-            'Switch to `main` and pull, so you start from the latest team code.',
+            'Switch to `main` and pull, so you start from the latest work the team has merged.',
             'Create a branch with a name that says what you are doing, like `feature/add-auth`.',
             'Make your changes and commit them on that branch.',
-            'Push the branch to the **remote**, the copy of the project that lives on GitHub.',
+            'Push the branch to the remote, so it sits somewhere your teammates can reach it.',
             'Open a **pull request**, which asks the team to merge your branch into `main`.',
             'Once a teammate approves it, merge into `main` and delete the branch.',
           ],
@@ -54,7 +55,7 @@ export default {
       title: 'Practice: the team workflow, start to finish',
       mode: 'goal',
       brief:
-        'Below is a shared team project, already cloned onto your machine, with a remote called `origin`. Your team lead has asked you to add a login page, and you have written it: `login.html` and `auth.js` are sitting in the folder with nothing about them saved to Git yet. Your copy of the project is two weeks behind what your teammates have pushed. **Your goal: walk the whole loop, from getting up to date to pushing a branch a teammate could review.** Call the branch `feature/add-auth`. The remote is real here, so `git pull` and `git push` genuinely move commits between the two.',
+        'Below is a shared team project with a remote called `origin`. Your team lead has asked you to add a login page, and you have written it: `login.html` and `auth.js` are sitting in the folder with nothing about them saved to Git yet. Your copy of the project is two weeks behind what your teammates have pushed. **Your goal: walk the whole loop, from getting up to date to pushing a branch a teammate could review.** Call the branch `feature/add-auth`.',
       seed: {
         dir: 'project',
         remote: {
@@ -130,13 +131,20 @@ export default {
           },
           hints: [
             'Two commands: stage everything you changed, then save the snapshot',
-            'Write a message a reviewer can actually read, like `git commit -m "feat: add login page"`',
+            'Nothing is staged yet, so start with `git add .`',
+            'Then `git commit -m "feat: add login page"`, a message a reviewer can actually read',
           ],
         },
         {
           id: 'pushed',
           label: 'The branch is on the remote, where a teammate can review it',
-          check: { kind: 'pushed', branch: 'feature/add-auth' },
+          check: {
+            kind: 'all-of',
+            checks: [
+              { kind: 'pushed', branch: 'feature/add-auth' },
+              { kind: 'upstream-set', branch: 'feature/add-auth' },
+            ],
+          },
           hints: [
             'A teammate cannot review what they cannot see. Sending your commits up is one command.',
             'It takes the flag that pairs your branch with one of the same name on the remote, then the remote name, then the branch name',
@@ -145,18 +153,19 @@ export default {
         },
       ],
       completionMessage:
-        'That is the entire loop: get up to date, branch, stage, commit, push. The only step left is opening the pull request, and that one happens in your browser. You have now practised every command a normal working day on a team asks for.',
+        'That is the entire loop: get up to date, branch, stage, commit, push. The only step left is opening the pull request, and that one happens on GitHub itself. You have now practised every command a normal working day on a team asks for.',
     },
     {
       type: 'block-exercise',
-      id: 'build-switch-feature',
-      prompt: 'Build the command to create and switch to a new feature branch called "feature/add-auth":',
-      availableBlocks: ['git', 'switch', '-c', 'branch', 'feature/add-auth', 'checkout', '-b', 'main'],
-      correctAnswer: ['git', 'switch', '-c', 'feature/add-auth'],
-      acceptableAnswers: [['git', 'checkout', '-b', 'feature/add-auth']],
+      id: 'build-push-feature',
+      prompt:
+        'The remote has never seen your `feature/add-auth` branch. Build the command that sends it up for the first time and pairs it with a branch of the same name on `origin`:',
+      availableBlocks: ['git', 'push', 'pull', '-u', 'origin', 'feature/add-auth', 'main', 'merge'],
+      correctAnswer: ['git', 'push', '-u', 'origin', 'feature/add-auth'],
       hints: [
-        'Use git switch with the -c flag to create and switch in one step',
-        'The branch name follows the -c flag',
+        'Sending commits up is `git push`, and the pairing flag comes straight after it',
+        'The flag is `-u`, then the remote name, then the branch name',
+        'Push the feature branch, not `main`. Your work goes to `main` through a pull request.',
       ],
     },
     {
@@ -177,7 +186,7 @@ export default {
           type: 'list',
           items: [
             '**Review** puts your changes in front of teammates line by line, so they can ask questions and suggest fixes before anything reaches `main`.',
-            '**Discussion** happens next to the code, so months later you can find out why a change was made.',
+            '**Discussion** happens next to the change itself, so months later you can find out why it was made.',
             '**Record-keeping** ties the branch, its commits, and the discussion together in one place you can go back to.',
           ],
         },
@@ -209,7 +218,59 @@ export default {
           variant: 'tip',
           title: 'Do this before you open a pull request',
           value:
-            'Resolving two small conflicts today is far easier than resolving twenty at once next week. Updating right before you open the PR also means your reviewer sees your work against current code, not last week\'s.',
+            "Resolving two small conflicts today is far easier than resolving twenty at once next week. Updating right before you open the PR also means your reviewer sees your work against the current project, not last week's.",
+        },
+      ],
+    },
+    {
+      type: 'reading',
+      id: 'rewriting-shared-history',
+      title: 'Once a branch is pushed, other people can see it',
+      content: [
+        {
+          type: 'text',
+          value:
+            'Your branch is up on the remote and a reviewer has it open. Now you spot a typo in a commit message, or a file you meant to include. Reaching for `git commit --amend` is the natural move, and this is the moment to be careful.',
+        },
+        {
+          type: 'text',
+          value:
+            '`git commit --amend` and `git reset` both **rewrite history**. The commits that come out have different hashes from the ones that went in, so Git treats them as brand new commits that happen to look similar. Whether that is harmless or a disaster comes down to one question: has anyone else got the originals?',
+        },
+        {
+          type: 'list',
+          items: [
+            '**Never pushed anywhere: rewrite freely.** Nobody else has a copy, so amend, reset, and reorder as much as you like.',
+            '**Pushed and shared: leave them alone.** Everyone who pulled has the old versions. Replacing them means their history and yours stop lining up, and sorting that out costs somebody else an afternoon.',
+          ],
+        },
+        {
+          type: 'text',
+          value:
+            'When you are not sure which case you are in, use `git revert`. It adds a commit that undoes an earlier one rather than replacing anything, so it is never the wrong answer on a branch other people pull from.',
+        },
+        {
+          type: 'text',
+          value:
+            'There is a middle case, and it comes up constantly. You pushed a feature branch that only you work on, then amended a commit on it. Your next push is rejected, because the branch on the remote no longer matches yours. The fix is not `--force`:',
+        },
+        {
+          type: 'code',
+          language: 'bash',
+          value:
+            '# Refuses if anyone pushed to the branch since you last fetched:\ngit push --force-with-lease\n\n# Overwrites whatever is there, no questions asked:\ngit push --force',
+        },
+        {
+          type: 'text',
+          value:
+            '`--force-with-lease` only overwrites the branch on the remote if it still looks the way it did the last time you fetched it. If a teammate pushed something you have not seen, your push is rejected instead of quietly deleting their commits. It costs you nothing and it has saved a lot of people.',
+        },
+        {
+          type: 'callout',
+          variant: 'danger',
+          title: 'Never force-push a shared branch',
+          value:
+            'Neither `--force` nor `--force-with-lease` belongs on `main`, or on any branch your team works from. Force-pushing there rewrites history under everyone at once, and the next pull each of them runs turns into a mess you will spend the day untangling. Keep force-pushing to branches only you touch.',
         },
       ],
     },
@@ -227,7 +288,7 @@ export default {
         {
           text: 'Create the branch straight away, and pull `main` into it later once you are finished',
           whyWrong:
-            'Branching from a two-week-old `main` means you build on stale code and find out at the very end, with a pile of conflicts. Pull first, branch second.',
+            'Branching from a two-week-old `main` means you build on a stale copy and find out at the very end, with a pile of conflicts. Pull first, branch second.',
         },
         {
           text: 'Switch to `main`, pull the latest changes, then create a branch like `feature/login-page`',
@@ -256,9 +317,10 @@ export default {
           items: [
             '**Commit often.** Small, focused commits are easier to review, and easier to undo when one of them turns out to be the problem.',
             '**Pull before you push.** Running `git pull` first means you build on what your teammates just pushed, instead of colliding with it.',
-            '**Never commit secrets.** API keys, passwords, and tokens belong in `.gitignore`, never in a commit. Once a secret is pushed, treat it as leaked.',
-            '**Read what you are about to commit.** `git diff --staged` shows exactly what is going in, and it catches the stray debug line every time.',
+            '**Never commit secrets.** Passwords, API keys, and access tokens belong in `.gitignore`, never in a commit. Once a secret is pushed, treat it as leaked.',
+            '**Read what you are about to commit.** `git diff --staged` shows exactly what is going in, and it catches the half-finished paragraph or the stray debug line every time.',
             '**On a team, work on a branch.** That way `main` stays working, and every change gets a second pair of eyes before it lands there.',
+            '**Rewrite only your own branches.** Amending, resetting, and force-pushing are fine on work nobody else has pulled, and a bad day for everyone on a branch they have.',
           ],
         },
         {
@@ -283,7 +345,7 @@ export default {
         {
           text: 'Because a commit made on `main` cannot be undone afterwards',
           whyWrong:
-            'A commit on `main` can be undone like any other, with `git revert`. The real cost is that until you do, everyone else is pulling your broken code.',
+            'A commit on `main` can be undone like any other, with `git revert`. The real cost is that until you do, everyone else is pulling the broken version.',
         },
         {
           text: 'Because a branch keeps your full history, while `main` only stores the latest version',
@@ -306,21 +368,19 @@ export default {
         {
           type: 'text',
           value:
-            'Part 1 is done, and that was the important half. A working developer repeats that loop every single day: pull, branch, commit, push, open a pull request, merge. You have now practised all of it.',
+            'Part 1 is done, and that was the important half. The loop is the part that repeats: pull, branch, commit, push, open a pull request, merge. You will go round it several times a week for as long as you work with other people, and you have now practised all of it.',
         },
         {
           type: 'text',
           value:
-            'Everything from here is **reference material**. You do not need to memorise any of it today. Read it once so the words are not strange when a teammate uses them, and come back to the page when you actually need one.',
+            'Everything from here is **reference material**. Read it once so the words are not strange when a teammate uses them, and come back to the page when you actually need one.',
         },
         {
           type: 'list',
           items: [
             'Forks let you contribute to a project you are not a member of',
             'Rebase reshapes history into a straight line',
-            'Tags are permanent bookmarks for releases like `v1.0`',
-            '`git blame` tells you who last touched a line, and in which commit',
-            'CI/CD is the robot that runs the tests on your pull request',
+            "CI/CD is the robot that runs a software project's tests on every pull request",
           ],
         },
       ],
@@ -333,7 +393,7 @@ export default {
         {
           type: 'text',
           value:
-            'A **fork** is your own copy of someone else\'s repository, sitting under your account on GitHub. You need one whenever you want to contribute to a project you have no permission to push to, which is most open-source projects.',
+            "A **fork** is your own copy of someone else's repository, sitting under your account on GitHub. You need one whenever you want to contribute to a project you have no permission to push to, which is most open-source projects.",
         },
         {
           type: 'list',
@@ -354,7 +414,7 @@ export default {
         {
           type: 'text',
           value:
-            'One word of warning: `upstream` here is nothing more than a conventional name people give that second remote. It has no connection to the `--set-upstream` flag you met in lesson 4. The two happen to share a word — that is all.',
+            'One word of warning about that name. `upstream` here is nothing more than the conventional nickname people give the second remote. It has no connection to the `--set-upstream` flag on `git push`. The two happen to share a word, and that is all.',
         },
         {
           type: 'text',
@@ -422,42 +482,7 @@ export default {
       ],
       correctIndex: 0,
       explanation:
-        'Rebase rewrites history: the replayed commits are new objects with new IDs, even though the code is the same. Anything already shared has to be added to, not rewritten, or everyone else ends up holding commits that no longer exist on the remote.',
-    },
-    {
-      type: 'reading',
-      id: 'tags-intro',
-      title: 'Tags: marking releases',
-      content: [
-        {
-          type: 'text',
-          value:
-            'A **tag** is a permanent bookmark on one specific commit, most often used to mark a released version like `v1.0` or `v2.3.1`. A branch moves forward as you commit. A tag never moves, so `v1.0` points at exactly the code you shipped as 1.0, forever.',
-        },
-        {
-          type: 'code',
-          language: 'bash',
-          value:
-            'git tag -a v1.0 -m "Release 1.0"    # Mark the current commit\ngit tag                             # List every tag\ngit push origin --tags              # Tags are not pushed by default',
-        },
-      ],
-    },
-    {
-      type: 'reading',
-      id: 'useful-commands',
-      title: 'git blame: who wrote this line',
-      content: [
-        {
-          type: 'text',
-          value:
-            '`git blame` shows, for every line of a file, the commit that last changed it and who made that commit. The name sounds accusing, but the real use is finding the commit message that explains a line you do not understand, and knowing who to ask about it.',
-        },
-        {
-          type: 'code',
-          language: 'bash',
-          value: 'git blame src/app.js',
-        },
-      ],
+        'Rebase rewrites history: the replayed commits are new objects with new IDs, even though the files inside them are identical. Anything already shared has to be added to, not rewritten, or everyone else ends up holding commits that no longer exist on the remote.',
     },
     {
       type: 'reading',
@@ -467,7 +492,7 @@ export default {
         {
           type: 'text',
           value:
-            '**CI/CD** stands for Continuous Integration / Continuous Deployment. In practice it means a service such as [GitHub Actions](https://github.com/features/actions) runs your project\'s tests automatically every time someone pushes or opens a pull request, so a broken change is caught before anyone merges it.',
+            "This one applies only if your project is code. **CI/CD** stands for Continuous Integration / Continuous Deployment. In practice it means a service such as [GitHub Actions](https://github.com/features/actions) runs the project's tests automatically every time someone pushes or opens a pull request, so a broken change is caught before anyone merges it.",
         },
         {
           type: 'text',
@@ -482,30 +507,17 @@ export default {
       title: 'Recap',
       content: [
         { type: 'text', value: 'You can now:' },
-        { type: 'text', value: '**From this lesson**' },
         {
           type: 'list',
           items: [
             'Run the feature branch workflow end to end: switch to `main`, pull, branch, commit, push',
             'Say what a pull request is, and what separates one a teammate can review from one nobody reads',
             'Keep a branch current by pulling `main` into it while you work, instead of at the last minute',
+            'Tell when rewriting history is harmless and when it becomes everybody else\'s problem',
+            'Reach for `--force-with-lease` over `--force`, and for neither of them on a branch the team shares',
             'Contribute to a project you do not own by forking it and adding an `upstream` remote',
             'Describe what a rebase does to history, and why rebasing commits other people already have is unsafe',
-            'Mark a release with a tag, and find out who last changed a line with `git blame`',
-            'Recognise CI as the service that runs your project\'s tests on every pull request',
-          ],
-        },
-        { type: 'text', value: '**Across the whole course**' },
-        {
-          type: 'list',
-          items: [
-            'Set up Git and turn any folder into a repository',
-            'Stage and commit changes, and write a message your future self can use',
-            'Read a project\'s history with `git log` and `git diff`',
-            'Undo safely: unstage a file, discard a change, revert a commit, and recover work you thought was gone',
-            'Create branches, merge them, and resolve a merge conflict by hand',
-            'Connect a project to GitHub and push and pull with confidence',
-            'Run the full team workflow: pull, branch, commit, push, pull request, merge',
+            "Recognise CI as the service that runs a code project's tests on every pull request",
           ],
         },
         { type: 'text', value: '**Commands from this lesson**' },
@@ -513,12 +525,12 @@ export default {
           type: 'code',
           language: 'bash',
           value:
-            'git switch -c feature/x            # start a feature branch\ngit push -u origin feature/x       # publish it and set up tracking\ngit rebase main                    # replay your commits on top of main\ngit remote add upstream <url>      # track the project you forked from\ngit tag -a v1.0 -m "Release 1.0"   # bookmark a release\ngit blame <file>                   # who last changed each line',
+            'git switch -c feature/x            # start a feature branch\ngit push -u origin feature/x       # publish it and set up tracking\ngit pull origin main               # bring the latest main into your branch\ngit push --force-with-lease        # republish a branch of your own that you rewrote\ngit rebase main                    # replay your commits on top of main\ngit remote add upstream <url>      # track the project you forked from',
         },
         {
           type: 'text',
           value:
-            'That is the whole course. The best next step is a real project: put something on GitHub, break it, and fix it with what you now know. Git has corners you have not met yet, like `git bisect`, interactive rebase, and submodules. They will make sense on the day a real problem sends you looking for them. Go build something.',
+            'Next up: your own machine. You install Git, make a GitHub account, and take a folder of your own real work to a live repository with a pull request open on it.',
         },
       ],
     },

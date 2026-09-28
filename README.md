@@ -1,6 +1,6 @@
 # Git 101 Web
 
-An interactive web app for learning Git through hands-on lessons. Work through bite-sized exercises covering everything from basic commits to branching, merging, and beyond — all in the browser, no terminal required.
+An interactive web app for learning Git through hands-on lessons. Work through bite-sized exercises covering everything from basic commits to branching, merging, and beyond, with a practice terminal that runs in the browser.
 
 ## Try It Out
 

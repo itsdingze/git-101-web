@@ -3,35 +3,33 @@ import CodeWalkthrough, { type WalkthroughStage } from './CodeWalkthrough'
 const STAGES: WalkthroughStage[] = [
   {
     label: 'Original file',
-    lines: [
-      { text: 'function greet() {', kind: 'normal' },
-      { text: '  return "Hello!";', kind: 'normal' },
-      { text: '}', kind: 'normal' },
-    ],
+    lines: [{ text: 'The lighthouse had been dark for a year.', kind: 'normal' }],
   },
   {
     label: 'File after your edit',
     lines: [
-      { text: 'function greet() {', kind: 'normal' },
-      { text: '  return "Hello, world!";', kind: 'normal' },
-      { text: '}', kind: 'normal' },
+      {
+        text: 'The lighthouse had been dark for a year, and nobody had asked why.',
+        kind: 'normal',
+      },
     ],
   },
   {
     label: 'Diff output',
     command: 'git diff',
     lines: [
-      { text: '--- a/greeting.js', kind: 'header' },
-      { text: '+++ b/greeting.js', kind: 'header' },
-      { text: '@@ -1,3 +1,3 @@', kind: 'header' },
-      { text: ' function greet() {', kind: 'normal' },
-      { text: '-  return "Hello!";', kind: 'removed' },
-      { text: '+  return "Hello, world!";', kind: 'added' },
-      { text: ' }', kind: 'normal' },
+      { text: '--- a/chapter-one.md', kind: 'header' },
+      { text: '+++ b/chapter-one.md', kind: 'header' },
+      { text: '@@ -1 +1 @@', kind: 'header' },
+      { text: '-The lighthouse had been dark for a year.', kind: 'removed' },
+      {
+        text: '+The lighthouse had been dark for a year, and nobody had asked why.',
+        kind: 'added',
+      },
     ],
   },
 ]
 
 export default function DiffWalkthrough() {
-  return <CodeWalkthrough stages={STAGES} filename="greeting.js" />
+  return <CodeWalkthrough stages={STAGES} filename="chapter-one.md" />
 }

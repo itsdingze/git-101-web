@@ -27,7 +27,7 @@
   --color-code-text: #e2e8f0;
   --color-code-muted: #64748b;
 
-  /* FakeTerminal (VS Code-style) */
+  /* Sandbox terminal */
   --color-terminal-bg: #1e1e1e;
   --color-terminal-bar: #2d2d2d;
   --color-terminal-border: #333333;
