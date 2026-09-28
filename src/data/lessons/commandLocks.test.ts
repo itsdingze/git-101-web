@@ -49,16 +49,16 @@ describe.each(lessons)('lesson $id', (lesson) => {
 
 describe('commandLocksFor', () => {
   it('locks only what later lessons unlock, naming the lesson that does', () => {
-    const locks = commandLocksFor(5)
+    const locks = commandLocksFor(8)
 
     expect(locks.has('switch')).toBe(false)
     expect(locks.has('status')).toBe(false)
-    expect(locks.get('merge')).toBe('Lesson 6: Merging')
-    expect(locks.get('stash')).toBe('Lesson 8: Stashing')
-    expect(locks.get('push')).toBe('Lesson 10: Remotes & GitHub')
+    expect(locks.get('merge')).toBe('Lesson 9: Merging')
+    expect(locks.get('stash')).toBe('Lesson 11: Stash')
+    expect(locks.get('push')).toBe('Lesson 14: Push and Pull')
   })
 
   it('locks nothing once every lesson is behind you', () => {
-    expect(commandLocksFor(12).size).toBe(0)
+    expect(commandLocksFor(21).size).toBe(0)
   })
 })

@@ -4,40 +4,31 @@ const STAGES: WalkthroughStage[] = [
   {
     label: 'Original file on main',
     lines: [
-      { text: '<html>', kind: 'normal' },
-      { text: '  <body>', kind: 'normal' },
-      { text: '    <h1>Welcome to our website!</h1>', kind: 'normal' },
-      { text: '  </body>', kind: 'normal' },
-      { text: '</html>', kind: 'normal' },
+      { text: 'MAX_TASKS = 10', kind: 'normal' },
+      { text: 'THEME = "light"', kind: 'normal' },
     ],
   },
   {
     label: 'CONFLICT: Automatic merge failed',
-    command: 'git merge feature-banner',
+    command: 'git merge raise-limit',
     lines: [
-      { text: '<html>', kind: 'normal' },
-      { text: '  <body>', kind: 'normal' },
       { text: '<<<<<<< HEAD', kind: 'marker-ours' },
-      { text: '    <h1>Welcome to our website!</h1>', kind: 'ours' },
+      { text: 'MAX_TASKS = 15', kind: 'ours' },
       { text: '=======', kind: 'normal' },
-      { text: '    <h1>Welcome to our amazing website!</h1>', kind: 'theirs' },
-      { text: '>>>>>>> feature-banner', kind: 'marker-theirs' },
-      { text: '  </body>', kind: 'normal' },
-      { text: '</html>', kind: 'normal' },
+      { text: 'MAX_TASKS = 50', kind: 'theirs' },
+      { text: '>>>>>>> raise-limit', kind: 'marker-theirs' },
+      { text: 'THEME = "light"', kind: 'normal' },
     ],
   },
   {
     label: 'Conflict resolved, markers removed',
     lines: [
-      { text: '<html>', kind: 'normal' },
-      { text: '  <body>', kind: 'normal' },
-      { text: '    <h1>Welcome to our amazing website!</h1>', kind: 'normal' },
-      { text: '  </body>', kind: 'normal' },
-      { text: '</html>', kind: 'normal' },
+      { text: 'MAX_TASKS = 50', kind: 'normal' },
+      { text: 'THEME = "light"', kind: 'normal' },
     ],
   },
 ]
 
 export default function ConflictMarkers() {
-  return <CodeWalkthrough stages={STAGES} filename="index.html" />
+  return <CodeWalkthrough stages={STAGES} filename="settings.txt" />
 }

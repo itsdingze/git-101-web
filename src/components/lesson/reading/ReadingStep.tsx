@@ -1,12 +1,10 @@
-import { lazy, Suspense, type ComponentType } from 'react'
-import type { ContentBlock as ContentBlockType, ReadingStep as ReadingStepType, VisualizationType } from '@/types'
+import { lazy, Suspense, useRef, type ComponentType } from 'react'
+import type { ReadingStep as ReadingStepType, VisualizationType } from '@/types'
 import useExerciseNav from '@/hooks/useExerciseNav'
+import InlineMarkdown from '@/components/ui/InlineMarkdown'
 import ContentBlock from './components/ContentBlock'
-
-function blockKey(block: ContentBlockType, index: number): string {
-  const sample = block.type === 'list' ? block.items.join('|') : block.value
-  return `${index}-${block.type}-${sample.slice(0, 32)}`
-}
+import DiagramJumpLink from './components/DiagramJumpLink'
+import blockKey from './components/blockKey'
 
 const ThreePlaceModel = lazy(() => import('@/components/visualization/ThreePlaceModel'))
 const GitGraph = lazy(() => import('@/components/visualization/git-graph/GitGraph'))
@@ -30,6 +28,7 @@ interface ReadingStepProps {
 
 export default function ReadingStep({ step }: ReadingStepProps) {
   useExerciseNav({ solved: true })
+  const diagramRef = useRef<HTMLDivElement>(null)
 
   const Visualization =
     step.visualization && step.visualization !== 'git-graph'
@@ -39,17 +38,25 @@ export default function ReadingStep({ step }: ReadingStepProps) {
   return (
     <div className="space-y-6">
       {step.title && (
-        <h2 className="text-xl font-semibold text-text-primary tracking-tight">{step.title}</h2>
+        <InlineMarkdown
+          as="h2"
+          className="text-xl font-semibold text-text-primary tracking-tight"
+          value={step.title}
+        />
       )}
+
+      {step.visualization && <DiagramJumpLink target={diagramRef} />}
 
       {step.content.map((block, index) => (
         <ContentBlock key={blockKey(block, index)} block={block} />
       ))}
 
-      <Suspense fallback={<div className="min-h-48 bg-bg-card rounded-xl animate-pulse" />}>
-        {step.visualization === 'git-graph' && <GitGraph scenario={step.visualizationVariant} />}
-        {Visualization && <Visualization />}
-      </Suspense>
+      <div ref={diagramRef} className="scroll-mt-24">
+        <Suspense fallback={<div className="min-h-48 bg-bg-card rounded-xl animate-pulse" />}>
+          {step.visualization === 'git-graph' && <GitGraph scenario={step.visualizationVariant} />}
+          {Visualization && <Visualization />}
+        </Suspense>
+      </div>
     </div>
   )
 }

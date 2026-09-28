@@ -9,15 +9,17 @@ export type LessonNavState = {
   stepCompleted: boolean
   checkDisabled: boolean
   checkResult: 'correct' | 'incorrect' | null
+  continueLocked: boolean
 }
 
 export type LessonNavActions = {
   setLessonNav: (values: Partial<LessonNavState>) => void
   clearLessonNav: () => void
-  registerCheck: (checkFn: () => boolean | undefined, disabled?: boolean) => void
+  registerCheck: (checkFn: () => boolean | undefined, disabled?: boolean, holdIncorrect?: boolean) => void
   clearCheck: () => void
   triggerCheck: () => void
   reportStepSolved: (isSolved: boolean) => void
+  lockContinue: (locked: boolean) => void
   clearCheckResult: () => void
 }
 

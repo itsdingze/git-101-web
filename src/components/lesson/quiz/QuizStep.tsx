@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { CheckCircle, XCircle } from 'lucide-react'
 import type { QuizStep as QuizStepType } from '@/types'
 import useProgressStore from '@/stores/progressStore'
 import useExerciseNav from '@/hooks/useExerciseNav'
 import InlineMarkdown from '@/components/ui/InlineMarkdown'
-import seededShuffle from '@/utils/seededShuffle'
+import FeedbackPanel from '@/components/ui/FeedbackPanel'
+import seededShuffle from '@/lib/seededShuffle'
 
 const GENERIC_WRONG = 'Not quite. Read the options again and look for the one that matches what Git actually does.'
 
@@ -34,6 +34,7 @@ export default function QuizStep({ step, lessonId }: QuizStepProps) {
   const [shake, setShake] = useState(false)
 
   function handleSelect(slot: number) {
+    if (slot === selected) return
     setSelected(slot)
     setWrongFeedback(null)
   }
@@ -54,7 +55,12 @@ export default function QuizStep({ step, lessonId }: QuizStepProps) {
     return false
   }
 
-  useExerciseNav({ solved: isCompleted, checkFn: handleCheck, checkDisabled: selected === null })
+  useExerciseNav({
+    solved: isCompleted,
+    checkFn: handleCheck,
+    checkDisabled: selected === null,
+    answerKey: String(selected),
+  })
 
   return (
     <div className="space-y-6">
@@ -98,19 +104,10 @@ export default function QuizStep({ step, lessonId }: QuizStepProps) {
         })}
       </motion.div>
 
-      {!isCompleted && wrongFeedback && (
-        <div className="flex items-start gap-3 p-4 rounded-xl text-sm leading-relaxed bg-accent-red/5 border border-accent-red/20">
-          <XCircle size={18} className="text-accent-red shrink-0" aria-hidden />
-          <InlineMarkdown className="text-text-secondary" value={wrongFeedback} />
-        </div>
-      )}
-
-      {isCompleted && (
-        <div className="flex items-start gap-3 p-4 rounded-xl text-sm leading-relaxed bg-accent-green/5 border border-accent-green/20">
-          <CheckCircle size={18} className="text-accent-green shrink-0" aria-hidden />
-          <InlineMarkdown className="text-text-secondary" value={step.explanation} />
-        </div>
-      )}
+      <div role="status" aria-live="polite">
+        {!isCompleted && wrongFeedback && <FeedbackPanel tone="wrong" message={wrongFeedback} />}
+        {isCompleted && <FeedbackPanel tone="right" message={step.explanation} />}
+      </div>
     </div>
   )
 }

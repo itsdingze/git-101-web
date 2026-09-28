@@ -25,8 +25,8 @@ export default function useLessonPage(lessonId: string | undefined): UseLessonPa
   const lesson = lessons.find((l) => l.id === parsedId)
 
   const [currentStepIndex, setCurrentStepIndex] = useState(() => {
-    if (isLessonCompleted(parsedId)) return 0
-    return getCurrentStep(parsedId)
+    if (!lesson || isLessonCompleted(parsedId)) return 0
+    return Math.min(getCurrentStep(parsedId), lesson.steps.length - 1)
   })
 
   const { setLessonNav, clearLessonNav, clearCheckResult } = useLessonNav()

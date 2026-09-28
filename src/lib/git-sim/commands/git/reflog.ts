@@ -1,7 +1,7 @@
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say, silent } from '@/lib/git-sim/output'
-import { readHeadHistory, type HeadMove } from '@/lib/git-sim/headHistory'
-import { currentBranch, headOid, shortOid } from '@/lib/git-sim/repository'
+import { readHeadHistory, type HeadMove } from '@/lib/git-sim/history/headHistory'
+import { currentBranch, headOid, shortOid } from '@/lib/git-sim/history/repository'
 import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
 
 function formatMove(move: HeadMove, index: number): string {

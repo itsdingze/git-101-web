@@ -1,0 +1,188 @@
+# The todo-app story.
+#
+# Each checkpoint is the state of the project at the end of one lesson, as a
+# list of seed steps. A sandbox starts from a checkpoint with a `story:` step,
+# and a checkpoint builds on the one before it the same way.
+#
+# Lessons 1 to 12 happen in the folder where the project started. From lesson
+# 13 on, the project also lives on GitHub, and the `team-` checkpoints are the
+# state of that shared copy.
+
+start:
+  - write:
+      README.md: |
+        # To-do app
+      notes/ideas.txt: |
+        Add due dates
+        Add search
+
+after-terminal-basics:
+  - story: start
+  - write:
+      app.txt: |
+        tasks = load()
+        show(tasks)
+
+after-start-a-repository:
+  - story: after-terminal-basics
+  - run: git init
+  - write:
+      settings.txt: |
+        MAX_TASKS = 10
+
+after-first-commit:
+  - story: after-start-a-repository
+  - run: git add .
+  - run: 'git commit -m "feat: add task list"'
+  - write:
+      settings.txt: |
+        MAX_TASKS = 20
+  - run: git add settings.txt
+  - run: 'git commit -m "feat: raise the task limit"'
+
+after-see-what-changed:
+  - story: after-first-commit
+  - write:
+      settings.txt: |
+        MAX_TASKS = 25
+  - run: git add settings.txt
+  - run: 'git commit -m "feat: raise the task limit to 25"'
+
+after-ignore-files:
+  - story: after-see-what-changed
+  - write:
+      tasks.txt: |
+        Buy milk
+      try-dates.txt: |
+        show_due(tasks)
+      .gitignore: |
+        tasks.txt
+        try-*
+        notes/
+  - run: git add .gitignore
+  - run: 'git commit -m "chore: ignore my tasks and experiments"'
+
+after-stop-tracking:
+  - story: after-ignore-files
+  - write:
+      notes/ideas.txt: |
+        Add due dates
+        Add search
+        Add tags
+  - run: git rm --cached notes/ideas.txt
+  - run: 'git commit -m "chore: stop tracking my notes"'
+
+after-branches:
+  - story: after-stop-tracking
+  - remove: [ try-dates.txt ]
+  - run: git switch -c add-due-dates
+  - write:
+      dates.txt: |
+        show_due(tasks)
+  - run: git add dates.txt
+  - run: 'git commit -m "feat: add due dates"'
+
+after-merging:
+  - story: after-branches
+  - run: git switch main
+  - write:
+      README.md: |
+        # To-do app
+        Keeps your tasks in one list.
+  - run: git add README.md
+  - run: 'git commit -m "docs: describe the app"'
+  - run: git merge add-due-dates
+  - run: git branch -d add-due-dates
+
+after-merge-conflicts:
+  - story: after-merging
+  - run: git switch -c raise-limit
+  - write:
+      settings.txt: |
+        MAX_TASKS = 50
+  - run: git add settings.txt
+  - run: 'git commit -m "feat: try a limit of 50"'
+  - run: git switch main
+  - write:
+      settings.txt: |
+        MAX_TASKS = 30
+  - run: git add settings.txt
+  - run: 'git commit -m "feat: raise the task limit to 30"'
+  - run: git merge raise-limit
+    allowFailure: true
+  - write:
+      settings.txt: |
+        MAX_TASKS = 50
+  - run: git add settings.txt
+  - run: 'git commit -m "Merge raise-limit"'
+  - run: git branch -d raise-limit
+
+after-stash:
+  - story: after-merge-conflicts
+  - write:
+      dates.txt: |
+        show_due(unfinished(tasks))
+  - run: git add dates.txt
+  - run: 'git commit -m "fix: hide due dates on finished tasks"'
+  - write:
+      app.txt: |
+        tasks = load()
+        show(tasks)
+        search(tasks)
+      search.txt: |
+        query = ask()
+
+after-undo-a-change:
+  - story: after-stash
+  - write:
+      search-help.txt: |
+        Type a word to find matching tasks.
+  - run: git add .
+  - run: 'git commit -m "feat: add search"'
+
+team-after-push-and-pull:
+  - story: after-undo-a-change
+  - run: git switch -c sam
+  - write:
+      reminders.txt: |
+        remind(tasks)
+  - run: git add reminders.txt
+  - run: 'git commit -m "feat: add reminders"'
+  - run: git switch main
+  - write:
+      tags.txt: |
+        tags = ask()
+  - run: git add tags.txt
+  - run: 'git commit -m "feat: add tags"'
+  - run: git merge sam -m "Merge branch 'main' of https://github.com/study-group/todo-app"
+  - run: git branch -d sam
+
+team-after-team-workflow:
+  - story: team-after-push-and-pull
+  - write:
+      priority.txt: |
+        PRIORITIES = low, high
+  - run: git add priority.txt
+  - run: 'git commit -m "feat: add priorities"'
+  - write:
+      export.txt: |
+        export(tasks)
+  - run: git add export.txt
+  - run: 'git commit -m "feat: add export"'
+
+team-after-revert:
+  - story: team-after-team-workflow
+  - write:
+      theme.txt: |
+        THEME = dark
+  - run: git add theme.txt
+  - run: 'git commit -m "feat: add dark mode"'
+  - run: git revert HEAD
+
+team-after-reset-and-reflog:
+  - story: team-after-revert
+  - write:
+      archive.txt: |
+        archive(done_tasks)
+  - run: git add archive.txt
+  - run: 'git commit -m "feat: add archive"'

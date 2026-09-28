@@ -4,6 +4,7 @@ export type {
   ListBlock,
   CalloutVariant,
   CalloutBlock,
+  TabsBlock,
   ContentBlock,
   VisualizationType,
   ReadingStep,
@@ -12,6 +13,7 @@ export type {
   BlockExerciseStep,
   ConflictExerciseStep,
   SandboxGoal,
+  SandboxDetour,
   SandboxExerciseStep,
   Step,
   Lesson,
@@ -29,6 +31,7 @@ export type {
 } from './graph'
 
 export type {
+  LearnerIdentity,
   ProgressState,
   ProgressActions,
   ProgressStore,

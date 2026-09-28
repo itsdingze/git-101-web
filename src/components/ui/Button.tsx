@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef, ElementType } from 'react'
 
-type ButtonVariant = 'filled' | 'outlined' | 'text' | 'filled-success' | 'filled-danger'
+type ButtonVariant = 'filled' | 'outlined' | 'text' | 'filled-success' | 'waiting'
 type ButtonSize = 'sm' | 'md'
 
 const base =
@@ -31,10 +31,9 @@ const variants: Record<ButtonVariant, string> = {
     'bg-accent-green text-white ' +
     'hover:bg-btn-filled-hover active:bg-accent-green-dark ' +
     'disabled:bg-accent-green disabled:text-white',
-  'filled-danger':
-    'bg-accent-red text-white ' +
-    'hover:bg-accent-red-dark active:bg-accent-red-dark ' +
-    'disabled:bg-accent-red disabled:text-white',
+  waiting:
+    'bg-bg-secondary text-text-secondary border border-border ' +
+    'disabled:cursor-default disabled:bg-bg-secondary disabled:text-text-secondary',
 }
 
 type ButtonProps<T extends ElementType> = {

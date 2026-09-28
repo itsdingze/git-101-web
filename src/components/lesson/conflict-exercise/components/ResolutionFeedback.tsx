@@ -1,54 +1,43 @@
-import { CheckCircle, XCircle, type LucideIcon } from 'lucide-react'
-import InlineMarkdown from '@/components/ui/InlineMarkdown'
+import FeedbackPanel from '@/components/ui/FeedbackPanel'
 import type { ResolutionVerdict } from '@/components/lesson/conflict-exercise/resolutionCheck'
 
-type Feedback = {
-  message: string
-  Icon: LucideIcon
-  container: string
-  iconColor: string
+interface SideLabels {
+  ours: string
+  theirs: string
 }
 
-const FEEDBACK: Record<ResolutionVerdict, Feedback> = {
-  solved: {
-    message: 'Resolved. The file reads as one version and every conflict marker is gone.',
-    Icon: CheckCircle,
-    container: 'bg-accent-green/5 border-accent-green/20',
-    iconColor: 'text-accent-green',
-  },
-  'marker-left': {
-    message:
-      'A conflict marker is still in the file. Git treats `<<<<<<<`, `=======`, and `>>>>>>>` as ordinary text, so they ship to production unless you delete all three lines yourself.',
-    Icon: XCircle,
-    container: 'bg-accent-red/5 border-accent-red/20',
-    iconColor: 'text-accent-red',
-  },
-  'wrong-content': {
-    message:
-      'Every marker is gone, but the lines that survived are not the ones this resolution needs. Read the prompt again and check which version should stay.',
-    Icon: XCircle,
-    container: 'bg-accent-red/5 border-accent-red/20',
-    iconColor: 'text-accent-red',
-  },
+function resolutionMessage(verdict: ResolutionVerdict, labels: SideLabels): string {
+  switch (verdict) {
+    case 'solved':
+      return 'Resolved. The file reads as one version and every conflict marker is gone.'
+    case 'marker-left':
+      return 'A conflict marker is still in the file. Git treats `<<<<<<<`, `=======`, and `>>>>>>>` as ordinary text, so they travel to everyone who gets a copy of the project unless you delete all three lines yourself.'
+    case 'kept-both':
+      return 'Every marker is gone, but you kept both versions. This step asks for just one of them, so delete the line that should not stay.'
+    case 'missing-side':
+      return 'Every marker is gone, but one of the two lines went with them. This step needs both lines in the file.'
+    case 'kept-ours':
+      return `You kept the \`${labels.ours}\` version, the one from the branch you are on. This step asks for the \`${labels.theirs}\` version instead.`
+    case 'kept-theirs':
+      return `You kept the \`${labels.theirs}\` version, the one coming in. This step asks for the \`${labels.ours}\` version instead.`
+    case 'near-miss':
+      return 'Almost. A word or two differs from the version this step asks for. Check every line of the file against the instruction, letter by letter.'
+    case 'wrong-content':
+      return "Every marker is gone, but the file doesn't match what the step asks for yet. Reread the instruction above the editor."
+  }
 }
 
 interface ResolutionFeedbackProps {
   id: string
   status: ResolutionVerdict | null
+  labels: SideLabels
 }
 
-export default function ResolutionFeedback({ id, status }: ResolutionFeedbackProps) {
-  const feedback = status === null ? null : FEEDBACK[status]
-
+export default function ResolutionFeedback({ id, status, labels }: ResolutionFeedbackProps) {
   return (
     <div id={id} role="status" aria-live="polite">
-      {feedback && (
-        <div
-          className={`flex items-start gap-3 p-4 rounded-xl border text-sm leading-relaxed ${feedback.container}`}
-        >
-          <feedback.Icon size={18} className={`shrink-0 ${feedback.iconColor}`} aria-hidden />
-          <InlineMarkdown className="text-text-secondary" value={feedback.message} />
-        </div>
+      {status && (
+        <FeedbackPanel tone={status === 'solved' ? 'right' : 'wrong'} message={resolutionMessage(status, labels)} />
       )}
     </div>
   )

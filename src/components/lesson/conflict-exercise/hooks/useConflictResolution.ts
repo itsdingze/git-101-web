@@ -36,7 +36,7 @@ function grade(step: ConflictExerciseStep, buffer: string, grading: Grading): bo
   }
 
   grading.feedback.reportFailure(verdict)
-  if (verdict === 'wrong-content') grading.hints.advance()
+  if (verdict !== 'marker-left') grading.hints.advance()
   return false
 }
 
@@ -55,6 +55,7 @@ export default function useConflictResolution(
     solved,
     checkFn: () => grade(step, buffer.text, grading),
     checkDisabled: buffer.text.trim() === '',
+    answerKey: buffer.text,
   })
 
   return {

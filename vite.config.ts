@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import lessonMarkdown from './src/lib/lesson-markdown/lessonMarkdownPlugin'
 
 /**
  * GitHub Pages serves static files only, so a client-side route like
@@ -23,7 +24,7 @@ function githubPagesSpaFallback(): Plugin {
 
 export default defineConfig({
   base: '/git-101-web/',
-  plugins: [react(), tailwindcss(), githubPagesSpaFallback()],
+  plugins: [lessonMarkdown(), react(), tailwindcss(), githubPagesSpaFallback()],
   resolve: {
     alias: {
       '@': new URL('./src', import.meta.url).pathname,

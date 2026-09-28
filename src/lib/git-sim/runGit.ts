@@ -1,9 +1,9 @@
 import { GIT_COMMANDS, UNSIMULATED_GIT_COMMANDS } from './commands/git/registry'
-import { suggestCommand } from './suggestCommand'
-import { findRepoDir, requireRepoDir } from './repository'
+import { suggestCommand } from './input/suggestCommand'
+import { findRepoDir, requireRepoDir } from './history/repository'
 import { fail, say } from './output'
-import { lockedCommand, type CommandLocks } from './commandLocks'
-import { usageFor } from './gitUsage'
+import { lockedCommand, type CommandLocks } from './input/commandLocks'
+import { usageFor } from './input/gitUsage'
 import type { CommandContext, CommandOutput } from './types'
 
 const GIT_VERSION = 'git version 2.43.0'

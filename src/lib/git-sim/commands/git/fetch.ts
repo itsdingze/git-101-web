@@ -1,11 +1,11 @@
 import git from 'isomorphic-git'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
-import { operandsOf } from '@/lib/git-sim/parseArgs'
+import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
+import { operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say, silent } from '@/lib/git-sim/output'
-import { currentBranch, refOid } from '@/lib/git-sim/repository'
-import { copyObjects } from '@/lib/git-sim/remoteTransfer'
-import { connectToRemote } from '@/lib/git-sim/remoteConnection'
+import { currentBranch, refOid, shortOid } from '@/lib/git-sim/history/repository'
+import { copyObjects } from '@/lib/git-sim/remote/remoteTransfer'
+import { connectToRemote } from '@/lib/git-sim/remote/remoteConnection'
 import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
 
 export type FetchResult = {
@@ -27,11 +27,29 @@ export async function resolveRemoteName(ctx: CommandContext, dir: string): Promi
   return name
 }
 
+function fetchLines(
+  names: { remoteName: string; branch: string },
+  refs: { previous: string | null; fetched: string },
+  branchNamed: boolean,
+): string[] {
+  const { remoteName, branch } = names
+  const tracking = `${branch.padEnd(10)} -> ${remoteName}/${branch}`
+  if (!refs.previous) return [` * [new branch]      ${tracking}`]
+
+  return [
+    ...(branchNamed ? [` * branch            ${branch.padEnd(10)} -> FETCH_HEAD`] : []),
+    ...(refs.previous === refs.fetched
+      ? []
+      : [`   ${shortOid(refs.previous)}..${shortOid(refs.fetched)}  ${tracking}`]),
+  ]
+}
+
 export async function fetchFromRemote(
   ctx: CommandContext,
   dir: string,
   remoteName: string,
   branch: string,
+  branchNamed = true,
 ): Promise<FetchResult> {
   const remote = await connectToRemote(ctx, dir, remoteName)
   await copyObjects(ctx, remote.dir, dir)
@@ -45,12 +63,10 @@ export async function fetchFromRemote(
   }
 
   const url = remote.url.replace(/\.git$/, '')
-  const line = previous
-    ? ` * branch            ${branch.padEnd(10)} -> FETCH_HEAD`
-    : ` * [new branch]      ${branch.padEnd(10)} -> ${remoteName}/${branch}`
+  const lines = fetchedOid ? fetchLines({ remoteName, branch }, { previous, fetched: fetchedOid }, branchNamed) : []
 
   return {
-    header: fetchedOid ? [`From ${url}`, line].join('\n') : `From ${url}`,
+    header: fetchedOid && lines.length === 0 ? '' : [`From ${url}`, ...lines].join('\n'),
     url,
     remoteName,
     branch,
@@ -67,7 +83,7 @@ export const fetch: GitSubcommand = {
 
     const branch = operands[1] ?? (await currentBranch(ctx, dir)) ?? 'main'
 
-    const result = await fetchFromRemote(ctx, dir, remoteName, branch)
-    return say(result.header)
+    const result = await fetchFromRemote(ctx, dir, remoteName, branch, operands[1] !== undefined)
+    return result.header === '' ? silent : say(result.header)
   },
 }

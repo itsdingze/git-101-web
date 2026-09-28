@@ -20,6 +20,7 @@ export default function CheatsheetCategory({ name, commands, completedLessons }:
             command={cmd.command}
             description={cmd.description}
             learned={completedLessons.includes(cmd.lessonId)}
+            danger={cmd.danger}
           />
         ))}
       </div>

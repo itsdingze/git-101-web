@@ -6,6 +6,7 @@ const initialState: ProgressState = {
   completedLessons: [],
   completedSteps: {},
   currentStep: {},
+  identity: null,
 }
 
 const useProgressStore = create<ProgressStore>()(
@@ -48,6 +49,10 @@ const useProgressStore = create<ProgressStore>()(
 
       isLessonCompleted: (lessonId) => {
         return get().completedLessons.includes(lessonId)
+      },
+
+      setIdentity: (identity) => {
+        set({ identity })
       },
     }),
     {

@@ -1,6 +1,6 @@
 import type { ScenarioKey } from './graph'
 import type { SandboxSeed } from '@/lib/git-sim/createSandbox'
-import type { GoalCheck } from '@/lib/git-sim/goals'
+import type { GoalCheck } from '@/lib/git-sim/goals/goalChecks'
 import type { GitCommandName } from '@/lib/git-sim/commands/git/registry'
 
 export type TextBlock = {
@@ -29,7 +29,16 @@ export type CalloutBlock = {
   value: string
 }
 
-export type ContentBlock = TextBlock | CodeBlock | ListBlock | CalloutBlock
+export type TabsBlock = {
+  type: 'tabs'
+  group: string
+  tabs: readonly {
+    label: string
+    content: readonly (TextBlock | CodeBlock | ListBlock | CalloutBlock)[]
+  }[]
+}
+
+export type ContentBlock = TextBlock | CodeBlock | ListBlock | CalloutBlock | TabsBlock
 
 export type VisualizationType =
   | 'three-place-model'
@@ -70,6 +79,8 @@ export type BlockExerciseStep = {
   correctAnswer: readonly string[]
   /** Equally valid answers buildable from `availableBlocks`, e.g. `git checkout -b` for `git switch -c`. */
   acceptableAnswers?: readonly (readonly string[])[]
+  decoyReasons?: Readonly<Record<string, string | undefined>>
+  missingReasons?: Readonly<Record<string, string | undefined>>
   hints?: readonly string[]
 }
 
@@ -97,6 +108,12 @@ export type SandboxGoal = {
   check: GoalCheck
 }
 
+export type SandboxDetour = {
+  id: string
+  check: GoalCheck
+  message: string
+}
+
 export type SandboxExerciseStep = {
   type: 'sandbox-exercise'
   id: string
@@ -105,6 +122,7 @@ export type SandboxExerciseStep = {
   mode: 'goal' | 'guided'
   seed: SandboxSeed
   goals: readonly SandboxGoal[]
+  detours?: readonly SandboxDetour[]
   completionMessage?: string
 }
 

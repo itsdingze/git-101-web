@@ -1,7 +1,13 @@
+export type LearnerIdentity = {
+  name: string
+  email: string
+}
+
 export type ProgressState = {
   completedLessons: number[]
   completedSteps: Record<string, boolean>
   currentStep: Record<number, number>
+  identity: LearnerIdentity | null
 }
 
 export type ProgressActions = {
@@ -11,6 +17,7 @@ export type ProgressActions = {
   getCurrentStep: (lessonId: number) => number
   completeLesson: (lessonId: number) => void
   isLessonCompleted: (lessonId: number) => boolean
+  setIdentity: (identity: LearnerIdentity) => void
 }
 
 export type ProgressStore = ProgressState & ProgressActions

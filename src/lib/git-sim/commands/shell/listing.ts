@@ -1,6 +1,6 @@
-import { isDirectory, listEntries, pathExists } from '@/lib/git-sim/fileOperations'
-import { basename, resolvePath } from '@/lib/git-sim/paths'
-import { hasFlag, operandsOf } from '@/lib/git-sim/parseArgs'
+import { isDirectory, listEntries, pathExists } from '@/lib/git-sim/fs/fileOperations'
+import { basename, resolvePath } from '@/lib/git-sim/fs/paths'
+import { hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { fail, say, silent } from '@/lib/git-sim/output'
 import type { CommandHandler } from '@/lib/git-sim/types'
 
@@ -13,10 +13,13 @@ export const ls: CommandHandler = async (args, ctx) => {
   }
   if (!(await isDirectory(ctx.fs, path))) return say(basename(path))
 
-  const showHidden = hasFlag(args, '-a', '-A', '-la', '-al')
-  const entries = (await listEntries(ctx.fs, path)).filter(
-    (entry) => showHidden || !entry.name.startsWith('.'),
-  )
+  const showAll = hasFlag(args, '-a', '-la', '-al')
+  const showHidden = showAll || hasFlag(args, '-A')
+  const dotEntries = showAll ? [{ name: '.', directory: true }, { name: '..', directory: true }] : []
+  const entries = [
+    ...dotEntries,
+    ...(await listEntries(ctx.fs, path)).filter((entry) => showHidden || !entry.name.startsWith('.')),
+  ]
 
   if (entries.length === 0) return silent
   if (hasFlag(args, '-l', '-la', '-al')) {

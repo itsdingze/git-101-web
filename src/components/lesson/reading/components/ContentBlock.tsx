@@ -2,6 +2,8 @@ import { Info, Lightbulb, TriangleAlert, OctagonAlert, type LucideIcon } from 'l
 import type { ContentBlock as ContentBlockType, CalloutVariant } from '@/types'
 import CodeBlock from '@/components/ui/CodeBlock'
 import InlineMarkdown from '@/components/ui/InlineMarkdown'
+import TabsBlock from './TabsBlock'
+import ShellCodeText from './ShellCodeText'
 
 const CALLOUT_STYLES: Record<CalloutVariant, { icon: LucideIcon; shell: string; accent: string }> = {
   info: { icon: Info, shell: 'bg-accent-blue/5 border-accent-blue/20', accent: 'text-accent-blue' },
@@ -22,7 +24,11 @@ export default function ContentBlock({ block }: ContentBlockProps) {
     case 'code':
       return (
         <CodeBlock label="Code sample" className="bg-code-bg rounded-xl px-5 py-4 font-mono text-xs leading-relaxed">
-          <code className="text-code-text">{block.value}</code>
+          {block.language === 'bash' ? (
+            <ShellCodeText value={block.value} />
+          ) : (
+            <code className="text-code-text">{block.value}</code>
+          )}
         </CodeBlock>
       )
 
@@ -53,6 +59,9 @@ export default function ContentBlock({ block }: ContentBlockProps) {
         </div>
       )
     }
+
+    case 'tabs':
+      return <TabsBlock block={block} />
 
     default: {
       const _exhaustive: never = block

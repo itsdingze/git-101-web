@@ -6,21 +6,21 @@ const STAGES: WalkthroughStage[] = [
     lines: [
       { text: 'On branch main', kind: 'normal' },
       { text: 'Changes to be committed:', kind: 'header' },
-      { text: '  modified:   filename.txt', kind: 'staged' },
+      { text: '  modified:   settings.txt', kind: 'staged' },
     ],
   },
   {
     label: 'File unstaged, edits kept',
-    command: 'git restore --staged filename.txt',
+    command: 'git restore --staged settings.txt',
     lines: [
       { text: 'On branch main', kind: 'normal' },
       { text: 'Changes not staged for commit:', kind: 'header' },
-      { text: '  modified:   filename.txt', kind: 'unstaged' },
+      { text: '  modified:   settings.txt', kind: 'unstaged' },
     ],
   },
   {
     label: 'Changes discarded',
-    command: 'git restore filename.txt',
+    command: 'git restore settings.txt',
     lines: [
       { text: 'On branch main', kind: 'normal' },
       { text: 'nothing to commit, working tree clean', kind: 'normal' },

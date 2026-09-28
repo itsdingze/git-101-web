@@ -6,6 +6,7 @@ import SolutionDropZone from './components/SolutionDropZone'
 import SolutionBlocks from './components/SolutionBlocks'
 import ExerciseControls from '@/components/lesson/ExerciseControls'
 import InlineMarkdown from '@/components/ui/InlineMarkdown'
+import FeedbackPanel from '@/components/ui/FeedbackPanel'
 import useBlockDrag from './hooks/useBlockDrag'
 
 interface BlockExerciseProps {
@@ -17,6 +18,7 @@ export default function BlockExercise({ step, lessonId }: BlockExerciseProps) {
   const {
     answer,
     solved,
+    feedback,
     showHint,
     hintIndex,
     shakeSlots,
@@ -43,7 +45,7 @@ export default function BlockExercise({ step, lessonId }: BlockExerciseProps) {
       <DragDropProvider {...dragProviderProps}>
         <SolutionDropZone solved={solved} shakeSlots={shakeSlots} overSolution={overSolution}>
           {answer.length === 0 && insertIndex === null ? (
-            <span className="py-2 text-text-muted text-sm">Tap the blocks below, or drag them here, to build the command</span>
+            <span className="flex min-h-11 items-center text-text-muted text-sm">Tap the blocks below, or drag them here, to build the command</span>
           ) : (
             <SolutionBlocks
               answer={answer}
@@ -77,6 +79,11 @@ export default function BlockExercise({ step, lessonId }: BlockExerciseProps) {
           ) : null}
         </DragOverlay>
       </DragDropProvider>
+
+      <div role="status" aria-live="polite">
+        {!solved && feedback && <FeedbackPanel tone="wrong" message={feedback} />}
+        {solved && <FeedbackPanel tone="right" message={`That's the command: \`${answer.join(' ')}\``} />}
+      </div>
 
       <ExerciseControls
         hints={step.hints}

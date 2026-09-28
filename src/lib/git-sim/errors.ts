@@ -43,6 +43,12 @@ function conflictingPaths(error: GitError): string {
   return filepaths.map((path) => `\t${String(path)}`).join('\n')
 }
 
+function unmergedLines(error: GitError): string[] {
+  const filepaths = error.data?.filepaths
+  if (!Array.isArray(filepaths)) return []
+  return filepaths.map((path) => `U\t${String(path)}`)
+}
+
 export function describeGitError(error: unknown): string {
   if (error instanceof SandboxError) return error.message
   if (!isGitError(error)) return `fatal: ${error instanceof Error ? error.message : String(error)}`
@@ -69,6 +75,7 @@ export function describeGitError(error: unknown): string {
         'hint: Fix them up in the work tree, and then use \'git add/rm <file>\'',
         'hint: as appropriate to mark resolution and make a commit.',
         'fatal: Exiting because of an unresolved conflict.',
+        ...unmergedLines(error),
       ].join('\n')
     case 'FastForwardError':
       return 'fatal: Not possible to fast-forward, aborting.'

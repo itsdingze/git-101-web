@@ -5,9 +5,15 @@ import type { DragOperation } from '@dnd-kit/abstract'
 import useProgressStore from '@/stores/progressStore'
 import useExerciseNav from '@/hooks/useExerciseNav'
 import type { BlockExerciseStep } from '@/types'
+import blockFeedback from '@/components/lesson/block-exercise/blockFeedback'
 
-function arraysEqual(a: readonly string[], b: readonly string[]): boolean {
-  return a.length === b.length && a.every((v, i) => v === b[i])
+type CheckedAnswer = {
+  key: string
+  message: string
+}
+
+function answerKeyOf(answer: readonly string[]): string {
+  return answer.join('\u0000')
 }
 
 function computeInsertIndex(pointerX: number): number {
@@ -26,6 +32,7 @@ function computeInsertIndex(pointerX: number): number {
 interface UseBlockDragReturn {
   answer: string[]
   solved: boolean
+  feedback: string | null
   showHint: boolean
   hintIndex: number
   shakeSlots: boolean
@@ -53,6 +60,7 @@ export default function useBlockDrag(step: BlockExerciseStep, lessonId: number):
   const [activeId, setActiveId] = useState<string | number | null>(null)
   const [overSolution, setOverSolution] = useState(false)
   const [insertIndex, setInsertIndex] = useState<number | null>(null)
+  const [checked, setChecked] = useState<CheckedAnswer | null>(null)
   const overSolutionRef = useRef(false)
   const insertIndexRef = useRef<number | null>(null)
   const previousAnswer = useRef(answer)
@@ -66,28 +74,32 @@ export default function useBlockDrag(step: BlockExerciseStep, lessonId: number):
     setActiveId(null)
     setOverSolution(false)
     setInsertIndex(null)
+    setChecked(null)
     overSolutionRef.current = false
     insertIndexRef.current = null
   }
 
-  function handleCheck() {
-    const isCorrect =
-      arraysEqual(answer, step.correctAnswer) ||
-      (step.acceptableAnswers?.some((alt) => arraysEqual(answer, alt)) ?? false)
+  const answerKey = answerKeyOf(answer)
+  const feedback = checked?.key === answerKey ? checked.message : null
 
-    if (isCorrect) {
+  function handleCheck() {
+    const message = blockFeedback(answer, step)
+
+    if (message === null) {
       setSolved(true)
+      setChecked(null)
       completeStep(lessonId, step.id)
       return true
     }
 
+    setChecked({ key: answerKey, message })
     setShakeSlots(true)
     setTimeout(() => setShakeSlots(false), 500)
     setHintIndex((i) => Math.min(i + 1, (step.hints?.length || 1) - 1))
     return false
   }
 
-  useExerciseNav({ solved, checkFn: handleCheck, checkDisabled: answer.length === 0 })
+  useExerciseNav({ solved, checkFn: handleCheck, checkDisabled: answer.length === 0, answerKey })
 
   function updateInsertIndex(operation: DragOperation) {
     const sourceId = String(operation.source?.id ?? '')
@@ -207,6 +219,7 @@ export default function useBlockDrag(step: BlockExerciseStep, lessonId: number):
   return {
     answer,
     solved,
+    feedback,
     showHint,
     hintIndex,
     shakeSlots,

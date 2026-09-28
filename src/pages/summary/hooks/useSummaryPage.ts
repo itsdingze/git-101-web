@@ -1,32 +1,18 @@
 import { useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import type { Step, Lesson } from '@/types'
+import type { Lesson } from '@/types'
 import useProgressStore from '@/stores/progressStore'
 import lessons from '@/data/lessons/index'
+import { recapCommands, recapSkills } from '@/pages/summary/lessonRecap'
 
 interface UseSummaryPageResult {
   lesson: Lesson | undefined
   commands: string[]
+  skills: string[]
   nextLesson: Lesson | undefined
-}
-
-function extractCommands(steps: readonly Step[]): string[] {
-  const recap = steps.find((step) => step.type === 'reading' && step.id === 'recap')
-
-  const listed =
-    recap?.type === 'reading'
-      ? recap.content
-          .filter((block) => block.type === 'code' && block.language === 'bash')
-          .flatMap((block) => (block.type === 'code' ? block.value.split('\n') : []))
-          .map((line) => line.split('#')[0]?.trim() ?? '')
-          .filter(Boolean)
-      : []
-
-  const built = steps
-    .filter((step) => step.type === 'block-exercise')
-    .map((step) => (step.type === 'block-exercise' ? step.correctAnswer.join(' ') : ''))
-
-  return [...new Set([...listed, ...built])]
+  courseComplete: boolean
+  completedCount: number
+  totalCount: number
 }
 
 export default function useSummaryPage(): UseSummaryPageResult {
@@ -35,14 +21,13 @@ export default function useSummaryPage(): UseSummaryPageResult {
 
   const completeLesson = useProgressStore((s) => s.completeLesson)
   const isStepCompleted = useProgressStore((s) => s.isStepCompleted)
+  const completedLessons = useProgressStore((s) => s.completedLessons)
 
   const lesson = lessons.find((l) => l.id === parsedId)
   const nextLesson = lessons.find((l) => l.id === parsedId + 1)
 
-  const commands = useMemo(() => {
-    if (!lesson) return []
-    return extractCommands(lesson.steps)
-  }, [lesson])
+  const commands = useMemo(() => (lesson ? recapCommands(lesson.steps) : []), [lesson])
+  const skills = useMemo(() => (lesson ? recapSkills(lesson.steps) : []), [lesson])
 
   // Guarded so landing on this URL directly does not credit unfinished work
   useEffect(() => {
@@ -52,5 +37,13 @@ export default function useSummaryPage(): UseSummaryPageResult {
     }
   }, [lesson, parsedId, completeLesson, isStepCompleted])
 
-  return { lesson, commands, nextLesson }
+  return {
+    lesson,
+    commands,
+    skills,
+    nextLesson,
+    courseComplete: lesson !== undefined && completedLessons.length === lessons.length,
+    completedCount: completedLessons.length,
+    totalCount: lessons.length,
+  }
 }

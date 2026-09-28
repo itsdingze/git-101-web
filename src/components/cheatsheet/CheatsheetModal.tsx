@@ -67,7 +67,7 @@ export default function CheatsheetModal({ onClose }: CheatsheetModalProps) {
         >
           <div className="px-6 py-6 sm:px-8">
             <p className="text-sm text-text-muted mb-8 leading-relaxed">
-              Quick reference for Git commands
+              Every command in the course. Ticked ones come from lessons you have finished.
             </p>
 
             <div className="flex flex-col gap-8">

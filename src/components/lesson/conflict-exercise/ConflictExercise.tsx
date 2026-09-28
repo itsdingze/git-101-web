@@ -44,7 +44,11 @@ export default function ConflictExercise({ step, lessonId }: ConflictExercisePro
         </motion.div>
       )}
 
-      <ResolutionFeedback id={feedbackId} status={solved ? 'solved' : failure} />
+      <ResolutionFeedback
+        id={feedbackId}
+        status={solved ? 'solved' : failure}
+        labels={{ ours: step.oursLabel, theirs: step.theirsLabel }}
+      />
 
       <ExerciseControls
         hints={step.hints}

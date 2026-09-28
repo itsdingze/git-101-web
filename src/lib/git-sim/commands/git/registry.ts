@@ -17,6 +17,7 @@ import { reset } from './reset'
 import { restore } from './restore'
 import { revert } from './revert'
 import { rm } from './rm'
+import { show } from './show'
 import { stash } from './stash'
 import { status } from './status'
 import { switchCommand } from './switch'
@@ -42,6 +43,7 @@ const SIMULATED_COMMANDS = {
   restore,
   revert,
   rm,
+  show,
   stash,
   status,
   switch: switchCommand,
@@ -65,7 +67,6 @@ export const UNSIMULATED_GIT_COMMANDS = [
   'mv',
   'rebase',
   'shortlog',
-  'show',
   'submodule',
   'tag',
   'worktree',

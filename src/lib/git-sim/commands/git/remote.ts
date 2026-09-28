@@ -1,9 +1,9 @@
 import git from 'isomorphic-git'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
-import { operandsOf } from '@/lib/git-sim/parseArgs'
+import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
+import { operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say, silent } from '@/lib/git-sim/output'
-import { createRemoteRepo } from '@/lib/git-sim/remoteTransfer'
+import { createRemoteRepo } from '@/lib/git-sim/remote/remoteTransfer'
 import type { CommandContext, CommandOutput, GitSubcommand } from '@/lib/git-sim/types'
 
 async function listRemotes(
@@ -23,6 +23,17 @@ async function listRemotes(
   )
 }
 
+const SET_URL_USAGE = [
+  'usage: git remote set-url [--push] <name> <newurl> [<oldurl>]',
+  '   or: git remote set-url --add <name> <newurl>',
+  '   or: git remote set-url --delete <name> <url>',
+].join('\n')
+
+async function remoteExists(ctx: CommandContext, dir: string, name: string): Promise<boolean> {
+  const remotes = await git.listRemotes({ fs: gitFs(ctx.fs), dir })
+  return remotes.some((entry) => entry.remote === name)
+}
+
 export const remote: GitSubcommand = {
   requiresRepo: true,
   run: async (args, ctx, dir) => {
@@ -32,13 +43,22 @@ export const remote: GitSubcommand = {
 
     if (action === 'add') {
       if (!name || !url) throw new SandboxError('usage: git remote add <name> <url>')
+      if (await remoteExists(ctx, dir, name)) throw new SandboxError(`error: remote ${name} already exists.`)
       await git.addRemote({ fs: gitFs(ctx.fs), dir, remote: name, url })
       if (!ctx.remote) ctx.remote = { name, url, dir: await createRemoteRepo(ctx, name) }
       return silent
     }
 
+    if (action === 'set-url') {
+      if (!name || !url) throw new SandboxError(SET_URL_USAGE)
+      if (!(await remoteExists(ctx, dir, name))) throw new SandboxError(`error: No such remote '${name}'`)
+      await git.addRemote({ fs: gitFs(ctx.fs), dir, remote: name, url, force: true })
+      return silent
+    }
+
     if (action === 'remove' || action === 'rm') {
       if (!name) throw new SandboxError('usage: git remote remove <name>')
+      if (!(await remoteExists(ctx, dir, name))) throw new SandboxError(`error: No such remote: '${name}'`)
       await git.deleteRemote({ fs: gitFs(ctx.fs), dir, remote: name })
       return silent
     }

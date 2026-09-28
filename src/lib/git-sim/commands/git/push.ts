@@ -1,12 +1,12 @@
 import git from 'isomorphic-git'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
-import { hasFlag, operandsOf } from '@/lib/git-sim/parseArgs'
+import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
+import { hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say } from '@/lib/git-sim/output'
-import { currentBranch, refOid, shortOid } from '@/lib/git-sim/repository'
-import { copyObjects } from '@/lib/git-sim/remoteTransfer'
-import { connectToRemote } from '@/lib/git-sim/remoteConnection'
-import { readUpstream, setUpstream } from '@/lib/git-sim/upstream'
+import { currentBranch, refOid, shortOid } from '@/lib/git-sim/history/repository'
+import { copyObjects } from '@/lib/git-sim/remote/remoteTransfer'
+import { connectToRemote } from '@/lib/git-sim/remote/remoteConnection'
+import { readUpstream, setUpstream } from '@/lib/git-sim/remote/upstream'
 import { firstRemoteName } from './fetch'
 import { describeRejection, type RejectionReason } from './pushRejection'
 import type { CommandContext } from '@/lib/git-sim/types'
@@ -141,6 +141,14 @@ export const push: GitSubcommand = {
     const reason = await rejectionReason(ctx, dir, tips, forceModeOf(args))
     if (reason) throw new SandboxError(describeRejection(url, branch, remoteBranch, reason))
 
+    const tracked = hasFlag(args, '-u', '--set-upstream')
+    const upstream = tracked
+      ? [`branch '${branch}' set up to track '${remoteName}/${remoteBranch}'.`]
+      : []
+    if (tracked) await setUpstream(ctx, dir, branch, { remote: remoteName, branch: remoteBranch })
+
+    if (tips.remote === localOid) return say([...upstream, 'Everything up-to-date'].join('\n'))
+
     const updated = await refLine(ctx, dir, tips, `${branch} -> ${remoteBranch}`)
     await copyObjects(ctx, dir, remoteDir)
     await git.writeRef({
@@ -157,13 +165,6 @@ export const push: GitSubcommand = {
       value: localOid,
       force: true,
     })
-
-    const tracked = hasFlag(args, '-u', '--set-upstream')
-    if (tracked) await setUpstream(ctx, dir, branch, { remote: remoteName, branch: remoteBranch })
-
-    const upstream = tracked
-      ? [`branch '${branch}' set up to track '${remoteName}/${remoteBranch}'.`]
-      : []
 
     return say([...TRANSFER_NOISE, `To ${url}`, updated, ...upstream].join('\n'))
   },

@@ -1,5 +1,5 @@
-import { hasFlag } from '@/lib/git-sim/parseArgs'
-import { readSetting } from '@/lib/git-sim/repository'
+import { hasFlag } from '@/lib/git-sim/input/parseArgs'
+import { readSetting } from '@/lib/git-sim/history/repository'
 import type { CommandContext } from '@/lib/git-sim/types'
 
 export type PullStrategy = 'unspecified' | 'merge' | 'rebase' | 'ff-only'

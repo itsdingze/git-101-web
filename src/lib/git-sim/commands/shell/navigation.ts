@@ -1,6 +1,6 @@
-import { isDirectory, pathExists } from '@/lib/git-sim/fileOperations'
-import { resolvePath } from '@/lib/git-sim/paths'
-import { operandsOf } from '@/lib/git-sim/parseArgs'
+import { isDirectory, pathExists } from '@/lib/git-sim/fs/fileOperations'
+import { resolvePath } from '@/lib/git-sim/fs/paths'
+import { operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { say, silent } from '@/lib/git-sim/output'
 import type { CommandHandler } from '@/lib/git-sim/types'
 

@@ -1,5 +1,5 @@
 import type { ElementType } from 'react'
-import inlineMarkdown from '@/utils/inlineMarkdown'
+import inlineMarkdown from '@/lib/text/inlineMarkdown'
 
 interface InlineMarkdownProps {
   value: string

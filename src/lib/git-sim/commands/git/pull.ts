@@ -1,11 +1,12 @@
 import git from 'isomorphic-git'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
-import { operandsOf } from '@/lib/git-sim/parseArgs'
+import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
+import { operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say, stderr, stdout } from '@/lib/git-sim/output'
-import { currentBranch, headOid } from '@/lib/git-sim/repository'
-import { readUpstream, type Upstream } from '@/lib/git-sim/upstream'
+import { currentBranch, headOid } from '@/lib/git-sim/history/repository'
+import { readUpstream, type Upstream } from '@/lib/git-sim/remote/upstream'
 import { fetchFromRemote, resolveRemoteName } from './fetch'
+import { refuseMergeWhileMerging } from '@/lib/git-sim/merge/mergeGuards'
 import { mergeInto } from './merge'
 import { divergedRefusal, pullStrategyOf } from './pullStrategy'
 import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
@@ -70,26 +71,32 @@ export const pull: GitSubcommand = {
   run: async (args, ctx, dir) => {
     const branchName = await currentBranch(ctx, dir)
     if (!branchName) throw new SandboxError('fatal: cannot pull onto a detached HEAD in this course.')
+    await refuseMergeWhileMerging(ctx, dir, 'Pulling')
 
     const { remote: remoteName, branch } = await pullSource(ctx, dir, args, branchName)
 
-    const result = await fetchFromRemote(ctx, dir, remoteName, branch)
+    const result = await fetchFromRemote(ctx, dir, remoteName, branch, operandsOf(args).length > 1)
     if (!result.fetchedOid) {
       return say([result.header, `fatal: couldn't find remote ref ${branch}`].join('\n'))
     }
 
     if (await hasDiverged(ctx, dir, result.fetchedOid)) {
       const refusal = divergedRefusal(await pullStrategyOf(ctx, dir, args))
-      if (refusal) return [stdout(result.header), stderr(refusal)]
+      if (refusal) return [...(result.header ? [stdout(result.header)] : []), stderr(refusal)]
     }
 
-    const merged = await mergeInto(
-      ctx,
-      dir,
-      `refs/remotes/${remoteName}/${branch}`,
-      'pull',
-      `Merge branch '${branch}' of ${result.url}`,
-    )
-    return say([result.header, merged].join('\n'))
+    try {
+      const merged = await mergeInto(
+        ctx,
+        dir,
+        { ref: `refs/remotes/${remoteName}/${branch}`, label: result.fetchedOid },
+        'pull',
+        `Merge branch '${branch}' of ${result.url}`,
+      )
+      return say([result.header, merged].filter(Boolean).join('\n'))
+    } catch (error) {
+      if (!(error instanceof SandboxError) || !result.header) throw error
+      return [stdout(result.header), stderr(error.message)]
+    }
   },
 }

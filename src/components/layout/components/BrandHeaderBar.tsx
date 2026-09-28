@@ -1,5 +1,6 @@
 import { GitBranch } from 'lucide-react'
 import ContentColumn from '@/components/layout/ContentColumn'
+import DebugToggle from './DebugToggle'
 import GitHubStarBadge from './GitHubStarBadge'
 
 export default function BrandHeaderBar() {
@@ -9,7 +10,10 @@ export default function BrandHeaderBar() {
         <GitBranch size={18} className="text-text-muted" />
         <span>Git 101</span>
       </div>
-      <GitHubStarBadge />
+      <div className="flex items-center gap-1">
+        <DebugToggle />
+        <GitHubStarBadge />
+      </div>
     </ContentColumn>
   )
 }

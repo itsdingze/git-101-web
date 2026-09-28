@@ -1,37 +1,18 @@
 import { useLessonNav } from '@/hooks/useLessonNav'
+import footerAction, { type FooterAction } from '@/components/layout/footerAction'
+import useDebugStore from '@/stores/debugStore'
 
-type ActionVariant = 'filled' | 'filled-success' | 'filled-danger'
-
-interface LessonFooterAction {
-  variant: ActionVariant
-  label: string
-  showContinue: boolean
-  disabled: boolean
+interface LessonFooterAction extends FooterAction {
   onClick: (() => void) | undefined
 }
 
 export default function useLessonFooterAction(): LessonFooterAction {
-  const { onNext, isLastStep, stepCompleted, checkDisabled, checkResult, triggerCheck } = useLessonNav()
-
-  const isIncorrect = checkResult === 'incorrect'
-  const showContinue = checkResult === 'correct' || stepCompleted
-
-  const variant: ActionVariant =
-    checkResult === 'correct' ? 'filled-success' : isIncorrect ? 'filled-danger' : 'filled'
-
-  const label = showContinue
-    ? isLastStep
-      ? 'Finish Lesson'
-      : 'Continue'
-    : isIncorrect
-      ? 'Try Again'
-      : 'Check Answer'
+  const nav = useLessonNav()
+  const debugMode = useDebugStore((state) => state.debugMode)
+  const action = footerAction(nav, debugMode)
 
   return {
-    variant,
-    label,
-    showContinue,
-    disabled: isIncorrect || (!showContinue && checkDisabled),
-    onClick: showContinue ? onNext ?? undefined : triggerCheck,
+    ...action,
+    onClick: action.showContinue ? nav.onNext ?? undefined : nav.triggerCheck,
   }
 }

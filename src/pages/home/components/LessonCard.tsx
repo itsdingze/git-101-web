@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Check, ChevronRight } from 'lucide-react'
 import type { Lesson } from '@/types'
+import lessonMinutes from '@/pages/home/lessonMinutes'
 
 interface LessonCardProps {
   lesson: Lesson
@@ -42,6 +43,7 @@ export default function LessonCard({ lesson, isCompleted, isCurrent }: LessonCar
           <p className="text-xs text-text-muted mt-0.5 leading-relaxed">
             {lesson.description}
           </p>
+          <p className="text-xs text-text-muted mt-1">About {lessonMinutes(lesson)} min</p>
         </div>
 
         <ChevronRight size={16} className="text-text-muted shrink-0" />

@@ -5,11 +5,13 @@ interface UseExerciseNavOptions {
   solved: boolean
   checkFn?: () => boolean | undefined
   checkDisabled?: boolean
+  answerKey?: string
 }
 
-export default function useExerciseNav({ solved, checkFn, checkDisabled }: UseExerciseNavOptions): void {
-  const { registerCheck, clearCheck, reportStepSolved } = useLessonNav()
+export default function useExerciseNav({ solved, checkFn, checkDisabled, answerKey }: UseExerciseNavOptions): void {
+  const { registerCheck, clearCheck, reportStepSolved, clearCheckResult } = useLessonNav()
   const checkFnRef = useRef(checkFn)
+  const holdIncorrect = answerKey !== undefined
 
   useEffect(() => {
     checkFnRef.current = checkFn
@@ -21,8 +23,12 @@ export default function useExerciseNav({ solved, checkFn, checkDisabled }: UseEx
       reportStepSolved(true)
     } else {
       reportStepSolved(false)
-      registerCheck(() => checkFnRef.current?.(), checkDisabled)
+      registerCheck(() => checkFnRef.current?.(), checkDisabled, holdIncorrect)
     }
     return clearCheck
-  }, [solved, checkDisabled, registerCheck, clearCheck, reportStepSolved])
+  }, [solved, checkDisabled, holdIncorrect, registerCheck, clearCheck, reportStepSolved])
+
+  useEffect(() => {
+    if (answerKey !== undefined && !solved) clearCheckResult()
+  }, [answerKey, solved, clearCheckResult])
 }

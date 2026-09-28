@@ -25,7 +25,7 @@ export type GitScenario = {
   stages: Stage[]
 }
 
-export type ScenarioKey = 'branching' | 'merging' | 'rebase'
+export type ScenarioKey = 'branching' | 'merging'
 
 export type Position = {
   x: number

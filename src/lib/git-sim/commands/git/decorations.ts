@@ -1,6 +1,7 @@
 import git from 'isomorphic-git'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
-import { currentBranch, headOid, refOid } from '@/lib/git-sim/repository'
+import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
+import { currentBranch, headOid, refOid } from '@/lib/git-sim/history/repository'
+import { STASH_REF } from '@/lib/git-sim/stash/stashLog'
 import type { CommandContext } from '@/lib/git-sim/types'
 
 export type RefDecorations = Map<string, string[]>
@@ -19,22 +20,30 @@ export async function readDecorations(
 
   const branch = await currentBranch(ctx, dir)
   const head = await headOid(ctx, dir)
+  const named: { ref: string; label: string }[] = []
 
   for (const name of await git.listBranches({ fs: gitFs(ctx.fs), dir })) {
-    const oid = await refOid(ctx, dir, `refs/heads/${name}`)
-    if (!oid) continue
-    if (name === branch) attach(oid, `HEAD -> ${name}`, true)
-    else attach(oid, name)
+    if (name !== branch) named.push({ ref: `refs/heads/${name}`, label: name })
   }
-
   for (const { remote } of await git.listRemotes({ fs: gitFs(ctx.fs), dir })) {
     for (const name of await git.listBranches({ fs: gitFs(ctx.fs), dir, remote })) {
-      const oid = await refOid(ctx, dir, `refs/remotes/${remote}/${name}`)
-      if (oid) attach(oid, `${remote}/${name}`)
+      named.push({ ref: `refs/remotes/${remote}/${name}`, label: `${remote}/${name}` })
     }
   }
+  named.push({ ref: STASH_REF, label: STASH_REF })
 
-  if (!branch && head) attach(head, 'HEAD', true)
+  named.sort((a, b) => (a.ref < b.ref ? 1 : a.ref > b.ref ? -1 : 0))
+  for (const { ref, label } of named) {
+    const oid = await refOid(ctx, dir, ref)
+    if (oid) attach(oid, label)
+  }
+
+  if (branch) {
+    const oid = await refOid(ctx, dir, `refs/heads/${branch}`)
+    if (oid) attach(oid, `HEAD -> ${branch}`, true)
+  } else if (head) {
+    attach(head, 'HEAD', true)
+  }
 
   return decorations
 }

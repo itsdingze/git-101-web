@@ -1,22 +1,22 @@
 import git from 'isomorphic-git'
 import type { ReadCommitResult } from 'isomorphic-git'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
-import { operandsOf, unknownFlags } from '@/lib/git-sim/parseArgs'
+import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
+import { operandsOf, unknownFlags } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say } from '@/lib/git-sim/output'
-import { recordHeadMove } from '@/lib/git-sim/headHistory'
-import { joinPath } from '@/lib/git-sim/paths'
-import { pathExists, removeTree, writeText } from '@/lib/git-sim/fileOperations'
-import { commitSignature, headOid, shortOid } from '@/lib/git-sim/repository'
-import { commitSubject } from '@/lib/git-sim/commitSubject'
-import { formatCommitSummary } from '@/lib/git-sim/commitSummary'
-import { resolveCommitish } from '@/lib/git-sim/resolveCommitish'
+import { recordHeadMove } from '@/lib/git-sim/history/headHistory'
+import { joinPath } from '@/lib/git-sim/fs/paths'
+import { pathExists, removeTree, writeText } from '@/lib/git-sim/fs/fileOperations'
+import { commitSignature, headOid, shortOid } from '@/lib/git-sim/history/repository'
+import { commitSubject } from '@/lib/git-sim/history/commitSubject'
+import { formatCommitSummary } from '@/lib/git-sim/history/commitSummary'
+import { resolveCommitish } from '@/lib/git-sim/history/resolveCommitish'
 import {
   readCommitFiles,
   readCommitFilesOrEmpty,
   readIndexFiles,
-} from '@/lib/git-sim/treeContents'
-import { readWorkingTree } from '@/lib/git-sim/workingTree'
+} from '@/lib/git-sim/working-tree/treeContents'
+import { readWorkingTree } from '@/lib/git-sim/working-tree/workingTree'
 import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
 import { formatStatus } from './status'
 
@@ -160,9 +160,14 @@ async function recordRevert(
     before,
     after,
     rootCommit: false,
-    showAuthorDate: true,
+    showAuthorDate: false,
   })
 }
+
+const REVERT_USAGE = [
+  'usage: git revert [--[no-]edit] [-n] [-m <parent-number>] [-s] [-S[<keyid>]] <commit>...',
+  '   or: git revert (--continue | --skip | --abort | --quit)',
+].join('\n')
 
 export const revert: GitSubcommand = {
   requiresRepo: true,
@@ -172,7 +177,8 @@ export const revert: GitSubcommand = {
       throw new SandboxError(`fatal: git revert ${unsupported} is not simulated in this course.`)
     }
 
-    const spec = operandsOf(args)[0] ?? 'HEAD'
+    const spec = operandsOf(args)[0]
+    if (!spec) throw new SandboxError(REVERT_USAGE)
     const target = await resolveCommitish(ctx, dir, spec)
     if (!target) throw new SandboxError(`fatal: bad revision '${spec}'`)
 

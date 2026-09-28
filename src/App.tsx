@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, ScrollRestoration } from 'react-router-dom'
 import Header from './components/layout/Header'
 import LessonFooter from './components/layout/LessonFooter'
 import { LessonNavProvider } from './contexts/LessonNavContext'
@@ -23,6 +23,7 @@ export default function App() {
         </main>
         <LessonFooter />
       </div>
+      <ScrollRestoration />
     </LessonNavProvider>
   )
 }

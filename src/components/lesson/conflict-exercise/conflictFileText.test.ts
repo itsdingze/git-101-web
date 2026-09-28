@@ -7,7 +7,7 @@ const SURROUNDED: ConflictExerciseStep = {
   id: 'surrounded',
   prompt: 'Resolve it.',
   fileName: 'index.html',
-  oursLabel: 'HEAD (main)',
+  oursLabel: 'HEAD',
   theirsLabel: 'feature-banner',
   oursContent: 'Welcome back!',
   theirsContent: 'Welcome to our amazing website!',
@@ -21,7 +21,7 @@ const BARE: ConflictExerciseStep = {
   id: 'bare',
   prompt: 'Keep both.',
   fileName: 'styles.css',
-  oursLabel: 'HEAD (main)',
+  oursLabel: 'HEAD',
   theirsLabel: 'feature-dark-mode',
   oursContent: '@import "components.css";',
   theirsContent: '@import "dark-theme.css";',
@@ -34,7 +34,7 @@ describe('composeConflictedFile', () => {
       [
         '<body>',
         '  <header>',
-        '<<<<<<< HEAD (main)',
+        '<<<<<<< HEAD',
         'Welcome back!',
         '=======',
         'Welcome to our amazing website!',
@@ -48,7 +48,7 @@ describe('composeConflictedFile', () => {
   it('emits only the conflict block when the step has no surroundings', () => {
     expect(composeConflictedFile(BARE)).toBe(
       [
-        '<<<<<<< HEAD (main)',
+        '<<<<<<< HEAD',
         '@import "components.css";',
         '=======',
         '@import "dark-theme.css";',

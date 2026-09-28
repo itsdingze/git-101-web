@@ -1,6 +1,7 @@
 import { type KeyboardEvent, useEffect, useRef, useState } from 'react'
 import type { PromptInfo } from '@/lib/git-sim/createSandbox'
-import type { TerminalLine } from '../hooks/useSandboxExercise'
+import type { TerminalLine } from '@/components/lesson/sandbox-exercise/hooks/useSandboxExercise'
+import CoachLine from './CoachLine'
 
 interface SandboxTerminalProps {
   lines: readonly TerminalLine[]
@@ -9,10 +10,16 @@ interface SandboxTerminalProps {
   onSubmit: (line: string) => void
 }
 
-const LINE_CLASSES: Record<TerminalLine['kind'], string> = {
+type ShellKind = 'command' | 'stdout' | 'stderr'
+
+const LINE_CLASSES: Record<ShellKind, string> = {
   command: 'text-terminal-text',
   stdout: 'text-terminal-muted',
   stderr: 'text-terminal-error',
+}
+
+function isShellKind(kind: TerminalLine['kind']): kind is ShellKind {
+  return kind in LINE_CLASSES
 }
 
 function PromptLabel({ prompt }: { prompt: PromptInfo }) {
@@ -35,11 +42,17 @@ export default function SandboxTerminal({ lines, prompt, disabled, onSubmit }: S
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    if (document.activeElement === inputRef.current) inputRef.current?.scrollIntoView({ block: 'nearest' })
   }, [lines])
 
   useEffect(() => {
-    if (!disabled) inputRef.current?.focus()
+    if (!disabled) inputRef.current?.focus({ preventScroll: true })
   }, [disabled])
+
+  function revealInput() {
+    inputRef.current?.focus({ preventScroll: true })
+    inputRef.current?.scrollIntoView({ block: 'nearest' })
+  }
 
   function recall(offset: number) {
     if (history.length === 0) return
@@ -89,17 +102,21 @@ export default function SandboxTerminal({ lines, prompt, disabled, onSubmit }: S
         ref={scrollRef}
         role="log"
         aria-label="Terminal output"
-        onClick={() => inputRef.current?.focus()}
+        onClick={revealInput}
         className="p-4 h-[min(22rem,55dvh)] overflow-y-auto space-y-1"
       >
-        {lines.map((line) => (
-          <div key={line.id} className="flex items-baseline gap-2">
-            {line.kind === 'command' && <PromptLabel prompt={line.prompt ?? prompt} />}
-            <span className={`min-w-0 whitespace-pre-wrap break-words ${LINE_CLASSES[line.kind]}`}>
-              {line.text}
-            </span>
-          </div>
-        ))}
+        {lines.map((line) =>
+          isShellKind(line.kind) ? (
+            <div key={line.id} className="flex items-baseline gap-2">
+              {line.kind === 'command' && <PromptLabel prompt={line.prompt ?? prompt} />}
+              <span className={`min-w-0 whitespace-pre-wrap break-words ${LINE_CLASSES[line.kind]}`}>
+                {line.text}
+              </span>
+            </div>
+          ) : (
+            <CoachLine key={line.id} kind={line.kind} text={line.text} />
+          ),
+        )}
 
         <div className="flex items-baseline gap-2">
           <PromptLabel prompt={prompt} />
@@ -110,7 +127,7 @@ export default function SandboxTerminal({ lines, prompt, disabled, onSubmit }: S
             disabled={disabled}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={handleKeyDown}
-            className="min-h-7 min-w-0 flex-1 bg-transparent text-terminal-text caret-terminal-text outline-none disabled:opacity-50"
+            className="min-w-0 flex-1 scroll-mt-16 scroll-mb-24 bg-transparent text-terminal-text caret-terminal-text outline-none disabled:opacity-50"
             aria-label="Terminal command input"
             spellCheck={false}
             autoComplete="off"

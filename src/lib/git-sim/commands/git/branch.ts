@@ -1,10 +1,11 @@
 import git from 'isomorphic-git'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
-import { flagValue, hasFlag, operandsOf } from '@/lib/git-sim/parseArgs'
+import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
+import { flagValue, hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
-import { assertNoBranchNameClash } from '@/lib/git-sim/branchNameClash'
-import { say } from '@/lib/git-sim/output'
-import { currentBranch, headOid, refOid, shortOid } from '@/lib/git-sim/repository'
+import { assertNoBranchNameClash } from '@/lib/git-sim/history/branchNameClash'
+import { say, stderr } from '@/lib/git-sim/output'
+import { currentBranch, headOid, refOid, shortOid } from '@/lib/git-sim/history/repository'
+import { resolveCommitish } from '@/lib/git-sim/history/resolveCommitish'
 import type { CommandContext, CommandOutput, GitSubcommand } from '@/lib/git-sim/types'
 
 const DELETE_FLAGS = ['-d', '--delete', '-D']
@@ -26,6 +27,17 @@ async function listBranches(
   }
 
   return say(lines.join('\n'))
+}
+
+async function startPointOid(
+  ctx: CommandContext,
+  dir: string,
+  startPoint: string | undefined,
+): Promise<string> {
+  const name = startPoint ?? (await currentBranch(ctx, dir)) ?? 'main'
+  const oid = startPoint ? await resolveCommitish(ctx, dir, startPoint) : await headOid(ctx, dir)
+  if (!oid) throw new SandboxError(`fatal: not a valid object name: '${name}'`)
+  return oid
 }
 
 async function isMerged(ctx: CommandContext, dir: string, oid: string): Promise<boolean> {
@@ -60,6 +72,24 @@ async function deleteBranch(
   return say(`Deleted branch ${name} (was ${shortOid(oid)}).`)
 }
 
+async function deleteBranches(
+  ctx: CommandContext,
+  dir: string,
+  names: readonly string[],
+  force: boolean,
+): Promise<CommandOutput[]> {
+  const outputs: CommandOutput[] = []
+  for (const name of names) {
+    try {
+      outputs.push(...(await deleteBranch(ctx, dir, name, force)))
+    } catch (error) {
+      if (!(error instanceof SandboxError)) throw error
+      outputs.push(stderr(error.message))
+    }
+  }
+  return outputs
+}
+
 export const branch: GitSubcommand = {
   requiresRepo: true,
   run: async (args, ctx, dir) => {
@@ -68,20 +98,20 @@ export const branch: GitSubcommand = {
     }
 
     const deleteTarget = flagValue(args, ...DELETE_FLAGS)
-    if (deleteTarget) return deleteBranch(ctx, dir, deleteTarget, hasFlag(args, '-D'))
+    if (deleteTarget) {
+      return deleteBranches(ctx, dir, [deleteTarget, ...operandsOf(args, DELETE_FLAGS)], hasFlag(args, '-D'))
+    }
 
-    const name = operandsOf(args)[0]
+    const [name, startPoint] = operandsOf(args)
     if (!name) return listBranches(ctx, dir, hasFlag(args, '-a', '--all', '-r', '--remotes'))
 
     if (await refOid(ctx, dir, `refs/heads/${name}`)) {
       throw new SandboxError(`fatal: a branch named '${name}' already exists`)
     }
     await assertNoBranchNameClash(ctx, dir, name)
-    if (!(await headOid(ctx, dir))) {
-      throw new SandboxError(`fatal: not a valid object name: '${(await currentBranch(ctx, dir)) ?? 'main'}'`)
-    }
 
-    await git.branch({ fs: gitFs(ctx.fs), dir, ref: name, checkout: false })
+    const object = await startPointOid(ctx, dir, startPoint)
+    await git.branch({ fs: gitFs(ctx.fs), dir, ref: name, object, checkout: false })
     return []
   },
 }

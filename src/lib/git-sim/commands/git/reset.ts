@@ -1,16 +1,18 @@
 import git from 'isomorphic-git'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
-import { hasFlag, operandsOf } from '@/lib/git-sim/parseArgs'
+import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
+import { forceCheckout } from '@/lib/git-sim/working-tree/forceCheckout'
+import { hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError, unknownRevision } from '@/lib/git-sim/errors'
 import { say, silent } from '@/lib/git-sim/output'
-import { pathExists } from '@/lib/git-sim/fileOperations'
-import { resolvePath } from '@/lib/git-sim/paths'
-import { matchAny, repoPrefix } from '@/lib/git-sim/pathspec'
-import { recordHeadMove } from '@/lib/git-sim/headHistory'
-import { currentBranch, shortOid } from '@/lib/git-sim/repository'
-import { commitSubject } from '@/lib/git-sim/commitSubject'
-import { resolveCommitish } from '@/lib/git-sim/resolveCommitish'
-import { readWorkingTree } from '@/lib/git-sim/workingTree'
+import { pathExists } from '@/lib/git-sim/fs/fileOperations'
+import { resolvePath } from '@/lib/git-sim/fs/paths'
+import { matchAny, repoPrefix } from '@/lib/git-sim/fs/pathspec'
+import { recordHeadMove } from '@/lib/git-sim/history/headHistory'
+import { currentBranch, shortOid } from '@/lib/git-sim/history/repository'
+import { commitSubject } from '@/lib/git-sim/history/commitSubject'
+import { resolveCommitish } from '@/lib/git-sim/history/resolveCommitish'
+import { readWorkingTree } from '@/lib/git-sim/working-tree/workingTree'
+import { endMerge, readMergeInProgress } from '@/lib/git-sim/merge/mergeInProgress'
 import { resolveTrackedPaths, restoreIndexEntries } from './restore'
 import type { CommandContext, CommandOutput, GitSubcommand } from '@/lib/git-sim/types'
 
@@ -44,6 +46,10 @@ async function moveBranch(
 ): Promise<CommandOutput[]> {
   const branch = await currentBranch(ctx, dir)
   if (!branch) throw new SandboxError('fatal: cannot reset with a detached HEAD in this course.')
+  if (mode === 'soft' && (await readMergeInProgress(ctx, dir))) {
+    throw new SandboxError('fatal: Cannot do a soft reset in the middle of a merge.')
+  }
+  if (mode !== 'soft') await endMerge(ctx, dir)
 
   const trackedBefore = await git.listFiles({ fs: gitFs(ctx.fs), dir })
   await git.writeRef({
@@ -57,7 +63,7 @@ async function moveBranch(
   if (mode === 'soft') return silent
 
   if (mode === 'hard') {
-    await git.checkout({ fs: gitFs(ctx.fs), dir, ref: branch, force: true })
+    await forceCheckout(ctx, dir, branch)
     const { commit } = await git.readCommit({ fs: gitFs(ctx.fs), dir, oid: target })
     return say(`HEAD is now at ${shortOid(target)} ${commitSubject(commit.message)}`)
   }

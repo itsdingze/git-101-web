@@ -1,4 +1,4 @@
-import type { SandboxFs } from './sandboxFs'
+import type { SandboxFs } from './fs/sandboxFs'
 
 export type CommandStream = 'stdout' | 'stderr'
 
@@ -33,6 +33,7 @@ export type CommandContext = {
 export type CommandHandler = (
   args: readonly string[],
   ctx: CommandContext,
+  locks: ReadonlyMap<string, string>,
 ) => Promise<CommandOutput[]>
 
 export type GitCommandHandler = (

@@ -3,6 +3,7 @@ import lessons from '@/data/lessons/index'
 import ContentColumn from '@/components/layout/ContentColumn'
 import useDocumentTitle from '@/hooks/useDocumentTitle'
 import LessonCard from './components/LessonCard'
+import CourseCallToAction from './components/CourseCallToAction'
 
 export default function HomePage() {
   useDocumentTitle('Git 101 — Interactive Tutorial')
@@ -11,7 +12,8 @@ export default function HomePage() {
   // so selecting them would leave the list stale after progress updates.
   const completedLessons = useProgressStore((s) => s.completedLessons)
 
-  const nextId = lessons.find((lesson) => !completedLessons.includes(lesson.id))?.id
+  const nextLesson = lessons.find((lesson) => !completedLessons.includes(lesson.id))
+  const nextId = nextLesson?.id
 
   return (
     <ContentColumn className="py-12 sm:py-16">
@@ -22,6 +24,7 @@ export default function HomePage() {
         <p className="text-base text-text-muted mt-2 leading-relaxed">
           Thirteen hands-on lessons, from your first commit to a real team workflow
         </p>
+        <CourseCallToAction nextLesson={nextLesson} hasStarted={completedLessons.length > 0} />
       </div>
 
       <div className="flex flex-col gap-1">

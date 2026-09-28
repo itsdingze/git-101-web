@@ -1,17 +1,18 @@
-import { parseLine, type Redirection } from './tokenize'
+import { parseLine, type Redirection } from './input/tokenize'
 import { runGit } from './runGit'
 import { SHELL_COMMANDS } from './commands/shell/registry'
 import { describeGitError } from './errors'
-import { resolvePath } from './paths'
+import { resolvePath } from './fs/paths'
 import {
   isDirectory,
   parentFolderProblem,
   pathExists,
   readText,
   writeText,
-} from './fileOperations'
+} from './fs/fileOperations'
 import { fail } from './output'
-import { NO_LOCKS, type CommandLocks } from './commandLocks'
+import { hasBackslash, LINE_CONTINUES, NO_BACKSLASH_NAMES } from './input/backslashNames'
+import { NO_LOCKS, type CommandLocks } from './input/commandLocks'
 import type { CommandContext, CommandOutput } from './types'
 
 export type RunResult = {
@@ -24,6 +25,7 @@ async function redirectionProblem(
   redirection: Redirection,
 ): Promise<string | null> {
   if (redirection.target === '') return 'bash: : No such file or directory'
+  if (hasBackslash(redirection.target)) return NO_BACKSLASH_NAMES
 
   const path = resolvePath(redirection.target, ctx.cwd, ctx.root)
   if (await isDirectory(ctx.fs, path)) return `bash: ${redirection.target}: Is a directory`
@@ -59,7 +61,7 @@ async function dispatch(
   if (name === 'git') return runGit(args, ctx, locks)
 
   const shell = SHELL_COMMANDS[name]
-  if (shell) return shell(args, ctx)
+  if (shell) return shell(args, ctx, locks)
 
   return [{ text: `bash: ${name}: command not found`, stream: 'stderr' }]
 }
@@ -69,9 +71,10 @@ export async function runCommand(
   ctx: CommandContext,
   locks: CommandLocks = NO_LOCKS,
 ): Promise<RunResult> {
-  const { tokens, redirection, redirectionMissingTarget } = parseLine(line)
+  const { tokens, redirection, redirectionMissingTarget, continuesLine } = parseLine(line)
   const [name, ...args] = tokens
 
+  if (continuesLine) return { outputs: fail(LINE_CONTINUES), clearScreen: false }
   if (redirectionMissingTarget) {
     return { outputs: fail("bash: syntax error near unexpected token `newline'"), clearScreen: false }
   }

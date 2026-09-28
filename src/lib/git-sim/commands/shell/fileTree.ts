@@ -5,15 +5,17 @@ import {
   parentFolderProblem,
   pathExists,
   removeTree,
-} from '@/lib/git-sim/fileOperations'
-import { basename, dirname, isInside, joinPath, resolvePath } from '@/lib/git-sim/paths'
-import { hasFlag, operandsOf } from '@/lib/git-sim/parseArgs'
+} from '@/lib/git-sim/fs/fileOperations'
+import { basename, dirname, isInside, joinPath, resolvePath } from '@/lib/git-sim/fs/paths'
+import { hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { fail, silent } from '@/lib/git-sim/output'
+import { hasBackslash, NO_BACKSLASH_NAMES } from '@/lib/git-sim/input/backslashNames'
 import type { CommandContext, CommandHandler, CommandOutput } from '@/lib/git-sim/types'
 
 export const mkdir: CommandHandler = async (args, ctx) => {
   const targets = operandsOf(args)
   if (targets.length === 0) return fail('mkdir: missing operand')
+  if (targets.some(hasBackslash)) return fail(NO_BACKSLASH_NAMES)
 
   const parents = hasFlag(args, '-p', '--parents')
   const outputs: CommandOutput[] = []
@@ -108,6 +110,7 @@ async function moveProblem(ctx: CommandContext, plan: MovePlan): Promise<string 
 export const mv: CommandHandler = async (args, ctx) => {
   const [source, destination] = operandsOf(args)
   if (!source || !destination) return fail('mv: missing destination file operand')
+  if (hasBackslash(destination)) return fail(NO_BACKSLASH_NAMES)
 
   const from = resolvePath(source, ctx.cwd, ctx.root)
   if (!(await pathExists(ctx.fs, from))) {
