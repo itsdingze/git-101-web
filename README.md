@@ -15,9 +15,21 @@ npm install
 npm run dev
 ```
 
+Before you push, run the same checks as CI:
+
+```bash
+npm run type-check
+npm run lint
+npm test
+```
+
+## Writing Lessons
+
+Each lesson is a Markdown file in `src/data/lessons/`. A Vite plugin in `src/lib/lesson-markdown/` parses and validates them at build time, so a broken lesson fails the build with its file and line.
+
 ## Tech Stack
 
-React + TypeScript, Vite, Tailwind CSS, Zustand, Framer Motion, and dnd-kit.
+React + TypeScript, Vite, Tailwind CSS, Zustand, Framer Motion, and dnd-kit. The practice terminal runs a Git simulator built on isomorphic-git.
 
 ## License
 
