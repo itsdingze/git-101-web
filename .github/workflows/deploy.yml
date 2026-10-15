@@ -7,43 +7,47 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-  deployments: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  cleanup:
-    runs-on: ubuntu-latest
-    permissions: write-all
-    steps:
-      - uses: strumwolf/delete-deployment-environment@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          environment: github-pages
-          onlyRemoveDeployments: true
-
   build:
-    needs: cleanup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run type-check
+      - run: npm run lint
+      - run: npm test
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
-  deploy:
+  cleanup:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+    steps:
+      - uses: strumwolf/delete-deployment-environment@035f6d27c8b8951729f4d71b2d3d6a7975139476 # v4.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: github-pages
+          onlyRemoveDeployments: true
+
+  deploy:
+    needs: [build, cleanup]
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
