@@ -1,12 +1,15 @@
-import type { CommandLocks } from '@/lib/git-sim/commandLocks'
-import lessons from './index'
+import type { CommandLocks } from '@/lib/git-sim/input/commandLocks'
+import { lessons } from './index'
 
 export function commandLocksFor(lessonId: number): CommandLocks {
+  const lessonIndex = lessons.findIndex((lesson) => lesson.id === lessonId)
+  if (lessonIndex < 0) return new Map()
+
   return new Map(
     lessons
-      .filter((lesson) => lesson.id > lessonId)
+      .slice(lessonIndex + 1)
       .flatMap((lesson) =>
-        lesson.unlocks.map((name) => [name, `Lesson ${lesson.id}: ${lesson.title}`] as const),
+        lesson.unlocks.map((name) => [name, lesson.title] as const),
       ),
   )
 }

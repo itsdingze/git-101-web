@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
-import blockShell from './blockShell'
-import SortableBlock from './SortableBlock'
+import { blockShell } from './blockShell'
+import { SortableBlock } from './SortableBlock'
 
 interface SolutionBlocksProps {
-  answer: string[]
+  answer: readonly string[]
   insertIndex: number | null
   isActiveFromGlossary: boolean
   overSolution: boolean
@@ -12,36 +12,25 @@ interface SolutionBlocksProps {
   onRemove: (block: string) => void
 }
 
-export default function SolutionBlocks({ answer, insertIndex, isActiveFromGlossary, overSolution, activeBlock, solved, onRemove }: SolutionBlocksProps) {
-  const showPlaceholder = insertIndex !== null && isActiveFromGlossary && overSolution
-  const children: ReactNode[] = []
+export function SolutionBlocks({ answer, insertIndex, isActiveFromGlossary, overSolution, activeBlock, solved, onRemove }: SolutionBlocksProps) {
+  const blocks: ReactNode[] = answer.map((block, i) => (
+    <SortableBlock
+      key={block}
+      id={block}
+      index={i}
+      onRemove={() => onRemove(block)}
+      disabled={solved}
+    >
+      {block}
+    </SortableBlock>
+  ))
 
-  for (let i = 0; i <= answer.length; i++) {
-    if (showPlaceholder && insertIndex === i) {
-      children.push(
-        <div
-          key="insert-placeholder"
-          className={`${blockShell} bg-border`}
-        >
-          <span className="invisible">{activeBlock}</span>
-        </div>
-      )
-    }
-    if (i < answer.length) {
-      const block = answer[i]!
-      children.push(
-        <SortableBlock
-          key={block}
-          id={block}
-          index={i}
-          onRemove={() => onRemove(block)}
-          disabled={solved}
-        >
-          {block}
-        </SortableBlock>
-      )
-    }
-  }
+  if (insertIndex === null || !isActiveFromGlossary || !overSolution) return blocks
 
-  return children
+  const placeholder = (
+    <div key="insert-placeholder" className={`${blockShell} bg-border`}>
+      <span className="invisible">{activeBlock}</span>
+    </div>
+  )
+  return [...blocks.slice(0, insertIndex), placeholder, ...blocks.slice(insertIndex)]
 }

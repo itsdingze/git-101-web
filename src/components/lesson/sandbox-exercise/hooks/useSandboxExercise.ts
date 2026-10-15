@@ -1,157 +1,148 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { PromptInfo, Sandbox } from '@/lib/git-sim/createSandbox'
-import { evaluateGoal } from '@/lib/git-sim/goals'
-import { commandLocksFor } from '@/data/lessons/commandLocks'
+import { useCallback, useRef, useState } from 'react'
+import type { PromptInfo, Sandbox, SandboxSeed } from '@/lib/git-sim/createSandbox'
+import type { RepoSnapshot } from '@/lib/git-sim/goals/snapshot'
 import type { SandboxExerciseStep } from '@/types'
+import { commandTip } from '@/components/lesson/sandbox-exercise/model/commandTip'
+import { createCommandQueue } from '@/components/lesson/sandbox-exercise/model/commandQueue'
+import { coachAfterCommand, openingCoach, type CoachLine } from '@/components/lesson/sandbox-exercise/model/coachLines'
+import { printedEntries } from '@/components/lesson/sandbox-exercise/model/transcript'
+import type { TerminalSession } from '@/components/lesson/sandbox-exercise/model/terminalSession'
+import type { SandboxFiles } from '@/components/lesson/sandbox-exercise/model/sandboxFiles'
+import { conflictFiles } from '@/components/lesson/sandbox-exercise/model/conflictFiles'
+import { useTranscript } from './useTranscript'
+import { useGoalProgress } from './useGoalProgress'
+import { useSandboxSession } from './useSandboxSession'
 
-export type TerminalLine = {
-  id: number
-  kind: 'command' | 'stdout' | 'stderr'
-  text: string
-  /** Recorded per command so scrollback keeps the branch it actually ran on. */
-  prompt?: PromptInfo
+interface SandboxExercise {
+  terminal: TerminalSession
+  files: SandboxFiles
+  snapshot: RepoSnapshot | null
+  allCompleted: boolean
+  activeGoalIndex: number
+  say: (coach: readonly CoachLine[]) => void
+  reset: () => void
 }
 
 const IDLE_PROMPT: PromptInfo = { directory: '~', branch: null }
 
-interface SandboxExerciseState {
-  ready: boolean
-  running: boolean
-  lines: TerminalLine[]
-  prompt: PromptInfo
-  completedGoals: boolean[]
-  allCompleted: boolean
-  activeGoalIndex: number
-  submit: (line: string) => void
-  reset: () => void
-}
-
-export default function useSandboxExercise(
+export function useSandboxExercise(
   step: SandboxExerciseStep,
+  seed: SandboxSeed,
   lessonId: number,
-  previouslyCompleted: boolean,
-): SandboxExerciseState {
-  const sandboxRef = useRef<Sandbox | null>(null)
-  const locks = useMemo(() => commandLocksFor(lessonId), [lessonId])
-  const nextLineId = useRef(0)
-
-  const [ready, setReady] = useState(false)
-  const [running, setRunning] = useState(false)
-  const [lines, setLines] = useState<TerminalLine[]>([])
+): SandboxExercise {
+  const promptRef = useRef<PromptInfo>(IDLE_PROMPT)
+  const [queue] = useState(createCommandQueue)
   const [prompt, setPrompt] = useState<PromptInfo>(IDLE_PROMPT)
-  const [completedGoals, setCompletedGoals] = useState<boolean[]>(() =>
-    step.goals.map(() => previouslyCompleted),
-  )
+  const [snapshot, setSnapshot] = useState<RepoSnapshot | null>(null)
+  const { lines, append, restart, settle } = useTranscript()
+  const { allCompleted, activeGoalIndex, current, advance, startAgain } = useGoalProgress(step)
 
-  /**
-   * Goals latch once met. Several of them describe something the learner did
-   * rather than something still true — staging stops being true the moment you
-   * commit, and a file that vanished on `main` comes back when you switch away.
-   */
   const refresh = useCallback(
     async (sandbox: Sandbox) => {
-      const snapshot = await sandbox.snapshot()
-      setPrompt(await sandbox.prompt())
-      setCompletedGoals((previous) => {
-        if (step.mode !== 'guided') {
-          return step.goals.map((goal, index) => previous[index] || evaluateGoal(goal.check, snapshot))
-        }
-
-        const reached = [...previous]
-        for (const [index, goal] of step.goals.entries()) {
-          if (reached[index]) continue
-          if (!evaluateGoal(goal.check, snapshot)) break
-          reached[index] = true
-        }
-        return reached
-      })
+      const latest = await sandbox.snapshot()
+      promptRef.current = await sandbox.prompt()
+      setPrompt(promptRef.current)
+      setSnapshot(latest)
+      return advance(latest)
     },
-    [step.goals, step.mode],
+    [advance],
   )
 
-  /** isomorphic-git only loads for learners who actually reach a sandbox step. */
-  useEffect(() => {
-    let cancelled = false
+  const prepare = useCallback(
+    async (sandbox: Sandbox) => {
+      const progress = await refresh(sandbox)
+      return () => restart(openingCoach(step, progress.completed))
+    },
+    [refresh, restart, step],
+  )
 
-    void import('@/lib/git-sim/createSandbox')
-      .then(({ createSandbox }) => createSandbox(step.seed, locks))
-      .then(async (sandbox) => {
-        if (cancelled) return
-        sandboxRef.current = sandbox
-        await refresh(sandbox)
-        if (!cancelled) setReady(true)
-      })
+  const { sandboxRef, ready } = useSandboxSession(seed, lessonId, prepare)
 
-    return () => {
-      cancelled = true
-      sandboxRef.current = null
-    }
-  }, [step.seed, locks, refresh])
-
-  const appendLines = useCallback((entries: Omit<TerminalLine, 'id'>[]) => {
-    setLines((previous) => [
-      ...previous,
-      ...entries.map((entry) => ({ ...entry, id: nextLineId.current++ })),
-    ])
-  }, [])
-
-  const submit = useCallback(
-    (line: string) => {
+  const runLine = useCallback(
+    async (line: string) => {
       const sandbox = sandboxRef.current
       if (!sandbox) return
 
-      setRunning(true)
-      appendLines([{ kind: 'command', text: line, prompt }])
+      const before = current()
+      const ranFrom = promptRef.current
+      append([{ kind: 'command', text: line, prompt: ranFrom }])
 
-      void sandbox
-        .run(line)
-        .then(async (result) => {
-          if (result.clearScreen) setLines([])
-          else {
-            appendLines(
-              result.outputs
-                .filter((output) => output.text !== '')
-                .map((output) => ({ kind: output.stream, text: output.text })),
-            )
-          }
-          await refresh(sandbox)
-        })
-        .finally(() => {
-          setRunning(false)
-        })
+      const result = await sandbox.run(line)
+      const tip = commandTip(line, result.outputs, {
+        branch: ranFrom.branch,
+        folder: await sandbox.currentFolder(),
+        newOnGitHubMain: await sandbox.newOnGitHub('main'),
+      })
+      append(printedEntries(result))
+
+      const after = await refresh(sandbox)
+      settle(result.clearScreen, {
+        opening: openingCoach(step, after.completed),
+        coach: coachAfterCommand(step, before, after, tip),
+      })
     },
-    [appendLines, prompt, refresh],
+    [sandboxRef, current, append, refresh, settle, step],
   )
 
-  const reset = useCallback(() => {
+  const writeFile = useCallback(
+    async (path: string, contents: string) => {
+      const sandbox = sandboxRef.current
+      if (!sandbox) return
+
+      const before = current()
+      await sandbox.writeFile(path, contents)
+      append(coachAfterCommand(step, before, await refresh(sandbox), null))
+    },
+    [sandboxRef, current, append, refresh, step],
+  )
+
+  const startOver = useCallback(async () => {
     const sandbox = sandboxRef.current
     if (!sandbox) return
 
-    setRunning(true)
-    void sandbox
-      .reset()
-      .then(async () => {
-        setLines([])
-        setCompletedGoals(step.goals.map(() => false))
-        await refresh(sandbox)
-      })
-      .finally(() => {
-        setRunning(false)
-      })
-  }, [refresh, step.goals])
+    startAgain()
+    await sandbox.reset()
+    const progress = await refresh(sandbox)
+    restart(openingCoach(step, progress.completed))
+  }, [sandboxRef, startAgain, refresh, restart, step])
 
-  const allCompleted = completedGoals.length > 0 && completedGoals.every(Boolean)
-  const firstIncomplete = completedGoals.findIndex((done) => !done)
+  const submit = useCallback((line: string) => queue.push(() => runLine(line)), [queue, runLine])
+
+  const complete = useCallback(
+    async (line: string, cursor: number) =>
+      (await queue.request(async () => sandboxRef.current?.complete(line, cursor))) ?? null,
+    [queue, sandboxRef],
+  )
+
+  const listCompletions = useCallback(
+    (line: string, matches: readonly string[]) => {
+      append([
+        { kind: 'command', text: line, prompt: promptRef.current },
+        { kind: 'stdout', text: matches.join('  ') },
+      ])
+    },
+    [append],
+  )
+
+  const read = useCallback(
+    async (path: string) => (await queue.request(async () => sandboxRef.current?.readFile(path))) ?? '',
+    [queue, sandboxRef],
+  )
+
+  const save = useCallback(
+    (path: string, contents: string) => queue.push(() => writeFile(path, contents)),
+    [queue, writeFile],
+  )
+
+  const reset = useCallback(() => queue.replace(startOver), [queue, startOver])
 
   return {
-    ready,
-    running,
-    lines,
-    prompt,
-    completedGoals,
+    terminal: { ready, lines, prompt, submit, complete, listCompletions },
+    files: { conflictFiles: conflictFiles(snapshot), read, save },
+    snapshot,
     allCompleted,
-    activeGoalIndex: firstIncomplete === -1 ? step.goals.length - 1 : firstIncomplete,
-    submit,
+    activeGoalIndex,
+    say: append,
     reset,
   }
 }

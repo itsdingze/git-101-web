@@ -1,22 +1,22 @@
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import { useDroppable } from '@dnd-kit/react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { Shake } from '@/components/lesson/components/Shake'
 
 interface SolutionDropZoneProps {
   children: ReactNode
+  zoneRef: RefObject<HTMLDivElement | null>
   solved: boolean
   shakeSlots: boolean
   overSolution: boolean
 }
 
-export default function SolutionDropZone({ children, solved, shakeSlots, overSolution }: SolutionDropZoneProps) {
-  const prefersReduced = useReducedMotion()
-  const { ref } = useDroppable({ id: 'solution-area' })
+export function SolutionDropZone({ children, zoneRef, solved, shakeSlots, overSolution }: SolutionDropZoneProps) {
+  useDroppable({ id: 'solution-area', element: zoneRef })
 
   return (
-    <motion.div
-      ref={ref}
-      data-solution-zone
+    <Shake
+      ref={zoneRef}
+      shaking={shakeSlots}
       className={`min-h-14 flex flex-wrap items-center gap-2 px-4 py-3.5 rounded-xl border-2 border-dashed transition-colors ${
         solved
           ? 'border-accent-green/40 bg-accent-green/5'
@@ -26,10 +26,8 @@ export default function SolutionDropZone({ children, solved, shakeSlots, overSol
               ? 'border-text-muted bg-bg-secondary'
               : 'border-border bg-bg-secondary'
       }`}
-      animate={shakeSlots && !prefersReduced ? { x: [-4, 4, -4, 4, 0] } : {}}
-      transition={{ duration: 0.4 }}
     >
       {children}
-    </motion.div>
+    </Shake>
   )
 }

@@ -1,13 +1,13 @@
 import type { ComponentPropsWithRef, ElementType } from 'react'
+import { FOCUS_RING } from './focusRing'
 
-type ButtonVariant = 'filled' | 'outlined' | 'text' | 'filled-success' | 'filled-danger'
+type ButtonVariant = 'filled' | 'outlined' | 'text' | 'filled-success' | 'waiting'
 type ButtonSize = 'sm' | 'md'
 
 const base =
   'inline-flex items-center justify-center rounded-lg font-medium ' +
   'transition-colors duration-150 cursor-pointer select-none no-underline ' +
-  'disabled:cursor-not-allowed ' +
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary'
+  `disabled:cursor-not-allowed ${FOCUS_RING}`
 
 const sizes: Record<ButtonSize, string> = {
   sm: 'gap-1.5 px-3 py-1.5 text-sm',
@@ -16,7 +16,7 @@ const sizes: Record<ButtonSize, string> = {
 
 const variants: Record<ButtonVariant, string> = {
   filled:
-    'bg-accent-green text-white ' +
+    'bg-btn-filled text-text-on-accent ' +
     'hover:bg-btn-filled-hover active:bg-btn-filled-active ' +
     'disabled:bg-border disabled:text-text-muted disabled:hover:bg-border',
   outlined:
@@ -28,13 +28,12 @@ const variants: Record<ButtonVariant, string> = {
     'hover:bg-text-secondary/8 active:bg-text-secondary/12 ' +
     'disabled:text-text-primary/38 disabled:hover:bg-transparent',
   'filled-success':
-    'bg-accent-green text-white ' +
-    'hover:bg-btn-filled-hover active:bg-accent-green-dark ' +
-    'disabled:bg-accent-green disabled:text-white',
-  'filled-danger':
-    'bg-accent-red text-white ' +
-    'hover:bg-accent-red-dark active:bg-accent-red-dark ' +
-    'disabled:bg-accent-red disabled:text-white',
+    'bg-btn-filled text-text-on-accent ' +
+    'hover:bg-btn-filled-hover active:bg-btn-filled-active ' +
+    'disabled:bg-btn-filled disabled:text-text-on-accent',
+  waiting:
+    'bg-bg-secondary text-text-secondary border border-border ' +
+    'disabled:cursor-default disabled:bg-bg-secondary disabled:text-text-secondary',
 }
 
 type ButtonProps<T extends ElementType> = {
@@ -43,7 +42,7 @@ type ButtonProps<T extends ElementType> = {
   size?: ButtonSize
 } & Omit<ComponentPropsWithRef<T>, 'as' | 'className'> & { className?: string }
 
-export default function Button<T extends ElementType = 'button'>({
+export function Button<T extends ElementType = 'button'>({
   as, variant = 'filled', size = 'md', className = '', ...rest
 }: ButtonProps<T>) {
   const Tag = as ?? 'button'

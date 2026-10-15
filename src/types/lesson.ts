@@ -1,9 +1,9 @@
-import type { ScenarioKey } from './graph'
-import type { SandboxSeed } from '@/lib/git-sim/createSandbox'
-import type { GoalCheck } from '@/lib/git-sim/goals'
-import type { GitCommandName } from '@/lib/git-sim/commands/git/registry'
+import type { GitScenario } from './graph'
+import type { PromptInfo, SandboxSeed } from '@/lib/git-sim/createSandbox'
+import type { GoalCheck } from '@/lib/git-sim/goals/goalChecks'
+import type { LockableCommand } from '@/lib/git-sim/input/commandLocks'
 
-export type TextBlock = {
+type TextBlock = {
   type: 'text'
   value: string
 }
@@ -14,7 +14,52 @@ export type CodeBlock = {
   value: string
 }
 
-export type ListBlock = {
+export type DiffLineChange = 'unchanged' | 'added' | 'removed'
+
+export type DiffLine = {
+  change: DiffLineChange
+  text: string
+}
+
+export type DiffBlock = {
+  type: 'diff'
+  path: string
+  fileName: string
+  folder: string
+  lines: readonly DiffLine[]
+}
+
+export type TerminalTranscriptLine =
+  | { kind: 'command'; prompt: PromptInfo; text: string; note: string }
+  | { kind: 'output'; text: string; note: string }
+  | { kind: 'note'; text: string }
+
+export type TerminalBlock = {
+  type: 'terminal'
+  lines: readonly TerminalTranscriptLine[]
+}
+
+type FileEntryBase = {
+  name: string
+  hidden: boolean
+}
+
+type FolderEntry = FileEntryBase & {
+  kind: 'folder'
+  entries: readonly FileEntry[]
+}
+
+export type FileEntry = (FileEntryBase & { kind: 'file' }) | FolderEntry
+
+export type FileEntryKind = FileEntry['kind']
+
+export type FilesBlock = {
+  type: 'files'
+  path: string
+  home: readonly FileEntry[]
+}
+
+type ListBlock = {
   type: 'list'
   ordered?: boolean
   items: readonly string[]
@@ -29,26 +74,48 @@ export type CalloutBlock = {
   value: string
 }
 
-export type ContentBlock = TextBlock | CodeBlock | ListBlock | CalloutBlock
+export type TabsBlock = {
+  type: 'tabs'
+  group: string
+  label: string
+  tabs: readonly {
+    label: string
+    content: readonly Exclude<ContentBlock, TabsBlock>[]
+  }[]
+}
 
-export type VisualizationType =
-  | 'three-place-model'
-  | 'git-graph'
-  | 'conflict-markers'
-  | 'diff-walkthrough'
-  | 'reset-walkthrough'
-  | 'restore-walkthrough'
+export type ContentBlock =
+  | TextBlock
+  | CodeBlock
+  | DiffBlock
+  | TerminalBlock
+  | FilesBlock
+  | ListBlock
+  | CalloutBlock
+  | TabsBlock
+
+export type ThreePlaceModelData = {
+  files: readonly string[]
+  ignored: readonly string[]
+  stageFirst: string
+  commitMessage: string
+}
+
+export type Visualization =
+  | ({ kind: 'three-place-model' } & ThreePlaceModelData)
+  | ({ kind: 'git-graph' } & GitScenario)
+
+export type VisualizationType = Visualization['kind']
 
 export type ReadingStep = {
   type: 'reading'
   id: string
   title?: string
   content: ContentBlock[]
-  visualization?: VisualizationType
-  visualizationVariant?: ScenarioKey
+  visualization?: Visualization
 }
 
-export type QuizOption = {
+type QuizOption = {
   text: string
   whyWrong?: string
 }
@@ -68,33 +135,25 @@ export type BlockExerciseStep = {
   prompt: string
   availableBlocks: readonly string[]
   correctAnswer: readonly string[]
-  /** Equally valid answers buildable from `availableBlocks`, e.g. `git checkout -b` for `git switch -c`. */
   acceptableAnswers?: readonly (readonly string[])[]
-  hints?: readonly string[]
-}
-
-export type ConflictExerciseStep = {
-  type: 'conflict-exercise'
-  id: string
-  prompt: string
-  fileName: string
-  oursLabel: string
-  theirsLabel: string
-  oursContent: string
-  theirsContent: string
-  surroundingBefore?: string
-  surroundingAfter?: string
-  acceptableResolutions: string[]
+  decoyReasons?: Readonly<Record<string, string | undefined>>
+  missingReasons?: Readonly<Record<string, string | undefined>>
   hints?: readonly string[]
 }
 
 export type SandboxGoal = {
   id: string
   label: string
-  /** Shown one at a time in `guided` mode, ignored in `goal` mode. */
   narration?: string
   hints?: readonly string[]
   check: GoalCheck
+}
+
+export type SandboxDetour = {
+  id: string
+  untilGoal?: string
+  check: GoalCheck
+  message: string
 }
 
 export type SandboxExerciseStep = {
@@ -105,15 +164,16 @@ export type SandboxExerciseStep = {
   mode: 'goal' | 'guided'
   seed: SandboxSeed
   goals: readonly SandboxGoal[]
+  detours?: readonly SandboxDetour[]
   completionMessage?: string
 }
 
-export type Step = ReadingStep | QuizStep | BlockExerciseStep | ConflictExerciseStep | SandboxExerciseStep
+export type Step = ReadingStep | QuizStep | BlockExerciseStep | SandboxExerciseStep
 
 export type Lesson = {
   id: number
   title: string
   description: string
-  unlocks: readonly GitCommandName[]
+  unlocks: readonly LockableCommand[]
   steps: readonly Step[]
 }

@@ -1,33 +1,18 @@
-import { useEffect, useRef } from 'react'
-import type { MouseEvent } from 'react'
 import { X } from 'lucide-react'
-import useProgressStore from '@/stores/progressStore'
-import cheatsheet from '@/data/cheatsheet'
-import CheatsheetCategory from './components/CheatsheetCategory'
+import { useProgressStore } from '@/stores/progressStore'
+import { cheatsheet } from '@/data/cheatsheet'
+import { messages } from '@/messages/en'
+import { FOCUS_RING, FOCUS_RING_INSET } from '@/components/ui/focusRing'
+import { CheatsheetCategory } from './components/CheatsheetCategory'
+import { useModalDialog } from './hooks/useModalDialog'
 
 interface CheatsheetModalProps {
   onClose: () => void
 }
 
-export default function CheatsheetModal({ onClose }: CheatsheetModalProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null)
+export function CheatsheetModal({ onClose }: CheatsheetModalProps) {
+  const { dialogRef, closeOnBackdrop } = useModalDialog(onClose)
   const completedLessons = useProgressStore((s) => s.completedLessons)
-
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog?.open) dialog?.showModal()
-
-    const root = document.documentElement
-    root.style.overflow = 'hidden'
-
-    return () => {
-      root.style.overflow = ''
-    }
-  }, [])
-
-  const closeOnBackdrop = (event: MouseEvent<HTMLDialogElement>) => {
-    if (event.target === event.currentTarget) onClose()
-  }
 
   return (
     <dialog
@@ -46,16 +31,15 @@ export default function CheatsheetModal({ onClose }: CheatsheetModalProps) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close the cheat sheet"
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg
+            aria-label={messages.cheatsheet.close}
+            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg
               text-text-muted transition-colors cursor-pointer
-              hover:bg-bg-secondary hover:text-text-primary
-              focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
+              hover:bg-bg-secondary hover:text-text-primary ${FOCUS_RING}`}
           >
             <X size={18} />
           </button>
           <h2 id="cheatsheet-title" className="text-base font-semibold text-text-primary">
-            Cheat Sheet
+            {messages.cheatsheet.title}
           </h2>
         </div>
 
@@ -63,11 +47,11 @@ export default function CheatsheetModal({ onClose }: CheatsheetModalProps) {
           tabIndex={0}
           role="region"
           aria-labelledby="cheatsheet-title"
-          className="overflow-y-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-blue"
+          className={`overflow-y-auto ${FOCUS_RING_INSET}`}
         >
           <div className="px-6 py-6 sm:px-8">
             <p className="text-sm text-text-muted mb-8 leading-relaxed">
-              Quick reference for Git commands
+              {messages.cheatsheet.intro}
             </p>
 
             <div className="flex flex-col gap-8">

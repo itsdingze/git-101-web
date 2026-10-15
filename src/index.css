@@ -6,26 +6,30 @@
   --color-bg-card: #f0f0f0;
   --color-bg-elevated: #e5e5e5;
   --color-accent-green: #58a700;
-  --color-accent-green-dark: #468f00;
+  --color-accent-green-strong: #3b7300;
   --color-accent-yellow: #ffc800;
+  --color-accent-yellow-strong: #8a6500;
+  --color-accent-red-strong: #c7201f;
   --color-accent-red: #ff4b4b;
-  --color-accent-red-dark: #ea2b2b;
   --color-accent-blue: #1cb0f6;
-  --color-accent-blue-dark: #1899d6;
+  --color-accent-blue-strong: #0b6fa8;
   --color-accent-blue-tint: #ddf4ff;
   --color-accent-blue-light: #84d8ff;
   --color-accent-orange: #ff9600;
+  --color-accent-orange-strong: #a35600;
   --color-text-primary: #4b4b4b;
-  --color-text-secondary: #777777;
-  --color-text-muted: #afafaf;
+  --color-text-secondary: #5a5a5a;
+  --color-text-muted: #696969;
+  --color-text-on-accent: #ffffff;
   --color-border: #e5e5e5;
-  --color-btn-filled-hover: #63bd00;
-  --color-btn-filled-active: #468f00;
+  --color-btn-filled: #3f7f00;
+  --color-btn-filled-hover: #3b7300;
+  --color-btn-filled-active: #326300;
 
-  /* Code block (ContentBlock + CodeWalkthrough) */
+  /* Code block */
   --color-code-bg: #1a1a2e;
   --color-code-text: #e2e8f0;
-  --color-code-muted: #64748b;
+  --color-code-muted: #8a9bb0;
 
   /* Sandbox terminal */
   --color-terminal-bg: #1e1e1e;
@@ -36,23 +40,78 @@
   --color-terminal-branch: #569cd6;
   --color-terminal-muted: #999999;
   --color-terminal-error: #f44747;
-  --color-terminal-close: #FF5F57;
-  --color-terminal-minimize: #FEBC2E;
-  --color-terminal-maximize: #28C840;
+  --color-terminal-tip: #FEBC2E;
+  --color-terminal-code-bg: rgb(255 255 255 / 0.1);
+  --color-terminal-strong: #ffffff;
+
+  /* Window chrome */
+  --color-window-close: #FF5F57;
+  --color-window-minimize: #FEBC2E;
+  --color-window-maximize: #28C840;
+
+  /* Code editor */
+  --color-editor-bg: #282828;
+  --color-editor-chrome: #181818;
+  --color-editor-border: #2b2b2b;
+  --color-editor-text: #d4d4d4;
+  --color-editor-muted: #9d9d9d;
+  --color-editor-gutter: #999999;
+  --color-editor-accent: #0078d4;
+  --color-editor-status: #007acc;
+  --color-editor-status-text: #ffffff;
+  --color-editor-added: #81b88b;
+  --color-editor-added-bg: #243222;
+  --color-editor-removed: #f48771;
+  --color-editor-removed-bg: #3f2828;
+  --color-editor-function: #dcdcaa;
+  --color-editor-string: #ce9178;
+  --color-editor-number: #b5cea8;
+  --color-editor-operator: #6cb2eb;
+  --color-editor-current-header: rgb(64 200 174 / 0.5);
+  --color-editor-current-content: rgb(64 200 174 / 0.2);
+  --color-editor-incoming-header: rgb(64 166 255 / 0.5);
+  --color-editor-incoming-content: rgb(64 166 255 / 0.2);
+
+  /* Finder window */
+  --color-finder-selection: #0064e1;
+  --color-finder-selection-inactive: #dcdcdc;
+  --color-finder-icon-selected: rgb(0 0 0 / 0.08);
+  --color-finder-control: rgb(0 0 0 / 0.55);
+  --color-finder-control-disabled: rgb(0 0 0 / 0.22);
+  --color-finder-control-hover: rgb(0 0 0 / 0.06);
+  --color-finder-control-active: rgb(0 0 0 / 0.12);
 
   --container-content: 42rem;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
 
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 }
 
 @layer base {
+  :root {
+    --window-body-height: min(22rem, 55dvh);
+  }
+
   *,
   *::before,
   *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   html {
@@ -76,6 +135,13 @@
     display: flex;
     flex-direction: column;
   }
+
+  code,
+  kbd,
+  pre,
+  .font-mono {
+    font-variant-ligatures: none;
+  }
 }
 
 /* Scrollbar styling */
@@ -97,7 +163,6 @@
   background: var(--color-text-muted);
 }
 
-/* Code block horizontal scrollbar — inset from rounded corners */
 pre::-webkit-scrollbar-track,
 [data-code-scroll]::-webkit-scrollbar-track {
   margin-inline: 0.75rem;

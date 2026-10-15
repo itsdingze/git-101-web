@@ -5,7 +5,7 @@ interface StepSpacer {
   contentRef: RefObject<HTMLDivElement | null>
 }
 
-export default function useStepSpacer(resetKey: unknown): StepSpacer {
+export function useStepSpacer(resetKey: unknown): StepSpacer {
   const spacerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 

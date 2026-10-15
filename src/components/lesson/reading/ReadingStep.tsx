@@ -1,55 +1,38 @@
-import { lazy, Suspense, type ComponentType } from 'react'
-import type { ContentBlock as ContentBlockType, ReadingStep as ReadingStepType, VisualizationType } from '@/types'
-import useExerciseNav from '@/hooks/useExerciseNav'
-import ContentBlock from './components/ContentBlock'
-
-function blockKey(block: ContentBlockType, index: number): string {
-  const sample = block.type === 'list' ? block.items.join('|') : block.value
-  return `${index}-${block.type}-${sample.slice(0, 32)}`
-}
-
-const ThreePlaceModel = lazy(() => import('@/components/visualization/ThreePlaceModel'))
-const GitGraph = lazy(() => import('@/components/visualization/git-graph/GitGraph'))
-const ConflictMarkers = lazy(() => import('@/components/visualization/ConflictMarkers'))
-const DiffWalkthrough = lazy(() => import('@/components/visualization/DiffWalkthrough'))
-const ResetWalkthrough = lazy(() => import('@/components/visualization/ResetWalkthrough'))
-const RestoreWalkthrough = lazy(() => import('@/components/visualization/RestoreWalkthrough'))
-
-/** git-graph is handled separately — it is the only visualization taking a prop. */
-const VISUALIZATIONS: Record<Exclude<VisualizationType, 'git-graph'>, ComponentType> = {
-  'three-place-model': ThreePlaceModel,
-  'conflict-markers': ConflictMarkers,
-  'diff-walkthrough': DiffWalkthrough,
-  'reset-walkthrough': ResetWalkthrough,
-  'restore-walkthrough': RestoreWalkthrough,
-}
+import { Suspense, useRef } from 'react'
+import type { ReadingStep as ReadingStepType } from '@/types'
+import { useExerciseNav } from '@/components/lesson/hooks/useExerciseNav'
+import { InlineMarkdown } from '@/components/ui/inline-markdown/InlineMarkdown'
+import { ContentBlockList } from './components/ContentBlockList'
+import { DiagramJumpLink } from './components/DiagramJumpLink'
+import { StepDiagram } from './components/StepDiagram'
 
 interface ReadingStepProps {
   step: ReadingStepType
 }
 
-export default function ReadingStep({ step }: ReadingStepProps) {
+export function ReadingStep({ step }: ReadingStepProps) {
   useExerciseNav({ solved: true })
-
-  const Visualization =
-    step.visualization && step.visualization !== 'git-graph'
-      ? VISUALIZATIONS[step.visualization]
-      : undefined
+  const diagramRef = useRef<HTMLDivElement>(null)
 
   return (
     <div className="space-y-6">
       {step.title && (
-        <h2 className="text-xl font-semibold text-text-primary tracking-tight">{step.title}</h2>
+        <InlineMarkdown
+          as="h2"
+          className="text-xl font-semibold text-text-primary tracking-tight"
+          value={step.title}
+        />
       )}
 
-      {step.content.map((block, index) => (
-        <ContentBlock key={blockKey(block, index)} block={block} />
-      ))}
+      {step.visualization && <DiagramJumpLink target={diagramRef} />}
 
-      <Suspense fallback={<div className="min-h-48 bg-bg-card rounded-xl animate-pulse" />}>
-        {step.visualization === 'git-graph' && <GitGraph scenario={step.visualizationVariant} />}
-        {Visualization && <Visualization />}
-      </Suspense>
+      <ContentBlockList blocks={step.content} />
+
+      <div ref={diagramRef} className="scroll-mt-24">
+        <Suspense fallback={<div className="min-h-48 bg-bg-card rounded-xl animate-pulse" />}>
+          {step.visualization && <StepDiagram visualization={step.visualization} />}
+        </Suspense>
+      </div>
     </div>
   )
 }

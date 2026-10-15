@@ -1,14 +1,15 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { ProgressState, ProgressStore } from '@/types'
+import type { ProgressState, ProgressStore } from './progress'
 
 const initialState: ProgressState = {
   completedLessons: [],
   completedSteps: {},
   currentStep: {},
+  identity: null,
 }
 
-const useProgressStore = create<ProgressStore>()(
+export const useProgressStore = create<ProgressStore>()(
   persist(
     (set, get) => ({
       ...initialState,
@@ -49,13 +50,15 @@ const useProgressStore = create<ProgressStore>()(
       isLessonCompleted: (lessonId) => {
         return get().completedLessons.includes(lessonId)
       },
+
+      setIdentity: (identity) => {
+        set({ identity })
+      },
     }),
     {
       name: 'git-101-progress',
-      version: 5,
+      version: 6,
       migrate: (): ProgressState => ({ ...initialState }),
     }
   )
 )
-
-export default useProgressStore

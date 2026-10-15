@@ -1,0 +1,417 @@
+# The todo-app story.
+#
+# Each checkpoint is the state of the project at the end of one lesson, as a
+# list of seed steps. A sandbox starts from a checkpoint with a `story:` step,
+# and a checkpoint builds on the one before it the same way. `changes-for-`
+# checkpoints are the uncommitted edits a lesson's practice starts with.
+#
+# Until "Put your project on GitHub", every lesson happens in the folder where the project
+# started. From then on, the project also lives on GitHub, and the `team-`
+# checkpoints are the state of that shared copy.
+
+home-files:
+  - write:
+      ~/documents/letter.txt: |
+        Dear Sam,
+      ~/projects/recipes/soup.txt: |
+        Tomato soup
+
+project-files:
+  - write:
+      app.py: |
+        def load_tasks() -> None:
+            # Read tasks from tasks.txt.
+            pass
+        
+        def show_tasks() -> None:
+            # Show all tasks.
+            pass
+      tasks.txt: |
+        Buy milk
+        Call the dentist
+      debug.log: |
+        app started
+
+after-start-a-project:
+  - story: project-files
+  - run: git init
+
+after-first-commit:
+  - story: after-start-a-project
+  - write:
+      .gitignore: |
+        tasks.txt
+  - run: git add .
+  - run: 'git commit -m "feat: add task list"'
+
+changes-for-lesson-4:
+  - write:
+      .gitignore: |
+        tasks.txt
+        *.log
+      debug.log: |
+        app started
+        app started
+      app.py: |
+        def load_tasks() -> None:
+            # Read tasks from tasks.txt.
+            pass
+        
+        def show_tasks() -> None:
+            # Show all tasks.
+            pass
+        
+        def show_due_dates() -> None:
+            # Show each task's due date.
+            pass
+      dates.py: |
+        def read_due_dates() -> None:
+            # Read each task's due date.
+            pass
+      README.md: |
+        # To-do app
+        A small to-do list app for learning Git.
+
+after-one-change-per-commit:
+  - story: after-first-commit
+  - story: changes-for-lesson-4
+  - run: git rm --cached debug.log
+  - run: git add .gitignore
+  - run: 'git commit -m "chore: stop tracking debug.log"'
+  - run: git add app.py dates.py
+  - run: 'git commit -m "feat: add due dates"'
+  - run: git add README.md
+  - run: 'git commit -m "docs: add a README"'
+
+changes-for-lesson-5:
+  - write:
+      search.py: |
+        def find_tasks() -> None:
+            # Find tasks matching the search.
+            pass
+      app.py: |
+        def load_tasks() -> None:
+            # Read tasks from tasks.txt.
+            pass
+        
+        def show_tasks() -> None:
+            # Show all tasks.
+            pass
+        
+        def show_due_dates() -> None:
+            # Show each task's due date.
+            pass
+        
+        def show_search() -> None:
+            # Show a search box.
+            pass
+      dates.py: |
+        def read_due_dates() -> None:
+            # Read each task's due date.
+            # Skip finished tasks.
+            pass
+
+after-branches-and-merging:
+  - story: after-one-change-per-commit
+  - story: changes-for-lesson-5
+  - run: git switch -c add-search
+  - run: git add search.py app.py
+  - run: 'git commit -m "feat: add search"'
+  - run: git switch main
+  - run: git add dates.py
+  - run: 'git commit -m "fix: hide due dates on finished tasks"'
+  - run: git merge add-search
+  - run: git branch -d add-search
+
+changes-for-lesson-6a:
+  - write:
+      app.py: |
+        def load_tasks() -> None:
+            # Read tasks from tasks.txt.
+            pass
+        
+        def show_tasks() -> None:
+            # Show tasks in a grid.
+            pass
+        
+        def show_due_dates() -> None:
+            # Show each task's due date.
+            pass
+        
+        def show_search() -> None:
+            # Show a search box.
+            pass
+
+lesson-6b-hurried-commit:
+  - write:
+      app.py: |
+        def load_tasks() -> None:
+            # Read tasks from tasks.txt.
+            pass
+        
+        def show_tasks() -> None:
+            # Show all tasks.
+            pass
+        
+        def show_due_dates() -> None:
+            # Show each task's due date.
+            pass
+        
+        def show_search() -> None:
+            # Show a search box.
+            pass
+        
+        def sort_by_priority() -> None:
+            # Sort tasks by priority.
+            pass
+      priority.py: |
+        def ask_priority() -> None:
+            # Ask how important each task is.
+            pass
+  - run: git add app.py
+  - run: 'git commit -m "feat: add priorites"'
+
+after-undo-changes:
+  - story: after-branches-and-merging
+  - story: lesson-6b-hurried-commit
+  - run: git add priority.py
+  - run: 'git commit --amend -m "feat: add priorities"'
+
+changes-for-lesson-7:
+  - write:
+      app.py: |
+        def load_tasks() -> None:
+            # Read tasks from tasks.txt.
+            pass
+        
+        def show_tasks() -> None:
+            # Show all tasks.
+            pass
+        
+        def show_due_dates() -> None:
+            # Show each task's due date.
+            pass
+        
+        def show_search() -> None:
+            # Show a search box.
+            pass
+        
+        def sort_by_priority() -> None:
+            # Sort tasks by priority.
+            pass
+        
+        def sort_by_due_date() -> None:
+            # Sort tasks by due date.
+            pass
+
+after-read-your-history:
+  - story: after-undo-changes
+  - story: changes-for-lesson-7
+  - run: git add app.py
+  - run: 'git commit -m "feat: sort tasks by due date"'
+
+team-after-put-it-on-github:
+  - story: after-read-your-history
+
+changes-for-lesson-9:
+  - write:
+      export.py: |
+        def export_tasks() -> None:
+            # Save the tasks to tasks.csv.
+            pass
+      app.py: |
+        def load_tasks() -> None:
+            # Read tasks from tasks.txt.
+            pass
+        
+        def show_tasks() -> None:
+            # Show all tasks.
+            pass
+        
+        def show_due_dates() -> None:
+            # Show each task's due date.
+            pass
+        
+        def show_search() -> None:
+            # Show a search box.
+            pass
+        
+        def sort_by_priority() -> None:
+            # Sort tasks by priority.
+            pass
+        
+        def sort_by_due_date() -> None:
+            # Sort tasks by due date.
+            pass
+        
+        def show_export() -> None:
+            # Show a button to export tasks.
+            pass
+
+team-after-work-with-a-team:
+  - story: team-after-put-it-on-github
+  - run: git switch -c add-export
+  - story: changes-for-lesson-9
+  - run: git add export.py app.py
+  - run: 'git commit -m "feat: add export"'
+  - run: git switch main
+  - run: 'git merge --no-ff add-export -m "Merge pull request #1 from your-username/add-export"'
+  - run: 'git commit --amend -m "Merge pull request #1 from your-username/add-export" -m "feat: add export"'
+  - run: git branch -d add-export
+
+reminders-branch:
+  - run: git switch -c add-reminders
+  - write:
+      reminders.py: |
+        def load_reminders() -> None:
+            # Read the reminders for each task.
+            pass
+      app.py: |
+        def load_tasks() -> None:
+            # Read tasks from tasks.txt.
+            pass
+        
+        def show_tasks() -> None:
+            # Show all tasks with reminders.
+            pass
+        
+        def show_due_dates() -> None:
+            # Show each task's due date.
+            pass
+        
+        def show_search() -> None:
+            # Show a search box.
+            pass
+        
+        def sort_by_priority() -> None:
+            # Sort tasks by priority.
+            pass
+        
+        def sort_by_due_date() -> None:
+            # Sort tasks by due date.
+            pass
+        
+        def show_export() -> None:
+            # Show a button to export tasks.
+            pass
+  - run: git add reminders.py app.py
+  - run: 'git commit -m "feat: add reminders"'
+
+sam-fixes-the-list:
+  - run: git switch -c show-open-tasks
+  - write:
+      app.py: |
+        def load_tasks() -> None:
+            # Read tasks from tasks.txt.
+            pass
+        
+        def show_tasks() -> None:
+            # Show only open tasks.
+            pass
+        
+        def show_due_dates() -> None:
+            # Show each task's due date.
+            pass
+        
+        def show_search() -> None:
+            # Show a search box.
+            pass
+        
+        def sort_by_priority() -> None:
+            # Sort tasks by priority.
+            pass
+        
+        def sort_by_due_date() -> None:
+            # Sort tasks by due date.
+            pass
+        
+        def show_export() -> None:
+            # Show a button to export tasks.
+            pass
+  - run: git add app.py
+  - run: 'git commit -m "fix: show only open tasks"'
+  - run: git switch main
+  - run: 'git merge --no-ff show-open-tasks -m "Merge pull request #2 from your-username/show-open-tasks"'
+  - run: 'git commit --amend -m "Merge pull request #2 from your-username/show-open-tasks" -m "fix: show only open tasks"'
+  - run: git branch -d show-open-tasks
+
+team-after-reminders-merged:
+  - story: team-after-work-with-a-team
+  - story: reminders-branch
+  - run: git switch main
+  - story: sam-fixes-the-list
+  - run: git switch add-reminders
+  - run: git merge main
+    allowFailure: true
+  - write:
+      app.py: |
+        def load_tasks() -> None:
+            # Read tasks from tasks.txt.
+            pass
+        
+        def show_tasks() -> None:
+            # Show only open tasks with reminders.
+            pass
+        
+        def show_due_dates() -> None:
+            # Show each task's due date.
+            pass
+        
+        def show_search() -> None:
+            # Show a search box.
+            pass
+        
+        def sort_by_priority() -> None:
+            # Sort tasks by priority.
+            pass
+        
+        def sort_by_due_date() -> None:
+            # Sort tasks by due date.
+            pass
+        
+        def show_export() -> None:
+            # Show a button to export tasks.
+            pass
+  - run: git add app.py
+  - run: >-
+      git commit -m "Merge branch 'main' of https://github.com/your-username/todo-app into add-reminders"
+  - run: git switch main
+  - run: 'git merge --no-ff add-reminders -m "Merge pull request #3 from your-username/add-reminders"'
+  - run: 'git commit --amend -m "Merge pull request #3 from your-username/add-reminders" -m "feat: add reminders"'
+  - run: git branch -d add-reminders
+
+changes-for-lesson-10b:
+  - write:
+      README.md: |
+        # Ticklist
+        A small to-do list app for learning Git.
+
+sam-explains-the-tasks-file:
+  - run: git switch -c explain-tasks-file
+  - write:
+      README.md: |
+        # To-do app
+        A small to-do list app for learning Git.
+        Add your tasks to tasks.txt, one per line.
+  - run: git add README.md
+  - run: 'git commit -m "docs: explain where tasks go"'
+  - run: git switch main
+  - run: 'git merge --no-ff explain-tasks-file -m "Merge pull request #4 from your-username/explain-tasks-file"'
+  - run: 'git commit --amend -m "Merge pull request #4 from your-username/explain-tasks-file" -m "docs: explain where tasks go"'
+  - run: git branch -d explain-tasks-file
+
+team-after-teammates-changes:
+  - story: team-after-reminders-merged
+  - story: sam-explains-the-tasks-file
+  - run: git switch -c name-the-app
+  - write:
+      README.md: |
+        # Ticklist
+        A small to-do list app for learning Git.
+        Add your tasks to tasks.txt, one per line.
+  - run: git add README.md
+  - run: 'git commit -m "docs: name the app Ticklist"'
+  - run: git switch main
+  - run: 'git merge --no-ff name-the-app -m "Merge pull request #5 from your-username/name-the-app"'
+  - run: 'git commit --amend -m "Merge pull request #5 from your-username/name-the-app" -m "docs: name the app Ticklist"'
+  - run: git branch -d name-the-app

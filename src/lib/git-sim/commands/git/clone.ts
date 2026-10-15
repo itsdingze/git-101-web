@@ -1,12 +1,12 @@
 import git from 'isomorphic-git'
 import { SandboxError } from '@/lib/git-sim/errors'
-import { isDirectory, listEntries, pathExists } from '@/lib/git-sim/fileOperations'
+import { isDirectory, listEntries, pathExists } from '@/lib/git-sim/fs/fileOperations'
 import { say } from '@/lib/git-sim/output'
-import { operandsOf } from '@/lib/git-sim/parseArgs'
-import { basename, resolvePath } from '@/lib/git-sim/paths'
-import { cloneInto, countObjects } from '@/lib/git-sim/remoteTransfer'
-import { hostedRemoteAt, unreachableRepository } from '@/lib/git-sim/remoteConnection'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
+import { operandsOf } from '@/lib/git-sim/input/parseArgs'
+import { basename, resolvePath } from '@/lib/git-sim/fs/paths'
+import { cloneInto, countObjects } from '@/lib/git-sim/remote/remoteTransfer'
+import { hostedRemoteAt, unreachableRepository } from '@/lib/git-sim/remote/remoteConnection'
+import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
 import type { CommandContext, GitSubcommand, RemoteLink } from '@/lib/git-sim/types'
 
 const MISSING_REPOSITORY = [
@@ -66,7 +66,10 @@ export const clone: GitSubcommand = {
     const destination = resolvePath(name, ctx.cwd, ctx.root)
     await requireEmptyDestination(ctx, destination, name)
 
-    await cloneInto(ctx, remoteFor(ctx, url, name), destination)
+    const outcome = await cloneInto(ctx, remoteFor(ctx, url, name), destination)
+    if (outcome === 'empty') {
+      return say([`Cloning into '${name}'...`, 'warning: You appear to have cloned an empty repository.'].join('\n'))
+    }
 
     const objects = await countObjects(ctx, destination)
     return say(transferReport(name, objects, await countBlobs(ctx, destination)))

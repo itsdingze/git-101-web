@@ -1,16 +1,16 @@
 import git from 'isomorphic-git'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
-import { hasFlag, operandsOf } from '@/lib/git-sim/parseArgs'
+import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
+import { hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say } from '@/lib/git-sim/output'
-import { currentBranch, refOid, shortOid } from '@/lib/git-sim/repository'
-import { copyObjects } from '@/lib/git-sim/remoteTransfer'
-import { connectToRemote } from '@/lib/git-sim/remoteConnection'
-import { readUpstream, setUpstream } from '@/lib/git-sim/upstream'
-import { firstRemoteName } from './fetch'
-import { describeRejection, type RejectionReason } from './pushRejection'
-import type { CommandContext } from '@/lib/git-sim/types'
-import type { GitSubcommand } from '@/lib/git-sim/types'
+import { currentBranch, refOid, shortOid } from '@/lib/git-sim/history/repository'
+import { copyObjects, countObjects } from '@/lib/git-sim/remote/remoteTransfer'
+import { connectToRemote } from '@/lib/git-sim/remote/remoteConnection'
+import { readUpstream, setUpstream } from '@/lib/git-sim/remote/upstream'
+import { firstRemoteName } from '@/lib/git-sim/remote/fetchFromRemote'
+import { describeRejection, type RejectionReason } from '@/lib/git-sim/remote/pushRejection'
+import { repositoryNameAt } from '@/lib/git-sim/github/hostedRepository'
+import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
 
 const NO_PUSH_DESTINATION = [
   'fatal: No configured push destination.',
@@ -23,11 +23,27 @@ const NO_PUSH_DESTINATION = [
   '    git push <name>',
 ].join('\n')
 
-const TRANSFER_NOISE = [
-  'Enumerating objects: 5, done.',
-  'Counting objects: 100% (5/5), done.',
-  'Writing objects: 100% (3/3), done.',
-]
+const BASE_OBJECTS_REVISITED = 2
+
+function transferReport(written: number, remoteHadHistory: boolean): string[] {
+  const enumerated = written + (remoteHadHistory ? BASE_OBJECTS_REVISITED : 0)
+  return [
+    `Enumerating objects: ${enumerated}, done.`,
+    `Counting objects: 100% (${enumerated}/${enumerated}), done.`,
+    `Writing objects: 100% (${written}/${written}), done.`,
+  ]
+}
+
+function pullRequestOffer(url: string, branch: string): string[] {
+  const repository = repositoryNameAt(url)
+  if (!repository || branch === 'main') return []
+  return [
+    'remote: ',
+    `remote: Create a pull request for '${branch}' on GitHub by visiting:`,
+    `remote:      https://github.com/${repository}/pull/new/${branch}`,
+    'remote: ',
+  ]
+}
 
 type PushTarget = {
   remoteName: string
@@ -126,7 +142,7 @@ export const push: GitSubcommand = {
   requiresRepo: true,
   run: async (args, ctx, dir) => {
     const branchName = await currentBranch(ctx, dir)
-    if (!branchName) throw new SandboxError('fatal: cannot push a detached HEAD in this course.')
+    if (!branchName) throw new SandboxError("fatal: this course can't push a detached HEAD.")
 
     const { remoteName, branch, remoteBranch } = await pushTarget(ctx, dir, args, branchName)
     const { url, dir: remoteDir } = await connectToRemote(ctx, dir, remoteName)
@@ -141,8 +157,18 @@ export const push: GitSubcommand = {
     const reason = await rejectionReason(ctx, dir, tips, forceModeOf(args))
     if (reason) throw new SandboxError(describeRejection(url, branch, remoteBranch, reason))
 
+    const tracked = hasFlag(args, '-u', '--set-upstream')
+    const upstream = tracked
+      ? [`branch '${branch}' set up to track '${remoteName}/${remoteBranch}'.`]
+      : []
+    if (tracked) await setUpstream(ctx, dir, branch, { remote: remoteName, branch: remoteBranch })
+
+    if (tips.remote === localOid) return say([...upstream, 'Everything up-to-date'].join('\n'))
+
     const updated = await refLine(ctx, dir, tips, `${branch} -> ${remoteBranch}`)
+    const objectsBefore = await countObjects(ctx, remoteDir)
     await copyObjects(ctx, dir, remoteDir)
+    const written = (await countObjects(ctx, remoteDir)) - objectsBefore
     await git.writeRef({
       fs: gitFs(ctx.fs),
       dir: remoteDir,
@@ -158,13 +184,9 @@ export const push: GitSubcommand = {
       force: true,
     })
 
-    const tracked = hasFlag(args, '-u', '--set-upstream')
-    if (tracked) await setUpstream(ctx, dir, branch, { remote: remoteName, branch: remoteBranch })
-
-    const upstream = tracked
-      ? [`branch '${branch}' set up to track '${remoteName}/${remoteBranch}'.`]
-      : []
-
-    return say([...TRANSFER_NOISE, `To ${url}`, updated, ...upstream].join('\n'))
+    const pullRequestLink = tips.remote === null ? pullRequestOffer(url, remoteBranch) : []
+    return say(
+      [...transferReport(written, objectsBefore > 0), ...pullRequestLink, `To ${url}`, updated, ...upstream].join('\n'),
+    )
   },
 }

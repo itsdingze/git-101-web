@@ -5,42 +5,19 @@ export type Commit = {
   parents: string[]
 }
 
-export type Branch = {
+export type GraphBranch = {
   name: string
-  color: string
   lane: number
-  /** Commit this branch points at while it has no commits of its own. */
   startsAt?: string
 }
 
-export type Stage = {
+export type GraphStage = {
   commits: Commit[]
-  branches: Branch[]
-  /** Name of the checked-out branch. */
+  branches: GraphBranch[]
   head: string
 }
 
 export type GitScenario = {
   commands: string[]
-  stages: Stage[]
-}
-
-export type ScenarioKey = 'branching' | 'merging' | 'rebase'
-
-export type Position = {
-  x: number
-  y: number
-}
-
-export type Connection = {
-  id: string
-  pathD: string
-  color: string
-}
-
-export type PhantomCommit = {
-  branch: Branch
-  x: number
-  y: number
-  pathD: string
+  stages: GraphStage[]
 }

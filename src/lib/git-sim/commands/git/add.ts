@@ -1,11 +1,14 @@
 import git from 'isomorphic-git'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
-import { repoPrefix, specMatcher } from '@/lib/git-sim/pathspec'
-import { hasFlag, operandsOf } from '@/lib/git-sim/parseArgs'
+import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
+import { repoPrefix, specMatcher } from '@/lib/git-sim/fs/pathspec'
+import { hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { silent } from '@/lib/git-sim/output'
-import { readIgnoredFiles } from '@/lib/git-sim/ignoredPaths'
-import { readWorkingTree } from '@/lib/git-sim/workingTree'
+import { readIgnoredFiles } from '@/lib/git-sim/fs/ignoredPaths'
+import { readWorkingTree } from '@/lib/git-sim/working-tree/workingTree'
+import { readUnmergedEntries } from '@/lib/git-sim/working-tree/indexStages'
+import { pathExists } from '@/lib/git-sim/fs/fileOperations'
+import { joinPath } from '@/lib/git-sim/fs/paths'
 import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
 
 type Candidate = { path: string; deleted: boolean }
@@ -20,10 +23,16 @@ async function candidatesFor(
   forced: boolean,
 ): Promise<Candidate[]> {
   const tree = await readWorkingTree(ctx, dir)
-  const candidates = [
+  const changed = [
     ...tree.unstaged.map((change) => ({ path: change.path, deleted: change.kind === 'deleted' })),
     ...tree.untracked.map((path) => ({ path, deleted: false })),
   ]
+  const unmerged: Candidate[] = []
+  for (const { path } of await readUnmergedEntries(ctx, dir)) {
+    if (changed.some((candidate) => candidate.path === path)) continue
+    unmerged.push({ path, deleted: !(await pathExists(ctx.fs, joinPath(dir, path))) })
+  }
+  const candidates = [...changed, ...unmerged]
   if (!forced) return candidates
 
   const ignored = await readIgnoredFiles(ctx, dir)

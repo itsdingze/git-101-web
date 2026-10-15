@@ -1,5 +1,7 @@
 import { useDraggable } from '@dnd-kit/react'
-import blockShell from './blockShell'
+import { FOCUS_RING } from '@/components/ui/focusRing'
+import { messages } from '@/messages/en'
+import { blockShell } from './blockShell'
 
 interface GlossaryBlockProps {
   block: string
@@ -8,7 +10,7 @@ interface GlossaryBlockProps {
   disabled: boolean
 }
 
-export default function GlossaryBlock({ block, isUsed, onAdd, disabled }: GlossaryBlockProps) {
+export function GlossaryBlock({ block, isUsed, onAdd, disabled }: GlossaryBlockProps) {
   const { ref } = useDraggable({
     id: `avail-${block}`,
     disabled: isUsed || disabled,
@@ -27,9 +29,9 @@ export default function GlossaryBlock({ block, isUsed, onAdd, disabled }: Glossa
       ref={ref}
       type="button"
       onClick={onAdd}
-      aria-label={`Add ${block} to answer`}
+      aria-label={messages.blocks.add(block)}
       className={`${blockShell} bg-bg-card border border-border text-text-primary cursor-grab active:cursor-grabbing transition-colors hover:border-text-muted
-        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary`}
+        ${FOCUS_RING}`}
       disabled={disabled}
     >
       {block}

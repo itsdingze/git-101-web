@@ -1,224 +1,123 @@
-import { type Dispatch, type SetStateAction, useState, useRef } from 'react'
+import { type RefObject, useRef, useState } from 'react'
 import { move } from '@dnd-kit/helpers'
 import type { DragDropEventHandlers } from '@dnd-kit/react'
-import type { DragOperation } from '@dnd-kit/abstract'
-import useProgressStore from '@/stores/progressStore'
-import useExerciseNav from '@/hooks/useExerciseNav'
-import type { BlockExerciseStep } from '@/types'
+import type { DragOperation, UniqueIdentifier } from '@dnd-kit/abstract'
+import { insertIndex } from '@/components/lesson/block-exercise/model/insertIndex'
+import type { BlockAnswer } from './useBlockAnswer'
 
-function arraysEqual(a: readonly string[], b: readonly string[]): boolean {
-  return a.length === b.length && a.every((v, i) => v === b[i])
-}
+const GLOSSARY_PREFIX = 'avail-'
+const SOLUTION_AREA = 'solution-area'
 
-function computeInsertIndex(pointerX: number): number {
-  const zone = document.querySelector('[data-solution-zone]')
-  if (!zone) return 0
-  const blocks = zone.querySelectorAll('[data-block]')
-  if (blocks.length === 0) return 0
-  for (let i = 0; i < blocks.length; i++) {
-    const rect = blocks[i]!.getBoundingClientRect()
-    const centerX = rect.left + rect.width / 2
-    if (pointerX < centerX) return i
-  }
-  return blocks.length
-}
-
-interface UseBlockDragReturn {
-  answer: string[]
-  solved: boolean
-  showHint: boolean
-  hintIndex: number
-  shakeSlots: boolean
-  activeId: string | number | null
+interface BlockDrag {
+  zoneRef: RefObject<HTMLDivElement | null>
+  activeId: UniqueIdentifier | null
   activeBlock: string | null
   isActiveFromGlossary: boolean
   overSolution: boolean
   insertIndex: number | null
-  handleBlockClick: (block: string) => void
-  handleRemoveFromAnswer: (block: string) => void
-  handleReset: () => void
-  setShowHint: Dispatch<SetStateAction<boolean>>
   dragProviderProps: Partial<DragDropEventHandlers>
 }
 
-export default function useBlockDrag(step: BlockExerciseStep, lessonId: number): UseBlockDragReturn {
-  const completeStep = useProgressStore((s) => s.completeStep)
-  const isCompleted = useProgressStore((s) => !!s.completedSteps[`${lessonId}:${step.id}`])
+function isFromGlossary(id: UniqueIdentifier | null | undefined): boolean {
+  return String(id ?? '').startsWith(GLOSSARY_PREFIX)
+}
 
-  const [answer, setAnswer] = useState<string[]>(isCompleted ? [...step.correctAnswer] : [])
-  const [solved, setSolved] = useState(isCompleted)
-  const [showHint, setShowHint] = useState(false)
-  const [hintIndex, setHintIndex] = useState(0)
-  const [shakeSlots, setShakeSlots] = useState(false)
-  const [activeId, setActiveId] = useState<string | number | null>(null)
+function blockOf(id: string): string {
+  return id.startsWith(GLOSSARY_PREFIX) ? id.slice(GLOSSARY_PREFIX.length) : id
+}
+
+function inserted(answer: readonly string[], block: string, index: number): string[] {
+  return [...answer.slice(0, index), block, ...answer.slice(index)]
+}
+
+export function useBlockDrag({ answer, solved, changeAnswer }: Pick<BlockAnswer, 'answer' | 'solved' | 'changeAnswer'>): BlockDrag {
+  const zoneRef = useRef<HTMLDivElement>(null)
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
   const [overSolution, setOverSolution] = useState(false)
-  const [insertIndex, setInsertIndex] = useState<number | null>(null)
+  const [dropIndex, setDropIndex] = useState<number | null>(null)
   const overSolutionRef = useRef(false)
-  const insertIndexRef = useRef<number | null>(null)
-  const previousAnswer = useRef(answer)
+  const dropIndexRef = useRef<number | null>(null)
+  const answerBeforeDrag = useRef(answer)
 
-  function handleReset() {
-    setAnswer([])
-    setSolved(false)
-    setShowHint(false)
-    setHintIndex(0)
-    setShakeSlots(false)
-    setActiveId(null)
-    setOverSolution(false)
-    setInsertIndex(null)
-    overSolutionRef.current = false
-    insertIndexRef.current = null
+  function markOverSolution(isOver: boolean) {
+    if (isOver === overSolutionRef.current) return
+    overSolutionRef.current = isOver
+    setOverSolution(isOver)
   }
 
-  function handleCheck() {
-    const isCorrect =
-      arraysEqual(answer, step.correctAnswer) ||
-      (step.acceptableAnswers?.some((alt) => arraysEqual(answer, alt)) ?? false)
-
-    if (isCorrect) {
-      setSolved(true)
-      completeStep(lessonId, step.id)
-      return true
-    }
-
-    setShakeSlots(true)
-    setTimeout(() => setShakeSlots(false), 500)
-    setHintIndex((i) => Math.min(i + 1, (step.hints?.length || 1) - 1))
-    return false
+  function markDropIndex(index: number | null) {
+    if (index === dropIndexRef.current) return
+    dropIndexRef.current = index
+    setDropIndex(index)
   }
 
-  useExerciseNav({ solved, checkFn: handleCheck, checkDisabled: answer.length === 0 })
+  function pointerDropIndex(pointerX: number): number {
+    const blocks = [...(zoneRef.current?.querySelectorAll('[data-block]') ?? [])]
+    return insertIndex(blocks.map((block) => block.getBoundingClientRect()), pointerX)
+  }
 
-  function updateInsertIndex(operation: DragOperation) {
-    const sourceId = String(operation.source?.id ?? '')
-    if (!sourceId.startsWith('avail-')) return
-
+  function trackDropIndex(operation: DragOperation) {
+    if (!isFromGlossary(operation.source?.id)) return
     if (!overSolutionRef.current) {
-      if (insertIndexRef.current !== null) {
-        insertIndexRef.current = null
-        setInsertIndex(null)
-      }
+      markDropIndex(null)
       return
     }
-
     const pointerX = operation.position.current.x
-    if (pointerX == null) return
-
-    const idx = computeInsertIndex(pointerX)
-    if (idx !== insertIndexRef.current) {
-      insertIndexRef.current = idx
-      setInsertIndex(idx)
-    }
+    if (pointerX != null) markDropIndex(pointerDropIndex(pointerX))
   }
 
-  function handleBlockClick(block: string) {
-    if (solved) return
-    setAnswer((prev) => [...prev, block])
+  function isOverAnswer(targetId: UniqueIdentifier | undefined): boolean {
+    return targetId === SOLUTION_AREA || answer.includes(String(targetId))
   }
 
-  function handleRemoveFromAnswer(block: string) {
-    if (solved) return
-    setAnswer((prev) => prev.filter((b) => b !== block))
-  }
-
-  function handleDragStart() {
-    previousAnswer.current = answer
-  }
-
-  function handleDragEnd(operation: DragOperation, canceled: boolean) {
-    if (solved) return
-
-    if (canceled) {
-      setAnswer(previousAnswer.current)
-      setActiveId(null)
-      return
-    }
-
+  function drop(operation: DragOperation) {
     const { source, target } = operation
-    setActiveId(null)
-    if (!source) return
-
-    const sourceId = String(source.id)
-    const isFromGlossary = sourceId.startsWith('avail-')
-
-    if (isFromGlossary) {
-      const block = sourceId.replace('avail-', '')
-      if (target && (target.id === 'solution-area' || answer.includes(String(target.id)))) {
-        if (!answer.includes(block)) {
-          const idx = insertIndexRef.current ?? answer.length
-          setAnswer((prev) => {
-            const next = [...prev]
-            next.splice(idx, 0, block)
-            return next
-          })
-        }
-      }
-    }
-    // Sortable reorder is handled by move() in onDragOver
+    if (!source || !isFromGlossary(source.id) || !target || !isOverAnswer(target.id)) return
+    const block = blockOf(String(source.id))
+    if (answer.includes(block)) return
+    const index = dropIndexRef.current ?? answer.length
+    changeAnswer((current) => inserted(current, block, index))
   }
-
-  const activeStr = activeId ? String(activeId) : null
-  const isActiveFromGlossary = activeStr?.startsWith('avail-') ?? false
-  const activeBlock = isActiveFromGlossary && activeStr
-    ? activeStr.replace('avail-', '')
-    : activeStr
 
   const dragProviderProps: Partial<DragDropEventHandlers> = {
     onDragStart(event) {
       if (solved) return
-      const sourceId = String(event.operation.source?.id ?? '')
-      const isFromGlossary = sourceId.startsWith('avail-')
-      setActiveId(event.operation.source?.id ?? null)
-      overSolutionRef.current = !isFromGlossary
-      setOverSolution(!isFromGlossary)
-      handleDragStart()
+      const sourceId = event.operation.source?.id ?? null
+      setActiveId(sourceId)
+      markOverSolution(!isFromGlossary(sourceId))
+      answerBeforeDrag.current = answer
     },
     onDragOver(event) {
-      const { source } = event.operation
-      const sourceId = String(source?.id ?? '')
-
-      // Sortable reorder: use move() to keep state in sync with visuals
-      if (!sourceId.startsWith('avail-')) {
-        setAnswer((prev) => move(prev, event))
+      if (!isFromGlossary(event.operation.source?.id)) {
+        changeAnswer((current) => move([...current], event))
         return
       }
-
-      // Glossary hover tracking
-      const targetId = event.operation.target?.id
-      const isOver = targetId === 'solution-area' || answer.includes(String(targetId))
-      if (isOver !== overSolutionRef.current) {
-        overSolutionRef.current = isOver
-        setOverSolution(isOver)
-      }
-      updateInsertIndex(event.operation)
+      markOverSolution(isOverAnswer(event.operation.target?.id))
+      trackDropIndex(event.operation)
     },
     onDragMove(event) {
-      updateInsertIndex(event.operation)
+      trackDropIndex(event.operation)
     },
     onDragEnd(event) {
-      overSolutionRef.current = false
-      setOverSolution(false)
-      handleDragEnd(event.operation, event.operation.canceled)
-      insertIndexRef.current = null
-      setInsertIndex(null)
+      setActiveId(null)
+      markOverSolution(false)
+      if (!solved) {
+        if (event.operation.canceled) changeAnswer(() => answerBeforeDrag.current)
+        else drop(event.operation)
+      }
+      markDropIndex(null)
     },
   }
 
+  const activeIdText = activeId === null ? null : String(activeId)
+
   return {
-    answer,
-    solved,
-    showHint,
-    hintIndex,
-    shakeSlots,
+    zoneRef,
     activeId,
-    activeBlock,
-    isActiveFromGlossary,
+    activeBlock: activeIdText === null ? null : blockOf(activeIdText),
+    isActiveFromGlossary: isFromGlossary(activeIdText),
     overSolution,
-    insertIndex,
-    handleBlockClick,
-    handleRemoveFromAnswer,
-    handleReset,
-    setShowHint,
+    insertIndex: dropIndex,
     dragProviderProps,
   }
 }

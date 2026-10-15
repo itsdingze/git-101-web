@@ -1,17 +1,25 @@
 export type {
-  TextBlock,
   CodeBlock,
-  ListBlock,
+  DiffLineChange,
+  DiffLine,
+  DiffBlock,
+  TerminalTranscriptLine,
+  TerminalBlock,
+  FileEntryKind,
+  FileEntry,
+  FilesBlock,
   CalloutVariant,
   CalloutBlock,
+  TabsBlock,
   ContentBlock,
+  ThreePlaceModelData,
+  Visualization,
   VisualizationType,
   ReadingStep,
-  QuizOption,
   QuizStep,
   BlockExerciseStep,
-  ConflictExerciseStep,
   SandboxGoal,
+  SandboxDetour,
   SandboxExerciseStep,
   Step,
   Lesson,
@@ -19,23 +27,7 @@ export type {
 
 export type {
   Commit,
-  Branch,
-  Stage,
+  GraphBranch,
+  GraphStage,
   GitScenario,
-  ScenarioKey,
-  Position,
-  Connection,
-  PhantomCommit,
 } from './graph'
-
-export type {
-  ProgressState,
-  ProgressActions,
-  ProgressStore,
-} from './progress'
-
-export type {
-  LessonNavState,
-  LessonNavActions,
-  LessonNavContextValue,
-} from './lessonNav'

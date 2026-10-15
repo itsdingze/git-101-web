@@ -1,36 +1,27 @@
-import useProgressStore from '@/stores/progressStore'
-import lessons from '@/data/lessons/index'
-import ContentColumn from '@/components/layout/ContentColumn'
-import useDocumentTitle from '@/hooks/useDocumentTitle'
-import LessonCard from './components/LessonCard'
+import { messages } from '@/messages/en'
+import { ContentColumn } from '@/components/layout/ContentColumn'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useHomePage } from './hooks/useHomePage'
+import { LessonCard } from './components/LessonCard'
+import { CourseIntro } from './components/CourseIntro'
 
-export default function HomePage() {
-  useDocumentTitle('Git 101 — Interactive Tutorial')
+export function HomePage() {
+  useDocumentTitle(messages.home.documentTitle)
 
-  // Subscribe to the state itself, not the action refs — those never change,
-  // so selecting them would leave the list stale after progress updates.
-  const completedLessons = useProgressStore((s) => s.completedLessons)
-
-  const nextId = lessons.find((lesson) => !completedLessons.includes(lesson.id))?.id
+  const { lessons, nextLesson, hasStarted } = useHomePage()
 
   return (
-    <ContentColumn className="py-12 sm:py-16">
-      <div className="mb-10">
-        <h1 className="text-3xl sm:text-4xl font-semibold text-text-primary tracking-tight leading-tight">
-          Learn Git
-        </h1>
-        <p className="text-base text-text-muted mt-2 leading-relaxed">
-          Thirteen hands-on lessons, from your first commit to a real team workflow
-        </p>
-      </div>
+    <ContentColumn className="flex flex-col gap-10 py-12 sm:py-16">
+      <CourseIntro nextLesson={nextLesson} hasStarted={hasStarted} />
 
       <div className="flex flex-col gap-1">
-        {lessons.map((lesson) => (
+        {lessons.map(({ lesson, isCompleted, isCurrent }, position) => (
           <LessonCard
             key={lesson.id}
             lesson={lesson}
-            isCompleted={completedLessons.includes(lesson.id)}
-            isCurrent={lesson.id === nextId}
+            position={position}
+            isCompleted={isCompleted}
+            isCurrent={isCurrent}
           />
         ))}
       </div>

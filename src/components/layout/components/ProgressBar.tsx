@@ -1,9 +1,11 @@
+import { messages } from '@/messages/en'
+
 interface ProgressBarProps {
   current: number
   total: number
 }
 
-export default function ProgressBar({ current, total }: ProgressBarProps) {
+export function ProgressBar({ current, total }: ProgressBarProps) {
   const progress = total > 0 ? ((current + 1) / total) * 100 : 0
 
   return (
@@ -12,7 +14,7 @@ export default function ProgressBar({ current, total }: ProgressBarProps) {
       aria-valuenow={current + 1}
       aria-valuemin={1}
       aria-valuemax={total}
-      aria-label={`Lesson progress: step ${current + 1} of ${total}`}
+      aria-label={messages.header.progress(current + 1, total)}
       className="w-full h-2 bg-bg-card rounded-full overflow-hidden"
     >
       <div

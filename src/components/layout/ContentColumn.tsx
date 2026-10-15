@@ -5,7 +5,7 @@ interface ContentColumnProps {
   className?: string
 }
 
-export default function ContentColumn({ children, className = '' }: ContentColumnProps) {
+export function ContentColumn({ children, className = '' }: ContentColumnProps) {
   return (
     <div className={`w-full max-w-content mx-auto px-6 sm:px-8 ${className}`}>
       {children}

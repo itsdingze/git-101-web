@@ -16,4 +16,12 @@ export function fail(text: string): CommandOutput[] {
   return [stderr(text)]
 }
 
+export function explain(text: string): CommandOutput[] {
+  return [{ ...stdout(text), prose: true }]
+}
+
+export function refuse(text: string): CommandOutput[] {
+  return [{ ...stderr(text), prose: true }]
+}
+
 export const silent: CommandOutput[] = []

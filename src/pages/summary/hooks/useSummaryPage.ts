@@ -1,56 +1,43 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import type { Step, Lesson } from '@/types'
-import useProgressStore from '@/stores/progressStore'
-import lessons from '@/data/lessons/index'
+import type { Lesson } from '@/types'
+import { useProgressStore } from '@/stores/progressStore'
+import { lessons } from '@/data/lessons/index'
+import { finishedEveryLesson, finishedEveryStep } from '@/pages/summary/lessonCompletion'
 
 interface UseSummaryPageResult {
   lesson: Lesson | undefined
-  commands: string[]
+  lessonFinished: boolean
   nextLesson: Lesson | undefined
+  courseComplete: boolean
+  completedCount: number
+  totalCount: number
 }
 
-function extractCommands(steps: readonly Step[]): string[] {
-  const recap = steps.find((step) => step.type === 'reading' && step.id === 'recap')
-
-  const listed =
-    recap?.type === 'reading'
-      ? recap.content
-          .filter((block) => block.type === 'code' && block.language === 'bash')
-          .flatMap((block) => (block.type === 'code' ? block.value.split('\n') : []))
-          .map((line) => line.split('#')[0]?.trim() ?? '')
-          .filter(Boolean)
-      : []
-
-  const built = steps
-    .filter((step) => step.type === 'block-exercise')
-    .map((step) => (step.type === 'block-exercise' ? step.correctAnswer.join(' ') : ''))
-
-  return [...new Set([...listed, ...built])]
-}
-
-export default function useSummaryPage(): UseSummaryPageResult {
+export function useSummaryPage(): UseSummaryPageResult {
   const { lessonId } = useParams()
   const parsedId = parseInt(lessonId ?? '', 10)
 
   const completeLesson = useProgressStore((s) => s.completeLesson)
   const isStepCompleted = useProgressStore((s) => s.isStepCompleted)
+  const completedLessons = useProgressStore((s) => s.completedLessons)
 
-  const lesson = lessons.find((l) => l.id === parsedId)
-  const nextLesson = lessons.find((l) => l.id === parsedId + 1)
+  const lessonIndex = lessons.findIndex((candidate) => candidate.id === parsedId)
+  const lesson = lessons[lessonIndex]
+  const nextLesson = lessonIndex < 0 ? undefined : lessons[lessonIndex + 1]
 
-  const commands = useMemo(() => {
-    if (!lesson) return []
-    return extractCommands(lesson.steps)
-  }, [lesson])
+  const stepsFinished = lesson !== undefined && finishedEveryStep(lesson, isStepCompleted)
 
-  // Guarded so landing on this URL directly does not credit unfinished work
   useEffect(() => {
-    if (!lesson) return
-    if (lesson.steps.every((step) => isStepCompleted(parsedId, step.id))) {
-      completeLesson(parsedId)
-    }
-  }, [lesson, parsedId, completeLesson, isStepCompleted])
+    if (lesson && stepsFinished) completeLesson(lesson.id)
+  }, [lesson, stepsFinished, completeLesson])
 
-  return { lesson, commands, nextLesson }
+  return {
+    lesson,
+    lessonFinished: stepsFinished || (lesson !== undefined && completedLessons.includes(lesson.id)),
+    nextLesson,
+    courseComplete: lesson !== undefined && finishedEveryLesson(lessons, completedLessons),
+    completedCount: completedLessons.length,
+    totalCount: lessons.length,
+  }
 }

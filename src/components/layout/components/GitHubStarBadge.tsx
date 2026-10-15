@@ -1,8 +1,11 @@
-import { Github, Star } from 'lucide-react'
-import { REPO_URL } from '@/data/repo'
-import useGitHubStars from '@/components/layout/hooks/useGitHubStars'
+import { Star } from 'lucide-react'
+import { REPO_URL } from '@/components/layout/repo'
+import { GitHubMark } from './GitHubMark'
+import { useGitHubStars } from '@/components/layout/hooks/useGitHubStars'
+import { FOCUS_RING } from '@/components/ui/focusRing'
+import { messages } from '@/messages/en'
 
-export default function GitHubStarBadge() {
+export function GitHubStarBadge() {
   const stars = useGitHubStars()
 
   return (
@@ -10,11 +13,11 @@ export default function GitHubStarBadge() {
       href={REPO_URL}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Star this project on GitHub"
-      className="-mr-2 flex h-11 items-center gap-1.5 px-2 text-sm text-text-muted hover:text-text-primary no-underline transition-colors
-        rounded-lg hover:bg-bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
+      aria-label={messages.header.starOnGitHub(stars)}
+      className={`-mr-2 flex h-11 items-center gap-1.5 px-2 text-sm text-text-muted hover:text-text-primary no-underline transition-colors
+        rounded-lg hover:bg-bg-secondary ${FOCUS_RING}`}
     >
-      <Github size={18} />
+      <GitHubMark size={16} />
       {stars !== null && stars > 0 && (
         <>
           <Star size={13} fill="currentColor" />

@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { GIT_COMMANDS } from '@/lib/git-sim/commands/git/registry'
 import type { Lesson } from '@/types'
-import lessons from './index'
+import { lessons } from './index'
 import { commandLocksFor } from './commandLocks'
 
 describe('lesson unlocks', () => {
-  it('unlock every simulated git command in exactly one lesson', () => {
+  it('unlock every simulated git command, and gh, in exactly one lesson', () => {
     const unlocked = lessons.flatMap((lesson) => lesson.unlocks)
 
-    expect([...unlocked].sort()).toEqual(Object.keys(GIT_COMMANDS).sort())
+    expect([...unlocked].sort()).toEqual([...Object.keys(GIT_COMMANDS), 'gh'].sort())
   })
 })
 
-function gitCommandsIn(text: string): string[] {
+function commandsIn(text: string): string[] {
   return [...text.matchAll(/\bgit ([a-z][a-z-]*)/g)]
     .map((match) => match[1] ?? '')
     .filter((name) => name in GIT_COMMANDS)
@@ -37,28 +37,32 @@ describe.each(lessons)('lesson $id', (lesson) => {
   const locks = commandLocksFor(lesson.id)
 
   it('recaps only commands unlocked by now', () => {
-    expect(gitCommandsIn(recapText(lesson)).filter((name) => locks.has(name))).toEqual([])
+    expect(commandsIn(recapText(lesson)).filter((name) => locks.has(name))).toEqual([])
   })
 
   it('points its sandbox only at commands unlocked by now', () => {
-    expect(gitCommandsIn(sandboxGuidanceText(lesson)).filter((name) => locks.has(name))).toEqual(
-      [],
-    )
+    expect(commandsIn(sandboxGuidanceText(lesson)).filter((name) => locks.has(name))).toEqual([])
   })
 })
 
 describe('commandLocksFor', () => {
   it('locks only what later lessons unlock, naming the lesson that does', () => {
-    const locks = commandLocksFor(5)
+    const locks = commandLocksFor(4)
 
-    expect(locks.has('switch')).toBe(false)
-    expect(locks.has('status')).toBe(false)
-    expect(locks.get('merge')).toBe('Lesson 6: Merging')
-    expect(locks.get('stash')).toBe('Lesson 8: Stashing')
-    expect(locks.get('push')).toBe('Lesson 10: Remotes & GitHub')
+    expect(locks.has('rm')).toBe(false)
+    expect(locks.has('commit')).toBe(false)
+    expect(locks.get('merge')).toBe('Branches and merging')
+    expect(locks.get('gh')).toBe('Put your project on GitHub')
+    expect(locks.get('push')).toBe('Put your project on GitHub')
+    expect(locks.get('pull')).toBe('Work with a team')
+    expect(locks.get('stash')).toBe("Bring in teammates' changes")
+  })
+
+  it('keeps all practiced commands available during computer setup', () => {
+    expect(commandLocksFor(11).size).toBe(0)
   })
 
   it('locks nothing once every lesson is behind you', () => {
-    expect(commandLocksFor(12).size).toBe(0)
+    expect(commandLocksFor(lessons[lessons.length - 1]?.id ?? -1).size).toBe(0)
   })
 })

@@ -1,0 +1,20 @@
+import { isDirectory, pathExists } from '@/lib/git-sim/fs/fileOperations'
+import { resolvePath } from '@/lib/git-sim/fs/paths'
+import { operandsOf } from '@/lib/git-sim/input/parseArgs'
+import { fail, silent } from '@/lib/git-sim/output'
+import type { CommandHandler } from '@/lib/git-sim/types'
+
+export const cd: CommandHandler = async (args, ctx) => {
+  const target = operandsOf(args)[0]
+  const destination = target ? resolvePath(target, ctx.cwd, ctx.root) : ctx.root
+
+  if (!(await pathExists(ctx.fs, destination))) {
+    return fail(`bash: cd: ${target ?? ''}: No such file or directory`)
+  }
+  if (!(await isDirectory(ctx.fs, destination))) {
+    return fail(`bash: cd: ${target ?? ''}: Not a directory`)
+  }
+
+  ctx.moveTo(destination)
+  return silent
+}

@@ -1,8 +1,8 @@
-import { useLessonNav } from '@/hooks/useLessonNav'
-import LessonHeaderBar from './components/LessonHeaderBar'
-import BrandHeaderBar from './components/BrandHeaderBar'
+import { useLessonNav } from '@/contexts/lesson-nav/useLessonNav'
+import { LessonHeaderBar } from './components/LessonHeaderBar'
+import { BrandHeaderBar } from './components/BrandHeaderBar'
 
-export default function Header() {
+export function Header() {
   const { showLessonNav, current, total } = useLessonNav()
 
   return (

@@ -1,111 +1,63 @@
-import { useEffect, useState } from 'react'
-import { CheckCircle } from 'lucide-react'
+import { useState } from 'react'
 import type { SandboxExerciseStep } from '@/types'
-import InlineMarkdown from '@/components/ui/InlineMarkdown'
-import ExerciseControls from '@/components/lesson/ExerciseControls'
-import useProgressStore from '@/stores/progressStore'
-import useExerciseNav from '@/hooks/useExerciseNav'
-import useSandboxExercise from './hooks/useSandboxExercise'
-import SandboxTerminal from './components/SandboxTerminal'
-import GoalChecklist from './components/GoalChecklist'
+import { InlineMarkdown } from '@/components/ui/inline-markdown/InlineMarkdown'
+import { ExerciseControls } from '@/components/lesson/components/ExerciseControls'
+import { HintButton } from '@/components/lesson/components/HintButton'
+import { useContinueGate } from './hooks/useContinueGate'
+import { useSandboxExercise } from './hooks/useSandboxExercise'
+import { useExerciseSeed } from './hooks/useExerciseSeed'
+import { useIdentityCapture } from './hooks/useIdentityCapture'
+import { useStepCompletion } from './hooks/useStepCompletion'
+import { useGoalHints } from './hooks/useGoalHints'
+import { SandboxTerminal } from './components/SandboxTerminal'
+import { ConflictEditorPanel } from './components/ConflictEditorPanel'
+import { messages } from '@/messages/en'
 
 interface SandboxExerciseProps {
   step: SandboxExerciseStep
   lessonId: number
 }
 
-type HintState = {
-  goalId: string
-  index: number
-  open: boolean
-}
-
-export default function SandboxExercise({ step, lessonId }: SandboxExerciseProps) {
-  const completeStep = useProgressStore((s) => s.completeStep)
-  const isCompleted = useProgressStore((s) => !!s.completedSteps[`${lessonId}:${step.id}`])
-
-  const { ready, running, lines, prompt, completedGoals, allCompleted, activeGoalIndex, submit, reset } =
-    useSandboxExercise(step, lessonId, isCompleted)
-
-  const [hintState, setHintState] = useState<HintState>({ goalId: '', index: 0, open: false })
-
-  const solved = allCompleted || isCompleted
+export function SandboxExercise({ step, lessonId }: SandboxExerciseProps) {
+  const seed = useExerciseSeed(step.seed)
+  const { terminal, files, snapshot, allCompleted, activeGoalIndex, say, reset } = useSandboxExercise(step, seed, lessonId)
   const activeGoal = step.goals[activeGoalIndex]
-  const guided = step.mode === 'guided'
+  const isCompleted = useStepCompletion(lessonId, step.id, allCompleted)
+  const { showNextHint, forgetHints } = useGoalHints(activeGoal, say)
+  const [attempt, setAttempt] = useState(0)
+  const [terminalFocusRequest, setTerminalFocusRequest] = useState(0)
 
-  const hintsMatchGoal = activeGoal !== undefined && hintState.goalId === activeGoal.id
-  const showHint = hintsMatchGoal && hintState.open
-  const hintIndex = hintsMatchGoal ? hintState.index : 0
-
-  useEffect(() => {
-    if (allCompleted && !isCompleted) completeStep(lessonId, step.id)
-  }, [allCompleted, isCompleted, completeStep, lessonId, step.id])
-
-  useExerciseNav({ solved, checkFn: () => allCompleted })
-
-  function handleToggleHint() {
-    if (!activeGoal) return
-
-    setHintState((previous) => {
-      const sameGoal = previous.goalId === activeGoal.id
-      if (sameGoal && previous.open) return { ...previous, open: false }
-
-      const lastHint = (activeGoal.hints?.length ?? 1) - 1
-      return {
-        goalId: activeGoal.id,
-        index: sameGoal ? Math.min(previous.index + 1, lastHint) : 0,
-        open: true,
-      }
-    })
-  }
+  useIdentityCapture(seed, snapshot)
+  useContinueGate(allCompleted || isCompleted)
 
   function handleReset() {
-    setHintState({ goalId: '', index: 0, open: false })
+    forgetHints()
+    setAttempt((count) => count + 1)
     reset()
   }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-text-primary tracking-tight">{step.title}</h2>
+      <InlineMarkdown as="h2" className="text-xl font-semibold text-text-primary tracking-tight" value={step.title} />
 
       <InlineMarkdown className="text-sm text-text-secondary leading-relaxed" value={step.brief} />
 
-      <div className="rounded-xl border border-border bg-bg-secondary px-5 py-4">
-        <GoalChecklist
-          goals={step.goals}
-          completed={completedGoals}
-          activeIndex={activeGoalIndex}
-          guided={guided}
-        />
-      </div>
-
-      {guided && !allCompleted && activeGoal?.narration && (
-        <InlineMarkdown
-          className="text-sm text-text-secondary leading-relaxed"
-          value={activeGoal.narration}
-        />
+      {isCompleted && !allCompleted && (
+        <p className="text-sm text-text-muted">{messages.sandbox.alreadyCompleted}</p>
       )}
 
-      <SandboxTerminal lines={lines} prompt={prompt} disabled={!ready || running} onSubmit={submit} />
-
-      <ExerciseControls
-        hints={activeGoal?.hints}
-        hintIndex={hintIndex}
-        showHint={showHint}
-        solved={solved}
-        onToggleHint={handleToggleHint}
-        onReset={handleReset}
+      <ConflictEditorPanel
+        key={attempt}
+        files={files}
+        projectDir={step.seed.dir}
+        onSaved={() => setTerminalFocusRequest((count) => count + 1)}
       />
 
-      {solved && (
-        <div className="flex items-start gap-3 p-4 rounded-xl text-sm leading-relaxed bg-accent-green/5 border border-accent-green/20">
-          <CheckCircle size={18} className="text-accent-green shrink-0" />
-          <InlineMarkdown
-            className="text-text-secondary"
-            value={step.completionMessage ?? 'Exercise complete.'}
-          />
-        </div>
-      )}
+      <SandboxTerminal session={terminal} focusRequest={terminalFocusRequest} />
+
+      <ExerciseControls solved={allCompleted} onReset={handleReset}>
+        {activeGoal?.hints && <HintButton onHint={showNextHint} />}
+      </ExerciseControls>
     </div>
   )
 }

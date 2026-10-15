@@ -1,9 +1,10 @@
 import { GIT_COMMANDS, UNSIMULATED_GIT_COMMANDS } from './commands/git/registry'
-import { suggestCommand } from './suggestCommand'
-import { findRepoDir, requireRepoDir } from './repository'
-import { fail, say } from './output'
-import { lockedCommand, type CommandLocks } from './commandLocks'
-import { usageFor } from './gitUsage'
+import { suggestCommand } from './input/suggestCommand'
+import { isOwnKey } from '@/lib/isOwnKey'
+import { findRepoDir, requireRepoDir } from './history/repository'
+import { fail, refuse, say } from './output'
+import { lockedCommand, type CommandLocks } from './input/commandLocks'
+import { usageFor } from './input/gitUsage'
 import type { CommandContext, CommandOutput } from './types'
 
 const GIT_VERSION = 'git version 2.43.0'
@@ -33,13 +34,13 @@ export async function runGit(
   if (name === '--version' || name === 'version') return say(GIT_VERSION)
 
   const unlocksIn = locks.get(name)
-  if (unlocksIn) return lockedCommand(name, unlocksIn, locks)
+  if (unlocksIn) return lockedCommand(`git ${name}`, unlocksIn, locks)
 
-  const command = GIT_COMMANDS[name]
+  const command = isOwnKey(GIT_COMMANDS, name) ? GIT_COMMANDS[name] : undefined
   if (!command) {
     if (UNSIMULATED_GIT_COMMANDS.includes(name)) {
-      return fail(
-        `git ${name} is a real Git command, but this practice sandbox does not simulate it.`,
+      return refuse(
+        `git ${name} is a real Git command, but this practice sandbox doesn't simulate it.`,
       )
     }
     return unknownCommand(name)

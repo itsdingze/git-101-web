@@ -1,31 +1,29 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ScrollText } from 'lucide-react'
-import CheatsheetModal from '@/components/cheatsheet/CheatsheetModal'
-import ProgressBar from './ProgressBar'
+import { CheatsheetTrigger } from '@/components/cheatsheet/CheatsheetTrigger'
+import { FOCUS_RING } from '@/components/ui/focusRing'
+import { messages } from '@/messages/en'
+import { ProgressBar } from './ProgressBar'
 
 const slot = 'w-11 lg:w-32 shrink-0 flex justify-center'
 
 const control =
   'inline-flex items-center gap-1.5 h-11 w-11 justify-center rounded-lg no-underline ' +
   'text-text-muted hover:text-text-primary hover:bg-bg-secondary transition-colors ' +
-  'lg:w-auto lg:px-2 ' +
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary'
+  `lg:w-auto lg:px-2 ${FOCUS_RING}`
 
 interface LessonHeaderBarProps {
   current: number
   total: number
 }
 
-export default function LessonHeaderBar({ current, total }: LessonHeaderBarProps) {
-  const [cheatsheetOpen, setCheatsheetOpen] = useState(false)
-
+export function LessonHeaderBar({ current, total }: LessonHeaderBarProps) {
   return (
     <div className="w-full h-14 flex items-center justify-center gap-2 px-6 sm:px-8 lg:gap-3 lg:px-0">
       <div className={`${slot} lg:justify-end`}>
-        <Link to="/" aria-label="Back to all lessons" className={control}>
+        <Link to="/" aria-label={messages.header.backToLessons} className={control}>
           <ArrowLeft size={16} />
-          <span className="hidden lg:inline text-sm whitespace-nowrap">Back</span>
+          <span className="hidden lg:inline text-sm whitespace-nowrap">{messages.header.allLessons}</span>
         </Link>
       </div>
 
@@ -34,20 +32,11 @@ export default function LessonHeaderBar({ current, total }: LessonHeaderBarProps
       </div>
 
       <div className={`${slot} lg:justify-start`}>
-        <button
-          type="button"
-          onClick={() => setCheatsheetOpen(true)}
-          aria-label="Open the cheat sheet"
-          aria-haspopup="dialog"
-          title="Cheat Sheet"
-          className={`${control} cursor-pointer`}
-        >
+        <CheatsheetTrigger label={messages.header.openCheatsheet} title={messages.header.cheatsheet} className={control}>
           <ScrollText size={16} />
-          <span className="hidden lg:inline text-sm whitespace-nowrap">Cheat Sheet</span>
-        </button>
+          <span className="hidden lg:inline text-sm whitespace-nowrap">{messages.header.cheatsheet}</span>
+        </CheatsheetTrigger>
       </div>
-
-      {cheatsheetOpen && <CheatsheetModal onClose={() => setCheatsheetOpen(false)} />}
     </div>
   )
 }

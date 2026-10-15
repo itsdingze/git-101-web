@@ -1,9 +1,10 @@
 import { useState, useCallback, useLayoutEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Lesson, Step } from '@/types'
-import useProgressStore from '@/stores/progressStore'
-import lessons from '@/data/lessons/index'
-import { useLessonNav } from '@/hooks/useLessonNav'
+import { useProgressStore } from '@/stores/progressStore'
+import { lessonById } from '@/data/lessons/index'
+import { useLessonNav } from '@/contexts/lesson-nav/useLessonNav'
+import { initialStepIndex } from '@/pages/lesson/initialStepIndex'
 
 interface UseLessonPageResult {
   lesson: Lesson | undefined
@@ -12,7 +13,7 @@ interface UseLessonPageResult {
   parsedId: number
 }
 
-export default function useLessonPage(lessonId: string | undefined): UseLessonPageResult {
+export function useLessonPage(lessonId: string | undefined): UseLessonPageResult {
   const navigate = useNavigate()
   const parsedId = parseInt(lessonId ?? '', 10)
 
@@ -22,12 +23,11 @@ export default function useLessonPage(lessonId: string | undefined): UseLessonPa
   const isLessonCompleted = useProgressStore((s) => s.isLessonCompleted)
   const completeStep = useProgressStore((s) => s.completeStep)
 
-  const lesson = lessons.find((l) => l.id === parsedId)
+  const lesson = lessonById(parsedId)
 
-  const [currentStepIndex, setCurrentStepIndex] = useState(() => {
-    if (isLessonCompleted(parsedId)) return 0
-    return getCurrentStep(parsedId)
-  })
+  const [currentStepIndex, setCurrentStepIndex] = useState(() =>
+    initialStepIndex(lesson, { lessonCompleted: isLessonCompleted(parsedId), savedStep: getCurrentStep(parsedId) }),
+  )
 
   const { setLessonNav, clearLessonNav, clearCheckResult } = useLessonNav()
 

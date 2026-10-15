@@ -1,15 +1,17 @@
 import git from 'isomorphic-git'
 import type { ReadCommitResult } from 'isomorphic-git'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
-import { flagValue, hasFlag, operandsOf } from '@/lib/git-sim/parseArgs'
+import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
+import { flagValue, hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
+import { firstUnknownOption, type KnownOptions } from '@/lib/git-sim/input/knownOptions'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say, silent } from '@/lib/git-sim/output'
-import { currentBranch, headOid, shortOid } from '@/lib/git-sim/repository'
-import { commitSubject } from '@/lib/git-sim/commitSubject'
-import { formatGitDate } from '@/lib/git-sim/formatDate'
-import { renderCommitGraph, topoOrderCommits } from '@/lib/git-sim/commitGraph'
-import { resolveCommitish } from '@/lib/git-sim/resolveCommitish'
-import { decorationLabel, readDecorations, type RefDecorations } from './decorations'
+import { currentBranch, headOid, refOid, shortOid } from '@/lib/git-sim/history/repository'
+import { STASH_REF } from '@/lib/git-sim/stash/stashLog'
+import { commitSubject } from '@/lib/git-sim/history/commitSubject'
+import { createCommitGraph, topoOrderCommits } from '@/lib/git-sim/history/commitGraph'
+import { resolveCommitish } from '@/lib/git-sim/history/resolveCommitish'
+import { decorationLabel, readDecorations, type RefDecorations } from '@/lib/git-sim/history/decorations'
+import { fullCommitLines } from '@/lib/git-sim/history/fullCommitLines'
 import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
 
 const DEFAULT_DEPTH = 200
@@ -23,21 +25,24 @@ function countFlag(args: readonly string[]): number | undefined {
   return value === undefined ? undefined : Number(value)
 }
 
-function withoutFlagValues(args: readonly string[]): string[] {
-  const consumed = new Set(
-    args.flatMap((arg, index) => (VALUE_FLAGS.includes(arg) ? [index + 1] : [])),
-  )
-  return args.filter((_, index) => !consumed.has(index))
-}
-
 async function startingRef(
   ctx: CommandContext,
   dir: string,
   args: readonly string[],
 ): Promise<string> {
-  const spec = operandsOf(withoutFlagValues(args))[0]
+  const spec = operandsOf(args, VALUE_FLAGS)[0]
   if (!spec) return 'HEAD'
   return (await resolveCommitish(ctx, dir, spec)) ?? spec
+}
+
+async function allRefs(ctx: CommandContext, dir: string): Promise<string[]> {
+  const fs = gitFs(ctx.fs)
+  const refs = (await git.listBranches({ fs, dir })).map((name) => `refs/heads/${name}`)
+  for (const { remote } of await git.listRemotes({ fs, dir })) {
+    for (const name of await git.listBranches({ fs, dir, remote })) refs.push(`refs/remotes/${remote}/${name}`)
+  }
+  if (await refOid(ctx, dir, STASH_REF)) refs.push(STASH_REF)
+  return refs
 }
 
 async function collectCommits(
@@ -45,9 +50,7 @@ async function collectCommits(
   dir: string,
   args: readonly string[],
 ): Promise<ReadCommitResult[]> {
-  const refs = hasFlag(args, '--all')
-    ? (await git.listBranches({ fs: gitFs(ctx.fs), dir })).map((name) => `refs/heads/${name}`)
-    : [await startingRef(ctx, dir, args)]
+  const refs = hasFlag(args, '--all') ? await allRefs(ctx, dir) : [await startingRef(ctx, dir, args)]
 
   const byOid = new Map<string, ReadCommitResult>()
   for (const ref of refs) {
@@ -66,31 +69,20 @@ function applyFilters(
 ): ReadCommitResult[] {
   const grep = flagValue(args, '--grep')
   const author = flagValue(args, '--author')
-  const count = countFlag(args)
 
   let filtered = [...commits]
   if (grep) filtered = filtered.filter((entry) => entry.commit.message.includes(grep))
   if (author) filtered = filtered.filter((entry) => entry.commit.author.name.includes(author))
-  return count !== undefined && Number.isFinite(count) ? filtered.slice(0, count) : filtered
+  return filtered
+}
+
+function limited<T>(items: readonly T[], args: readonly string[]): T[] {
+  const count = countFlag(args)
+  return count !== undefined && Number.isFinite(count) ? items.slice(0, count) : [...items]
 }
 
 function onelineText(entry: ReadCommitResult, decorations: RefDecorations): string {
   return `${shortOid(entry.oid)}${decorationLabel(decorations, entry.oid)} ${commitSubject(entry.commit.message)}`
-}
-
-function longLines(entry: ReadCommitResult, decorations: RefDecorations): string[] {
-  const { author, message } = entry.commit
-  return [
-    `commit ${entry.oid}${decorationLabel(decorations, entry.oid)}`,
-    ...(entry.commit.parent.length > 1
-      ? [`Merge: ${entry.commit.parent.map(shortOid).join(' ')}`]
-      : []),
-    `Author: ${author.name} <${author.email}>`,
-    `Date:   ${formatGitDate(author.timestamp, author.timezoneOffset)}`,
-    '',
-    ...message.trimEnd().split('\n').map((line) => `    ${line}`),
-    '',
-  ]
 }
 
 function renderPlain(
@@ -99,38 +91,45 @@ function renderPlain(
   oneline: boolean,
 ): string {
   if (oneline) return commits.map((entry) => onelineText(entry, decorations)).join('\n')
-  return commits.flatMap((entry) => longLines(entry, decorations)).join('\n').trimEnd()
+  return commits.flatMap((entry) => fullCommitLines(entry, decorations)).join('\n').trimEnd()
 }
 
 function renderGraph(
   commits: readonly ReadCommitResult[],
   decorations: RefDecorations,
   oneline: boolean,
+  args: readonly string[],
 ): string {
   const byOid = new Map(commits.map((entry) => [entry.oid, entry]))
   const ordered = topoOrderCommits(
     commits.map((entry) => ({ oid: entry.oid, parents: entry.commit.parent })),
   )
-  const rows = renderCommitGraph(ordered)
+  const graph = createCommitGraph(ordered)
 
-  return rows
-    .flatMap((row) => {
-      if (!row.oid) return [row.prefix.trimEnd()]
-      const entry = byOid.get(row.oid)
+  return limited(ordered, args)
+    .flatMap((commit, index) => {
+      const entry = byOid.get(commit.oid)
       if (!entry) return []
-      if (oneline) return [`${row.prefix} ${onelineText(entry, decorations)}`.trimEnd()]
-
-      const continuation = row.prefix.replace('*', '|')
-      return longLines(entry, decorations).map((line, index) =>
-        `${index === 0 ? row.prefix : continuation} ${line}`.trimEnd(),
-      )
+      const message = oneline ? [onelineText(entry, decorations)] : fullCommitLines(entry, decorations).slice(0, -1)
+      return graph.draw(commit, message, !oneline && index > 0)
     })
+    .map((line) => line.trimEnd())
     .join('\n')
+    .trimEnd()
+}
+
+const LOG_OPTIONS: KnownOptions = {
+  flags: ['--oneline', '--graph', '--all', '--no-decorate', '--decorate'],
+  valueFlags: VALUE_FLAGS,
+  countShorthand: true,
 }
 
 export const log: GitSubcommand = {
   requiresRepo: true,
   run: async (args, ctx, dir) => {
+    const unknown = firstUnknownOption(args, LOG_OPTIONS)
+    if (unknown) throw new SandboxError(`fatal: unrecognized argument: ${unknown}`)
+
     if (!(await headOid(ctx, dir))) {
       const branch = (await currentBranch(ctx, dir)) ?? 'main'
       throw new SandboxError(`fatal: your current branch '${branch}' does not have any commits yet`)
@@ -146,8 +145,8 @@ export const log: GitSubcommand = {
 
     return say(
       hasFlag(args, '--graph')
-        ? renderGraph(commits, decorations, oneline)
-        : renderPlain(commits, decorations, oneline),
+        ? renderGraph(commits, decorations, oneline, args)
+        : renderPlain(limited(commits, args), decorations, oneline),
     )
   },
 }

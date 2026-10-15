@@ -9,7 +9,10 @@
     "noEmit": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["vite.config.ts", "vitest.config.ts"]
 }

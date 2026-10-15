@@ -1,9 +1,8 @@
-import git from 'isomorphic-git'
-import { gitFs } from '@/lib/git-sim/sandboxFs'
-import { makeDirectory } from '@/lib/git-sim/fileOperations'
-import { isRepository } from '@/lib/git-sim/repository'
-import { joinPath, resolvePath } from '@/lib/git-sim/paths'
-import { operandsOf } from '@/lib/git-sim/parseArgs'
+import { makeDirectory } from '@/lib/git-sim/fs/fileOperations'
+import { initRepository } from '@/lib/git-sim/history/initRepository'
+import { isRepository } from '@/lib/git-sim/history/repository'
+import { joinPath, resolvePath } from '@/lib/git-sim/fs/paths'
+import { operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { say } from '@/lib/git-sim/output'
 import type { GitSubcommand } from '@/lib/git-sim/types'
 
@@ -15,7 +14,7 @@ export const init: GitSubcommand = {
 
     await makeDirectory(ctx.fs, dir)
     const existed = await isRepository(ctx, dir)
-    await git.init({ fs: gitFs(ctx.fs), dir, defaultBranch: 'main' })
+    await initRepository(ctx, dir)
 
     const verb = existed ? 'Reinitialized existing' : 'Initialized empty'
     return say(`${verb} Git repository in ${joinPath(dir, '.git')}/`)
