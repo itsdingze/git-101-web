@@ -54,6 +54,8 @@ export const messages = {
   },
   home: {
     documentTitle: "Git 101: Let's learn Git",
+    description:
+      'Learn Git with short lessons, quizzes, and a practice terminal in your browser. Start with commits, then practise branches, merging, and team workflows.',
     hero: {
       title: "Let's learn Git",
       start: 'Start learning',
@@ -68,6 +70,12 @@ export const messages = {
   },
   lessonPage: {
     documentTitle: (lessonTitle: string) => `${lessonTitle} — Git 101`,
+  },
+  share: {
+    homeImageAlt: "Git 101: Let's learn Git",
+    lessonImageAlt: (lessonTitle: string) => `${lessonTitle}, a Git 101 lesson`,
+    lessonEyebrow: (lessonNumber: number) => `Lesson ${lessonNumber}`,
+    homeEyebrow: 'A free, hands-on course',
   },
   summary: {
     documentTitle: (lessonTitle: string) => `${lessonTitle} complete — Git 101`,
