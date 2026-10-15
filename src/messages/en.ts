@@ -9,6 +9,14 @@ export const messages = {
     name: 'Git 101',
     skipToContent: 'Skip to main content',
     lessonNotFoundTitle: 'Lesson not found — Git 101',
+    pageNotFoundTitle: 'Page not found — Git 101',
+  },
+  error: {
+    documentTitle: 'Something went wrong — Git 101',
+    title: 'Something went wrong',
+    body: 'Reload the page to try again. If it keeps happening, go back to all lessons.',
+    reload: 'Reload the page',
+    back: 'Back to all lessons',
   },
   header: {
     skipChecks: 'Skip checks',
