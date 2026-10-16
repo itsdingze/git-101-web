@@ -37,7 +37,8 @@ const PALETTE_TOKENS: Record<keyof SharePalette, string> = {
 }
 
 export function sharePalette(css: string): SharePalette {
-  const tokens = new Map([...css.matchAll(/--color-([a-z0-9-]+):\s*(#[0-9a-fA-F]{3,8});/g)].map(([, name, value]) => [name, value]))
+  const theme = css.match(/@theme\s*\{([^}]*)\}/)?.[1] ?? ''
+  const tokens = new Map([...theme.matchAll(/--color-([a-z0-9-]+):\s*(#[0-9a-fA-F]{3,8});/g)].map(([, name, value]) => [name, value]))
   const colorOf = (token: string): string => {
     const value = tokens.get(token)
     if (!value) throw new Error(`index.css has no --color-${token} for the share images`)

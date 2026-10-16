@@ -5,14 +5,14 @@ import { renderShareImage, sharePalette } from './shareImage'
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 
-const TOKENS = `
+const TOKENS = `@theme {
   --color-bg-primary: #ffffff;
   --color-accent-green: #58a700;
   --color-accent-green-strong: #3b7300;
   --color-text-primary: #4b4b4b;
   --color-text-secondary: #5a5a5a;
   --color-text-muted: #696969;
-`
+}`
 
 function bytesOf(dataUrl: string): Uint8Array {
   return Uint8Array.from(atob(dataUrl.split(',')[1] ?? ''), (char) => char.charCodeAt(0))
@@ -35,8 +35,14 @@ describe('sharePalette', () => {
     })
   })
 
+  it('keeps the light colours when a dark theme overrides them', () => {
+    const css = `${TOKENS}\n:root.dark {\n  --color-bg-primary: #131f24;\n}`
+
+    expect(sharePalette(css).background).toBe('#ffffff')
+  })
+
   it('names the token that is missing', () => {
-    expect(() => sharePalette('--color-bg-primary: #ffffff;')).toThrow('--color-accent-green')
+    expect(() => sharePalette('@theme { --color-bg-primary: #ffffff; }')).toThrow('--color-accent-green')
   })
 })
 

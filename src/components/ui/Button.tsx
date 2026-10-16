@@ -2,7 +2,7 @@ import type { ComponentPropsWithRef, ElementType } from 'react'
 import { FOCUS_RING } from './focusRing'
 
 type ButtonVariant = 'filled' | 'outlined' | 'text' | 'filled-success' | 'waiting'
-type ButtonSize = 'sm' | 'md'
+type ButtonSize = 'sm' | 'md' | 'icon'
 
 const base =
   'inline-flex items-center justify-center rounded-lg font-medium ' +
@@ -12,6 +12,7 @@ const base =
 const sizes: Record<ButtonSize, string> = {
   sm: 'gap-1.5 px-3 py-1.5 text-sm',
   md: 'min-h-11 gap-2 px-4 py-2.5 text-sm sm:px-5',
+  icon: 'size-11',
 }
 
 const variants: Record<ButtonVariant, string> = {

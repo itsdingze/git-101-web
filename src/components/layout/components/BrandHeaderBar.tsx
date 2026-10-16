@@ -3,6 +3,7 @@ import { ContentColumn } from '@/components/layout/ContentColumn'
 import { messages } from '@/messages/en'
 import { DebugToggle } from './DebugToggle'
 import { GitHubStarBadge } from './GitHubStarBadge'
+import { ThemeToggle } from './ThemeToggle'
 
 export function BrandHeaderBar() {
   return (
@@ -13,6 +14,7 @@ export function BrandHeaderBar() {
       </div>
       <div className="flex items-center gap-1">
         {import.meta.env.DEV && <DebugToggle />}
+        <ThemeToggle />
         <GitHubStarBadge />
       </div>
     </ContentColumn>

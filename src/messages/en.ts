@@ -27,6 +27,8 @@ export const messages = {
     openCheatsheet: 'Open the cheat sheet',
     cheatsheet: 'Cheat sheet',
     progress: (step: number, total: number) => `Lesson progress: step ${step} of ${total}`,
+    theme: 'Theme',
+    themeChoice: { system: 'Match system', light: 'Light', dark: 'Dark' },
   },
   footer: {
     goBack: 'Go back',

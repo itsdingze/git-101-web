@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-bg-primary: #fcfcfa;
   --color-bg-secondary: #f5f5f1;
@@ -104,6 +106,42 @@
 @layer base {
   :root {
     --window-body-height: min(22rem, 55dvh);
+    color-scheme: light;
+  }
+
+  :root.dark {
+    color-scheme: dark;
+
+    --color-bg-primary: #1e2326;
+    --color-bg-secondary: #232729;
+    --color-bg-card: #2a2f32;
+    --color-bg-elevated: #3a4044;
+    --color-accent-green: #a7c080;
+    --color-accent-green-strong: #a7c080;
+    --color-accent-yellow: #dbbc7f;
+    --color-accent-yellow-strong: #dbbc7f;
+    --color-accent-red: #e67e80;
+    --color-accent-red-strong: #e67e80;
+    --color-accent-blue: #7fbbb3;
+    --color-accent-blue-strong: #7fbbb3;
+    --color-accent-blue-light: #7fbbb3;
+    --color-accent-orange: #e69875;
+    --color-accent-orange-strong: #e69875;
+    --color-text-primary: #e2ded3;
+    --color-text-secondary: #c3c0b6;
+    --color-text-muted: #9a9f9b;
+    --color-border: #383e42;
+    --color-btn-filled: #a7c080;
+    --color-btn-filled-hover: #b2ca8c;
+    --color-btn-filled-active: #99b372;
+
+    --color-finder-selection: #0058d0;
+    --color-finder-selection-inactive: #464646;
+    --color-finder-icon-selected: rgb(255 255 255 / 0.1);
+    --color-finder-control: rgb(255 255 255 / 0.6);
+    --color-finder-control-disabled: rgb(255 255 255 / 0.25);
+    --color-finder-control-hover: rgb(255 255 255 / 0.08);
+    --color-finder-control-active: rgb(255 255 255 / 0.14);
   }
 
   *,
