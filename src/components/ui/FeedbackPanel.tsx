@@ -4,8 +4,8 @@ import { InlineMarkdown } from '@/components/ui/inline-markdown/InlineMarkdown'
 type FeedbackTone = 'right' | 'wrong'
 
 const TONES: Record<FeedbackTone, { Icon: typeof CheckCircle; container: string; icon: string }> = {
-  right: { Icon: CheckCircle, container: 'bg-accent-green/5 border-accent-green/20', icon: 'text-accent-green' },
-  wrong: { Icon: XCircle, container: 'bg-accent-red/5 border-accent-red/20', icon: 'text-accent-red' },
+  right: { Icon: CheckCircle, container: 'bg-accent-green-tint border-accent-green-edge', icon: 'text-accent-green' },
+  wrong: { Icon: XCircle, container: 'bg-accent-red-tint border-accent-red-edge', icon: 'text-accent-red' },
 }
 
 interface FeedbackPanelProps {

@@ -19,9 +19,9 @@ export function SolutionDropZone({ children, zoneRef, solved, shakeSlots, overSo
       shaking={shakeSlots}
       className={`min-h-14 flex flex-wrap items-center gap-2 px-4 py-3.5 rounded-xl border-2 border-dashed transition-colors ${
         solved
-          ? 'border-accent-green/40 bg-accent-green/5'
+          ? 'border-accent-green-edge bg-accent-green-tint'
           : shakeSlots
-            ? 'border-accent-red bg-accent-red/5'
+            ? 'border-accent-red bg-accent-red-tint'
             : overSolution
               ? 'border-text-muted bg-bg-secondary'
               : 'border-border bg-bg-secondary'

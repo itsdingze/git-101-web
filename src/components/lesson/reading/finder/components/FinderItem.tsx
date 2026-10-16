@@ -3,7 +3,7 @@ import type { FileEntry } from '@/types'
 import { entryLabel } from '@/components/lesson/reading/finder/model/finderLabels'
 import { FinderIcon } from './FinderIcon'
 
-const SELECTED_NAME = 'bg-finder-selection-inactive text-text-primary group-focus:bg-finder-selection group-focus:text-text-on-accent'
+const SELECTED_NAME = 'bg-finder-selection-inactive text-text-primary group-focus:bg-finder-selection group-focus:text-finder-selection-text'
 
 interface FinderItemProps {
   id: string

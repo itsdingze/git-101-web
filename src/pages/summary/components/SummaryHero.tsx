@@ -13,7 +13,7 @@ export function SummaryHero({ lessonTitle, courseComplete, completedCount, total
 
   return (
     <div className="flex flex-col items-center gap-6 text-center">
-      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-accent-green/10">
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-accent-green-tint">
         <Icon size={28} className="text-accent-green" aria-hidden />
       </div>
 

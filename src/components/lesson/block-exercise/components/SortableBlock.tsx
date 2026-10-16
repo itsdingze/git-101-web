@@ -31,7 +31,7 @@ export function SortableBlock({ id, index, children, onRemove, disabled }: Sorta
       aria-label={messages.blocks.remove(id)}
       onClick={onRemove}
       onKeyDown={(e) => { if (e.key === ' ') e.preventDefault() }}
-      className={`${blockShell} bg-accent-blue-strong text-text-on-accent cursor-grab active:cursor-grabbing ${FOCUS_RING}`}
+      className={`${blockShell} bg-accent-blue text-text-on-accent cursor-grab active:cursor-grabbing ${FOCUS_RING}`}
     >
       {children}
     </button>

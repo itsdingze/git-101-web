@@ -13,12 +13,12 @@ const ZONES: { id: ZoneId; label: string; labelColor: string }[] = [
 ]
 
 const FILE_STYLES: Record<FileTone, string> = {
-  new: 'bg-accent-red/5 text-accent-red-strong',
-  staged: 'bg-accent-yellow/10 text-accent-yellow-strong',
+  new: 'bg-accent-red-tint text-accent-red-strong',
+  staged: 'bg-accent-yellow-tint text-accent-yellow-strong',
   committed: 'bg-bg-card text-text-secondary',
   ignored: 'text-text-muted',
-  staging: 'bg-accent-yellow/10 text-accent-yellow-strong',
-  repo: 'bg-accent-green/5 text-accent-green-strong',
+  staging: 'bg-accent-yellow-tint text-accent-yellow-strong',
+  repo: 'bg-accent-green-tint text-accent-green-strong',
 }
 
 const STATE_LABELS: Record<FileState, string> = {

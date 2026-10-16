@@ -11,10 +11,10 @@ import { TerminalExample } from '@/components/lesson/reading/terminal-example/Te
 import { messages } from '@/messages/en'
 
 const CALLOUT_STYLES: Record<CalloutVariant, { icon: LucideIcon; shell: string; accent: string }> = {
-  info: { icon: Info, shell: 'bg-accent-blue/5 border-accent-blue/20', accent: 'text-accent-blue-strong' },
-  tip: { icon: Lightbulb, shell: 'bg-accent-green/5 border-accent-green/20', accent: 'text-accent-green-strong' },
-  warning: { icon: TriangleAlert, shell: 'bg-accent-orange/5 border-accent-orange/25', accent: 'text-accent-orange-strong' },
-  danger: { icon: OctagonAlert, shell: 'bg-accent-red/5 border-accent-red/25', accent: 'text-accent-red-strong' },
+  info: { icon: Info, shell: 'bg-accent-blue-tint border-accent-blue-edge', accent: 'text-accent-blue-strong' },
+  tip: { icon: Lightbulb, shell: 'bg-accent-green-tint border-accent-green-edge', accent: 'text-accent-green-strong' },
+  warning: { icon: TriangleAlert, shell: 'bg-accent-orange-tint border-accent-orange-edge', accent: 'text-accent-orange-strong' },
+  danger: { icon: OctagonAlert, shell: 'bg-accent-red-tint border-accent-red-edge', accent: 'text-accent-red-strong' },
 }
 
 interface ContentBlockProps {

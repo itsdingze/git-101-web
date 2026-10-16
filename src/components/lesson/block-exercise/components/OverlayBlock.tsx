@@ -11,7 +11,7 @@ export function OverlayBlock({ children, isPlaced }: OverlayBlockProps) {
     <div
       className={`${blockShell} shadow-2xl ${
         isPlaced
-          ? 'bg-accent-blue-strong text-text-on-accent'
+          ? 'bg-accent-blue text-text-on-accent'
           : 'bg-bg-card border border-border text-text-primary'
       }`}
     >

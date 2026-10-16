@@ -1,30 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f7f7f7;
-  --color-bg-card: #f0f0f0;
-  --color-bg-elevated: #e5e5e5;
-  --color-accent-green: #58a700;
-  --color-accent-green-strong: #3b7300;
-  --color-accent-yellow: #ffc800;
-  --color-accent-yellow-strong: #8a6500;
-  --color-accent-red-strong: #c7201f;
-  --color-accent-red: #ff4b4b;
-  --color-accent-blue: #1cb0f6;
-  --color-accent-blue-strong: #0b6fa8;
-  --color-accent-blue-tint: #ddf4ff;
-  --color-accent-blue-light: #84d8ff;
-  --color-accent-orange: #ff9600;
-  --color-accent-orange-strong: #a35600;
-  --color-text-primary: #4b4b4b;
-  --color-text-secondary: #5a5a5a;
-  --color-text-muted: #696969;
-  --color-text-on-accent: #ffffff;
-  --color-border: #e5e5e5;
-  --color-btn-filled: #3f7f00;
-  --color-btn-filled-hover: #3b7300;
-  --color-btn-filled-active: #326300;
+  --color-bg-primary: #fcfcfa;
+  --color-bg-secondary: #f5f5f1;
+  --color-bg-card: #eeeee8;
+  --color-bg-elevated: #e4e5de;
+  --color-accent-green: #899b32;
+  --color-accent-green-strong: #647205;
+  --color-accent-yellow: #bc891c;
+  --color-accent-yellow-strong: #8c6405;
+  --color-accent-red-strong: #af4c47;
+  --color-accent-red: #dc756e;
+  --color-accent-blue: #429bcd;
+  --color-accent-blue-strong: #0672a2;
+  --color-accent-blue-light: #429bcd;
+  --color-accent-orange: #d47c45;
+  --color-accent-orange-strong: #a85418;
+  --color-accent-green-tint: color-mix(in oklab, var(--color-accent-green) 12%, transparent);
+  --color-accent-yellow-tint: color-mix(in oklab, var(--color-accent-yellow) 12%, transparent);
+  --color-accent-red-tint: color-mix(in oklab, var(--color-accent-red) 12%, transparent);
+  --color-accent-blue-tint: color-mix(in oklab, var(--color-accent-blue) 12%, transparent);
+  --color-accent-orange-tint: color-mix(in oklab, var(--color-accent-orange) 12%, transparent);
+  --color-accent-green-edge: color-mix(in oklab, var(--color-accent-green) 40%, transparent);
+  --color-accent-red-edge: color-mix(in oklab, var(--color-accent-red) 40%, transparent);
+  --color-accent-blue-edge: color-mix(in oklab, var(--color-accent-blue) 40%, transparent);
+  --color-accent-orange-edge: color-mix(in oklab, var(--color-accent-orange) 40%, transparent);
+  --color-text-primary: #3d474d;
+  --color-text-secondary: #525e65;
+  --color-text-muted: #5d6970;
+  --color-text-on-accent: #1e2326;
+  --color-border: #e4e5de;
+  --color-btn-filled: #93b259;
+  --color-btn-filled-hover: #86a54c;
+  --color-btn-filled-active: #7a9841;
 
   /* Code block */
   --color-code-bg: #1a1a2e;
@@ -73,7 +81,10 @@
   --color-editor-incoming-content: rgb(64 166 255 / 0.2);
 
   /* Finder window */
+  --color-finder-folder: #1cb0f6;
+  --color-finder-folder-front: #84d8ff;
   --color-finder-selection: #0064e1;
+  --color-finder-selection-text: #ffffff;
   --color-finder-selection-inactive: #dcdcdc;
   --color-finder-icon-selected: rgb(0 0 0 / 0.08);
   --color-finder-control: rgb(0 0 0 / 0.55);

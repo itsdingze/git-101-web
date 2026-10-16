@@ -6,8 +6,8 @@ import type { SlotTone } from '@/components/lesson/quiz/model/slotTone'
 const TONE_STYLES: Record<SlotTone, string> = {
   idle: 'border-border bg-bg-primary',
   selected: 'border-accent-blue-light bg-accent-blue-tint',
-  wrong: 'border-accent-red bg-accent-red/5',
-  correct: 'border-accent-green bg-accent-green/5',
+  wrong: 'border-accent-red bg-accent-red-tint',
+  correct: 'border-accent-green bg-accent-green-tint',
 }
 
 interface QuizOptionProps {

@@ -12,7 +12,7 @@ export function App() {
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50
-            focus:px-4 focus:py-2 focus:rounded-lg focus:bg-text-primary focus:text-text-on-accent focus:text-sm focus:font-medium focus:no-underline"
+            focus:px-4 focus:py-2 focus:rounded-lg focus:bg-text-primary focus:text-bg-primary focus:text-sm focus:font-medium focus:no-underline"
         >
           {messages.app.skipToContent}
         </a>

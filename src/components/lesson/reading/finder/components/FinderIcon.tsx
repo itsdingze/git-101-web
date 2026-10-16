@@ -5,9 +5,9 @@ export function FolderIcon({ className = 'h-13 w-16' }: { className?: string }) 
     <svg aria-hidden viewBox="0 0 64 52" className={className}>
       <path
         d="M4 8a4 4 0 0 1 4-4h15a3 3 0 0 1 2.1.9L29 9h27a4 4 0 0 1 4 4v33a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"
-        className="fill-accent-blue"
+        className="fill-finder-folder"
       />
-      <rect x="4" y="14" width="56" height="36" rx="4" className="fill-accent-blue-light" />
+      <rect x="4" y="14" width="56" height="36" rx="4" className="fill-finder-folder-front" />
     </svg>
   )
 }
