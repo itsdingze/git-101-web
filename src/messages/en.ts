@@ -131,6 +131,9 @@ export const messages = {
     removed: 'removed',
     currentChange: '(Current Change)',
     incomingChange: '(Incoming Change)',
+    contents: (fileName: string) => `${fileName} contents`,
+    cursorPosition: 'Ln 1, Col 1',
+    encoding: 'UTF-8',
   },
   reading: {
     codeSample: 'Code sample',
@@ -213,6 +216,71 @@ export const messages = {
       save: 'Save',
       open: 'Open',
       editLabel: (fileName: string) => `Edit ${fileName}`,
+    },
+    tips: {
+      unmergedBranch:
+        "Git couldn't confirm that this branch is merged. Merge work you need before deleting it. `-D` skips that check and can make unmerged commits hard to recover.",
+      noSuchCommit: (startPoint: string) =>
+        `There's no commit \`${startPoint}\` in this repository. Run \`git log --oneline\` and copy a hash from its list.`,
+      branchNameWithSpaces: (hyphenated: string) =>
+        `Branch names can't have spaces. Join the words with hyphens: \`git switch -c ${hyphenated}\``,
+      noSuchBranch: (name: string) =>
+        `There's no branch called \`${name}\` yet. To create it and move onto it, add \`-c\`: \`git switch -c ${name}\``,
+      mainExists: '`main` already exists. Move onto it with `git switch main`.',
+      branchExists: (name: string) =>
+        `You already have a branch called \`${name}\`. Move onto it with \`git switch ${name}\`, or delete it with \`git branch -d ${name}\` and try again.`,
+      emptyDiff:
+        'No output means no unstaged changes to tracked files. Use `git status` to check for new files and `git diff --staged` to inspect staged changes.',
+      unknownCommit: (revision: string) =>
+        `\`${revision}\` isn't in your history. Run \`git log --oneline\` and use a hash from your own list.`,
+      nothingStaged:
+        "Nothing is staged, so there's nothing to commit. Stage your changes with `git add <file>` first, then commit.",
+      untypedMessage: 'This course starts each message with its type, like `feat: add search` or `fix: stop crash`.',
+      newOnGitHubMain:
+        "The new work is on GitHub's `main`, not on your `main` yet. Run `git pull origin main` to bring it into this branch.",
+      mergeDirectionAfterConflict: (branch: string) =>
+        `You're on \`${branch}\`, so this brings \`main\` into \`${branch}\`. If you meant to bring \`${branch}\` into \`main\`, press Start over, then run \`git switch main\` and \`git merge ${branch}\`.`,
+      mergeDirection: (branch: string) =>
+        `You're on \`${branch}\`, so this brings \`main\` into \`${branch}\`. If you meant to bring \`${branch}\` into \`main\`, run \`git switch main\` first, then \`git merge ${branch}\`.`,
+      mergeCurrentBranch: (branch: string) =>
+        `You're already on \`${branch}\`, so there's nothing to bring in. Move to the branch that should receive the work first, like \`git switch main\`, then run \`git merge ${branch}\`.`,
+      unresolvedConflict: 'A file still has a conflict. Fix it, stage it with `git add <file>` to mark it settled, then commit.',
+      uncommittedBeforeMerge: "You have changes that aren't committed yet. Commit or stash them first, then run the command again.",
+      copiedPrompt: "Leave out the `$` at the start. It's the prompt, not part of the command.",
+      copiedFullPrompt: (command: string) =>
+        `Leave out the prompt, everything up to and including the \`$\`. Type only the command: \`${command}\``,
+      copiedNote: (command: string) => `Leave out the note after \`#\`. Copy only the command itself: \`${command}\``,
+      curlyQuotes: (straightened: string) =>
+        `Those are curly quotes, which the terminal doesn't treat as quotes. Type straight quotes instead: \`${straightened}\``,
+      unquotedMessage: (suggestion: string) =>
+        `Put the message in quotes, so Git reads it as one message: \`${suggestion}\``,
+      unreadableName: (suggestion: string) =>
+        `Git couldn't read that as one name, so nothing was saved. Put your full name in quotes: \`${suggestion}\``,
+      firstWordOfName: (firstWord: string, suggestion: string) =>
+        `Only the first word, \`${firstWord}\`, was saved as your name. Put your full name in quotes: \`${suggestion}\``,
+      missingConfigScope: (suggestion: string) => `Add \`--global\` so the setting covers every project: \`${suggestion}\``,
+      noPushDestination:
+        "This project isn't connected to GitHub yet, so there's nowhere to send it. Connect it first with `git remote add origin <url>`, using the address of your GitHub repository, then try again.",
+      unreachableOrigin:
+        "Git can't reach `origin`. Run `git remote -v`: if nothing is listed, add it with `git remote add origin <url>`. If the address looks wrong, press Start over and add the right one.",
+      remoteExists: '`origin` already has an address. Check it with `git remote -v`. If it looks wrong, press Start over and add the right one.',
+      cloneRepositoryNotFound: "Git couldn't find a repository at that address. Check it for typos, then run `git clone` again.",
+      remoteRepositoryNotFound:
+        "Git couldn't find a repository at that address. Check it for typos with `git remote -v`. If it's wrong, press Start over and add the right one.",
+      forcePush:
+        "That replaced GitHub's copy with yours, so any commits your teammates pushed are gone from it. Pull instead of forcing. If a goal can no longer be met, press Start over.",
+      cloneOwnerAndRepository: (name: string) =>
+        `Git needs the full address. Run \`gh repo clone ${name}\`, or \`git clone https://github.com/${name}.git\`.`,
+      cloneScheme: (address: string) => `A web address needs its start too: \`git clone https://${address}\``,
+      cdWithoutSpace: 'Put a space between `cd` and `..`: `cd ..`',
+      windowsDir: '`dir` is a Windows command. In this terminal, `ls` lists a folder.',
+      windowsCls: '`cls` is a Windows command. In this terminal, `clear` empties the screen.',
+      lowercaseCommand: (command: string) => `Commands are lowercase. Try \`${command}\`.`,
+      insideFolder: (name: string, holder: string) => `\`${name}\` is inside \`${holder}\`. Run \`cd ${holder}\` first.`,
+      noSuchName: "Nothing in this folder has that exact name. Run `ls` to see what's here, and type names exactly, capitals included.",
+      untrackedProject: "This folder isn't a Git repository yet. If it's your project, run `git init` here to start one.",
+      notARepository:
+        "This folder isn't a Git repository. Run `ls`: if your project is a folder here, `cd` into it first. Run `git init` only to start a brand-new repository.",
     },
   },
 } as const

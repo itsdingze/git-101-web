@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from 'react'
 import type { DiffBlock } from '@/types'
+import { messages } from '@/messages/en'
 import { useScrollableRegion } from '@/components/lesson/reading/hooks/useScrollableRegion'
 import { WindowFrame } from '@/components/lesson/window/WindowFrame'
 import { editorLanguage } from './model/editorLanguage'
@@ -20,7 +21,7 @@ export function CodeEditor({ files }: CodeEditorProps) {
   const fileNames = files.map((each) => each.fileName)
   const tabIds = fileNames.map((_, index) => `${baseId}-tab-${index}`)
   const panelId = `${baseId}-panel`
-  const { ref, regionProps } = useScrollableRegion<HTMLDivElement>(`${file?.fileName ?? ''} contents`, selected)
+  const { ref, regionProps } = useScrollableRegion<HTMLDivElement>(messages.editor.contents(file?.fileName ?? ''), selected)
 
   useEffect(() => {
     ref.current?.scrollTo({ top: 0, left: 0 })
