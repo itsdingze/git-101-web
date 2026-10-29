@@ -67,6 +67,8 @@ function readTabs(reader: LineReader): TabsBlock {
 function parseTabContentBlock(reader: LineReader): TabContent {
   const line = reader.peek()
   if (line.startsWith(TABS)) throw reader.error('tabs cannot sit inside other tabs')
+  if (line === TABS_END) throw reader.error('this ::: closes a tab group, but no :::tabs block is open')
+  if (line.startsWith(TAB)) throw reader.error('::tab only belongs inside a :::tabs block')
   if (line.startsWith(FENCE)) return readCode(reader)
   if (BULLET.test(line)) return { type: 'list', items: readList(reader, BULLET) }
   if (NUMBER.test(line)) return { type: 'list', ordered: true, items: readList(reader, NUMBER) }

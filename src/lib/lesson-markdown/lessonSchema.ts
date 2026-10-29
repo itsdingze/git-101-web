@@ -8,19 +8,13 @@ import type {
   VisualizationType,
 } from '@/types'
 import type { LockableCommand } from '@/lib/git-sim/input/commandLocks'
-import type { GoalCheck } from '@/lib/git-sim/goals/goalChecks'
 import type { SandboxSeed } from '@/lib/git-sim/createSandbox'
 import { playGitGraph } from './playGitGraph'
-import { isRecord } from './isRecord'
+import { goalCheckSchema } from './goalCheckSchema'
 
 const text = z.string().min(1)
 const texts = z.array(text)
 const reasons = z.record(z.string(), text)
-
-const goalCheck = z.custom<GoalCheck>(
-  (value) => isRecord(value) && typeof value.kind === 'string',
-  'needs a check with a kind',
-)
 
 const seedTarget = z.enum(['local', 'remote']).optional()
 
@@ -49,6 +43,20 @@ const seed = z.strictObject({
   setup: seedSteps.optional(),
 }) satisfies z.ZodType<SandboxSeed>
 
+function countOf(blocks: readonly string[], block: string): number {
+  return blocks.filter((candidate) => candidate === block).length
+}
+
+function unavailableBlock(answer: readonly string[], available: readonly string[]): string | null {
+  for (const block of new Set(answer)) {
+    const offered = countOf(available, block)
+    const used = countOf(answer, block)
+    if (offered === 0) return `uses "${block}", which availableBlocks does not offer`
+    if (used > offered) return `uses "${block}" ${used} times, but availableBlocks offers it ${offered} time${offered === 1 ? '' : 's'}`
+  }
+  return null
+}
+
 export const frontmatterSchema = z.strictObject({
   id: z.number().int().min(0),
   title: text,
@@ -73,42 +81,85 @@ export const visualizationSchemas = {
 } satisfies { [Kind in VisualizationType]: z.ZodType<Extract<Visualization, { kind: Kind }>> }
 
 export const exerciseSchemas = {
-  quiz: z.strictObject({
-    type: z.literal('quiz'),
-    id: text,
-    question: text,
-    options: z.array(z.strictObject({ text, whyWrong: text.optional() })).min(2),
-    correctIndex: z.number().int().min(0),
-    explanation: text,
-  }) satisfies z.ZodType<QuizStep>,
+  quiz: z
+    .strictObject({
+      type: z.literal('quiz'),
+      id: text,
+      question: text,
+      options: z.array(z.strictObject({ text, whyWrong: text.optional() })).min(2),
+      correctIndex: z.number().int().min(0),
+      explanation: text,
+    })
+    .superRefine((quiz, ctx) => {
+      if (quiz.correctIndex < quiz.options.length) return
+      ctx.addIssue({
+        code: 'custom',
+        path: ['correctIndex'],
+        message: `must point at one of the ${quiz.options.length} options`,
+      })
+    }) satisfies z.ZodType<QuizStep>,
 
-  'block-exercise': z.strictObject({
-    type: z.literal('block-exercise'),
-    id: text,
-    prompt: text,
-    availableBlocks: texts,
-    correctAnswer: texts,
-    acceptableAnswers: z.array(texts).optional(),
-    decoyReasons: reasons.optional(),
-    missingReasons: reasons.optional(),
-    hints: texts.optional(),
-  }) satisfies z.ZodType<BlockExerciseStep>,
+  'block-exercise': z
+    .strictObject({
+      type: z.literal('block-exercise'),
+      id: text,
+      prompt: text,
+      availableBlocks: texts,
+      correctAnswer: texts,
+      acceptableAnswers: z.array(texts).optional(),
+      decoyReasons: reasons.optional(),
+      missingReasons: reasons.optional(),
+      hints: texts.optional(),
+    })
+    .superRefine((exercise, ctx) => {
+      const answers: [PropertyKey[], readonly string[]][] = [
+        [['correctAnswer'], exercise.correctAnswer],
+        ...(exercise.acceptableAnswers ?? []).map((answer, index): [PropertyKey[], readonly string[]] => [
+          ['acceptableAnswers', index],
+          answer,
+        ]),
+      ]
+      for (const [path, answer] of answers) {
+        const problem = unavailableBlock(answer, exercise.availableBlocks)
+        if (problem) ctx.addIssue({ code: 'custom', path, message: problem })
+      }
+    }) satisfies z.ZodType<BlockExerciseStep>,
 
-  'sandbox-exercise': z.strictObject({
-    type: z.literal('sandbox-exercise'),
-    id: text,
-    title: text,
-    brief: text,
-    mode: z.enum(['goal', 'guided']),
-    seed,
-    goals: z
-      .array(z.strictObject({ id: text, label: text, narration: text.optional(), hints: texts.optional(), check: goalCheck }))
-      .min(1),
-    detours: z
-      .array(z.strictObject({ id: text, untilGoal: text.optional(), check: goalCheck, message: text }))
-      .optional(),
-    completionMessage: text.optional(),
-  }) satisfies z.ZodType<SandboxExerciseStep>,
+  'sandbox-exercise': z
+    .strictObject({
+      type: z.literal('sandbox-exercise'),
+      id: text,
+      title: text,
+      brief: text,
+      mode: z.enum(['goal', 'guided']),
+      seed,
+      goals: z
+        .array(
+          z.strictObject({ id: text, label: text, narration: text.optional(), hints: texts.optional(), check: goalCheckSchema }),
+        )
+        .min(1),
+      detours: z
+        .array(z.strictObject({ id: text, untilGoal: text.optional(), check: goalCheckSchema, message: text }))
+        .optional(),
+      completionMessage: text.optional(),
+    })
+    .superRefine((exercise, ctx) => {
+      const goalIds = new Set<string>()
+      exercise.goals.forEach((goal, index) => {
+        if (goalIds.has(goal.id)) {
+          ctx.addIssue({ code: 'custom', path: ['goals', index, 'id'], message: `"${goal.id}" is already used by another goal` })
+        }
+        goalIds.add(goal.id)
+      })
+      exercise.detours?.forEach((detour, index) => {
+        if (detour.untilGoal === undefined || goalIds.has(detour.untilGoal)) return
+        ctx.addIssue({
+          code: 'custom',
+          path: ['detours', index, 'untilGoal'],
+          message: `no goal has the id "${detour.untilGoal}"`,
+        })
+      })
+    }) satisfies z.ZodType<SandboxExerciseStep>,
 }
 
 export type ExerciseType = keyof typeof exerciseSchemas

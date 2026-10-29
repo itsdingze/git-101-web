@@ -35,6 +35,14 @@ describe('parseLesson', () => {
     expect(extra).toThrow(/^lesson\.md:8: .*extra/)
   })
 
+  it('rejects a stray ::: under a heading with its line instead of hanging', () => {
+    expect(() => lesson('## A {#a}', '', 'Text.', ':::')).toThrow(/^lesson\.md:11: .*no :::tabs block is open/)
+  })
+
+  it('rejects a stray ::tab line under a heading with its line instead of hanging', () => {
+    expect(() => lesson('## A {#a}', '', '::tab macOS')).toThrow(/^lesson\.md:10: .*::tab only belongs inside a :::tabs block/)
+  })
+
   it('rejects duplicate step ids instead of rendering duplicated lesson sections', () => {
     expect(() => lesson(
       '## The prompt {#the-prompt}',
@@ -492,6 +500,90 @@ describe('parseLesson', () => {
       lesson('## Q {#q}', '', 'Text.', '', '```quiz', 'id: q1', 'question: Why?', 'options: [{ text: A }, { text: B }]', 'explanation: Because.', '```')
 
     expect(broken).toThrow(/^lesson\.md:12: quiz "q1": correctIndex/)
+  })
+
+  it('rejects a quiz whose correctIndex points past its options', () => {
+    const broken = () =>
+      lesson('## Q {#q}', '', 'Text.', '', '```quiz', 'id: q1', 'question: Why?', 'options: [{ text: A }, { text: B }]', 'correctIndex: 7', 'explanation: Because.', '```')
+
+    expect(broken).toThrow(/^lesson\.md:12: quiz "q1": correctIndex: must point at one of the 2 options/)
+  })
+
+  it('rejects a block exercise whose answer needs a block it does not offer', () => {
+    const broken = () =>
+      lesson(
+        '## Q {#q}', '', 'Text.', '',
+        '```block-exercise', 'id: b1', 'prompt: Build it', 'availableBlocks: [git, add]', 'correctAnswer: [git, commit]', '```',
+      )
+
+    expect(broken).toThrow(/^lesson\.md:12: block-exercise "b1": correctAnswer: uses "commit", which availableBlocks does not offer/)
+  })
+
+  it('rejects an acceptable answer that needs a block more times than it is offered', () => {
+    const broken = () =>
+      lesson(
+        '## Q {#q}', '', 'Text.', '',
+        '```block-exercise', 'id: b1', 'prompt: Build it', 'availableBlocks: [git, add, .]', 'correctAnswer: [git, add, .]',
+        'acceptableAnswers: [[git, add, ., .]]', '```',
+      )
+
+    expect(broken).toThrow(/^lesson\.md:12: block-exercise "b1": acceptableAnswers\.0: uses "\." 2 times, but availableBlocks offers it 1 time/)
+  })
+
+  describe('sandbox exercise goals', () => {
+    function sandbox(...yaml: string[]) {
+      return () =>
+        lesson(
+          '## Q {#q}', '', 'Text.', '',
+          '```sandbox-exercise', 'id: s1', 'title: Try it', 'brief: Do it', 'mode: goal', 'seed: { dir: /project }',
+          ...yaml,
+          '```',
+        )
+    }
+
+    it('rejects a goal check whose kind is misspelled, since it could never pass', () => {
+      const broken = sandbox('goals:', '  - { id: g1, label: Make it, check: { kind: branch-exsts, name: x } }')
+
+      expect(broken).toThrow(/^lesson\.md:12: sandbox-exercise "s1": goals\.0\.check/)
+    })
+
+    it('rejects a goal check nested inside all-of that is missing its fields', () => {
+      const broken = sandbox('goals:', '  - { id: g1, label: Make it, check: { kind: all-of, checks: [{ kind: branch-exists }] } }')
+
+      expect(broken).toThrow(/^lesson\.md:12: sandbox-exercise "s1": goals\.0\.check\.checks\.0\.name/)
+    })
+
+    it('rejects two goals that share an id', () => {
+      const broken = sandbox(
+        'goals:',
+        '  - { id: g1, label: One, check: { kind: repo-initialized } }',
+        '  - { id: g1, label: Two, check: { kind: working-tree-clean } }',
+      )
+
+      expect(broken).toThrow(/^lesson\.md:12: sandbox-exercise "s1": goals\.1\.id: "g1" is already used by another goal/)
+    })
+
+    it('rejects a detour that waits for a goal the exercise does not have', () => {
+      const broken = sandbox(
+        'goals:',
+        '  - { id: g1, label: One, check: { kind: repo-initialized } }',
+        'detours:',
+        '  - { id: d1, untilGoal: nope, check: { kind: working-tree-clean }, message: Not yet }',
+      )
+
+      expect(broken).toThrow(/^lesson\.md:12: sandbox-exercise "s1": detours\.0\.untilGoal: no goal has the id "nope"/)
+    })
+
+    it('accepts well-formed goals and detours', () => {
+      const valid = sandbox(
+        'goals:',
+        '  - { id: g1, label: One, check: { kind: not, check: { kind: branch-exists, name: main } } }',
+        'detours:',
+        '  - { id: d1, untilGoal: g1, check: { kind: last-command, startsWith: git add }, message: Not yet }',
+      )
+
+      expect(valid).not.toThrow()
+    })
   })
 
   it('rejects text that sits outside any step', () => {
