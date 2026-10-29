@@ -37,7 +37,9 @@ describe('help', () => {
   })
 
   it('describes each command in plain words', async () => {
-    expect(await helpText()).toContain("  restore   throw away changes you haven't committed")
+    const text = await helpText()
+    expect(text).toContain('  restore   discard unstaged edits, or unstage with --staged')
+    expect(text).toContain("  diff      show changed lines you haven't staged")
   })
 
   it('lists the gh commands once gh is unlocked', async () => {

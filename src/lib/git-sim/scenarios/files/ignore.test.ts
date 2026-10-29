@@ -157,6 +157,31 @@ describe('git add with a .gitignore', () => {
     )
   })
 
+  it('stages the other paths and lists every ignored one, like git add * does', async () => {
+    const sandbox = await createSandbox(IGNORED_SEED)
+
+    expect(await textOf(sandbox, 'git add app.js build debug.log')).toBe(
+      [
+        'The following paths are ignored by one of your .gitignore files:',
+        'build',
+        'debug.log',
+        'hint: Use -f if you really want to add them.',
+        'hint: Turn this message off by running',
+        'hint: "git config advice.addIgnoredFile false"',
+      ].join('\n'),
+    )
+    expect(await textOf(sandbox, 'git status --short')).toContain('A  app.js')
+  })
+
+  it('stages nothing when one path matches no file at all', async () => {
+    const sandbox = await createSandbox(IGNORED_SEED)
+
+    expect(await textOf(sandbox, 'git add app.js debug.log nowhere.txt')).toBe(
+      "fatal: pathspec 'nowhere.txt' did not match any files",
+    )
+    expect(await textOf(sandbox, 'git status --short')).not.toContain('A  app.js')
+  })
+
   it('refuses an ignored folder without -f', async () => {
     const sandbox = await createSandbox(IGNORED_SEED)
 

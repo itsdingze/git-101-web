@@ -9,6 +9,15 @@ import type { CommandContext, CommandOutput } from './types'
 
 const GIT_VERSION = 'git version 2.43.0'
 
+const UNSIMULATED_NEXT_STEPS: Readonly<Record<string, string>> = {
+  checkout: 'Use git switch <branch> to change branches, or git restore <file> to discard edits.',
+}
+
+function unsimulatedCommand(name: string): CommandOutput[] {
+  const nextStep = isOwnKey(UNSIMULATED_NEXT_STEPS, name) ? ` ${UNSIMULATED_NEXT_STEPS[name]}` : ''
+  return refuse(`git ${name} is a real Git command, but this practice sandbox doesn't simulate it.${nextStep}`)
+}
+
 function unknownCommand(name: string): CommandOutput[] {
   const suggestion = suggestCommand(name, [
     ...Object.keys(GIT_COMMANDS),
@@ -38,11 +47,7 @@ export async function runGit(
 
   const command = isOwnKey(GIT_COMMANDS, name) ? GIT_COMMANDS[name] : undefined
   if (!command) {
-    if (UNSIMULATED_GIT_COMMANDS.includes(name)) {
-      return refuse(
-        `git ${name} is a real Git command, but this practice sandbox doesn't simulate it.`,
-      )
-    }
+    if (UNSIMULATED_GIT_COMMANDS.includes(name)) return unsimulatedCommand(name)
     return unknownCommand(name)
   }
 

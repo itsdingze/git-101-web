@@ -12,27 +12,74 @@ import { createCommitGraph, topoOrderCommits } from '@/lib/git-sim/history/commi
 import { resolveCommitish } from '@/lib/git-sim/history/resolveCommitish'
 import { decorationLabel, readDecorations, type RefDecorations } from '@/lib/git-sim/history/decorations'
 import { fullCommitLines } from '@/lib/git-sim/history/fullCommitLines'
+import { commitsTouching } from '@/lib/git-sim/history/touchedPaths'
+import { matchAny, repoPrefix } from '@/lib/git-sim/fs/pathspec'
+import { pathExists } from '@/lib/git-sim/fs/fileOperations'
+import { resolvePath } from '@/lib/git-sim/fs/paths'
 import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
 
 const DEFAULT_DEPTH = 200
 const VALUE_FLAGS = ['-n', '--max-count', '--grep', '--author']
+
+type LogOperands = { included: string[]; excluded: string[]; paths: string[] }
 
 function countFlag(args: readonly string[]): number | undefined {
   const shorthand = args.find((arg) => /^-\d+$/.test(arg))
   if (shorthand) return Number(shorthand.slice(1))
 
   const value = flagValue(args, '-n', '--max-count')
-  return value === undefined ? undefined : Number(value)
+  if (value === undefined) return undefined
+  if (!/^[+-]?\d+$/.test(value)) throw new SandboxError(`fatal: '${value}': not an integer`)
+  return Number(value)
 }
 
-async function startingRef(
-  ctx: CommandContext,
-  dir: string,
-  args: readonly string[],
-): Promise<string> {
-  const spec = operandsOf(args, VALUE_FLAGS)[0]
-  if (!spec) return 'HEAD'
-  return (await resolveCommitish(ctx, dir, spec)) ?? spec
+function ambiguousArgument(spec: string): SandboxError {
+  return new SandboxError(
+    [
+      `fatal: ambiguous argument '${spec}': unknown revision or path not in the working tree.`,
+      "Use '--' to separate paths from revisions, like this:",
+      "'git <command> [<revision>...] -- [<file>...]'",
+    ].join('\n'),
+  )
+}
+
+async function logOperands(ctx: CommandContext, dir: string, args: readonly string[]): Promise<LogOperands> {
+  const separator = args.indexOf('--')
+  const leading = operandsOf(separator === -1 ? args : args.slice(0, separator), VALUE_FLAGS)
+  const named = separator === -1 ? [] : args.slice(separator + 1)
+
+  const operands: LogOperands = { included: [], excluded: [], paths: [] }
+  for (const operand of leading) {
+    if (operands.paths.length === 0 && (await addRevision(ctx, dir, operand, operands))) continue
+    if (!(await pathExists(ctx.fs, resolvePath(operand, ctx.cwd, ctx.root)))) throw ambiguousArgument(operand)
+    operands.paths.push(operand)
+  }
+  return { ...operands, paths: [...operands.paths, ...named] }
+}
+
+async function addRevision(ctx: CommandContext, dir: string, operand: string, operands: LogOperands): Promise<boolean> {
+  const range = operand.includes('...') ? null : operand.split('..')
+  if (range?.length === 2) {
+    const [from = '', to = ''] = range
+    const excluded = await resolveCommitish(ctx, dir, from || 'HEAD')
+    const included = await resolveCommitish(ctx, dir, to || 'HEAD')
+    if (!excluded || !included) return false
+    operands.excluded.push(excluded)
+    operands.included.push(included)
+    return true
+  }
+  const oid = await resolveCommitish(ctx, dir, operand)
+  if (oid) operands.included.push(oid)
+  return oid !== null
+}
+
+async function reachableOids(ctx: CommandContext, dir: string, refs: readonly string[]): Promise<Map<string, ReadCommitResult>> {
+  const byOid = new Map<string, ReadCommitResult>()
+  for (const ref of refs) {
+    const entries = await git.log({ fs: gitFs(ctx.fs), dir, ref, depth: DEFAULT_DEPTH })
+    for (const entry of entries) byOid.set(entry.oid, entry)
+  }
+  return byOid
 }
 
 async function allRefs(ctx: CommandContext, dir: string): Promise<string[]> {
@@ -49,16 +96,14 @@ async function collectCommits(
   ctx: CommandContext,
   dir: string,
   args: readonly string[],
+  { included, excluded }: LogOperands,
 ): Promise<ReadCommitResult[]> {
-  const refs = hasFlag(args, '--all') ? await allRefs(ctx, dir) : [await startingRef(ctx, dir, args)]
+  const starts = included.length > 0 ? included : ['HEAD']
+  const refs = hasFlag(args, '--all') ? await allRefs(ctx, dir) : starts
+  const hidden = await reachableOids(ctx, dir, excluded)
+  const shown = [...(await reachableOids(ctx, dir, refs)).values()].filter((entry) => !hidden.has(entry.oid))
 
-  const byOid = new Map<string, ReadCommitResult>()
-  for (const ref of refs) {
-    const entries = await git.log({ fs: gitFs(ctx.fs), dir, ref, depth: DEFAULT_DEPTH })
-    for (const entry of entries) byOid.set(entry.oid, entry)
-  }
-
-  return [...byOid.values()].sort(
+  return shown.sort(
     (a, b) => b.commit.committer.timestamp - a.commit.committer.timestamp,
   )
 }
@@ -129,13 +174,18 @@ export const log: GitSubcommand = {
   run: async (args, ctx, dir) => {
     const unknown = firstUnknownOption(args, LOG_OPTIONS)
     if (unknown) throw new SandboxError(`fatal: unrecognized argument: ${unknown}`)
+    countFlag(args)
 
     if (!(await headOid(ctx, dir))) {
       const branch = (await currentBranch(ctx, dir)) ?? 'main'
       throw new SandboxError(`fatal: your current branch '${branch}' does not have any commits yet`)
     }
 
-    const commits = applyFilters(await collectCommits(ctx, dir, args), args)
+    const operands = await logOperands(ctx, dir, args)
+    const { paths } = operands
+    const history = await collectCommits(ctx, dir, args, operands)
+    const touching = paths.length === 0 ? history : await commitsTouching(ctx, dir, history, matchAny(paths, repoPrefix(ctx, dir)))
+    const commits = applyFilters(touching, args)
     if (commits.length === 0) return silent
 
     const decorations = hasFlag(args, '--no-decorate')

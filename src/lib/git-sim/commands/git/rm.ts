@@ -5,7 +5,7 @@ import { SandboxError } from '@/lib/git-sim/errors'
 import { say, silent } from '@/lib/git-sim/output'
 import { joinPath } from '@/lib/git-sim/fs/paths'
 import { isDirectory, pathExists, removeTree } from '@/lib/git-sim/fs/fileOperations'
-import { repoPrefix, specMatcher } from '@/lib/git-sim/fs/pathspec'
+import { repoPrefix, specMatcher, specTarget } from '@/lib/git-sim/fs/pathspec'
 import { readStatusRows } from '@/lib/git-sim/working-tree/workingTree'
 import { readUnmergedEntries } from '@/lib/git-sim/working-tree/indexStages'
 import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
@@ -51,11 +51,6 @@ async function refuseChangedFiles(
   if (reports.length > 0) throw new SandboxError(reports.join('\n'))
 }
 
-function folderOf(spec: string, prefix: string): string {
-  const named = spec.replace(/^\.\/?/, '').replace(/\/+$/, '')
-  return [prefix, named].filter(Boolean).join('/')
-}
-
 function isInsideFolder(path: string, folder: string): boolean {
   return folder === '' || path.startsWith(`${folder}/`)
 }
@@ -78,7 +73,8 @@ export const rm: GitSubcommand = {
       if (hits.length === 0) {
         throw new SandboxError(`fatal: pathspec '${spec}' did not match any files`)
       }
-      if (!recursive && hits.some((hit) => isInsideFolder(hit, folderOf(spec, prefix)))) {
+      const folder = specTarget(spec, prefix) ?? ''
+      if (!recursive && hits.some((hit) => isInsideFolder(hit, folder))) {
         throw new SandboxError(`fatal: not removing '${spec}' recursively without -r`)
       }
       removed.push(...hits)

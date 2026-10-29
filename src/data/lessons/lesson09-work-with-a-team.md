@@ -74,6 +74,7 @@ To start a branch from the latest shared work, first update local `main` with `g
 ~/projects/todo-app (main) $ git switch main
 M	app.py  # the prepared export change
 Already on 'main'
+Your branch is up to date with 'origin/main'.
 ~/projects/todo-app (main) $ git pull
 Already up to date.  # nobody has pushed anything new
 ~/projects/todo-app (main) $
@@ -102,7 +103,7 @@ diff --git a/app.py b/app.py
 index dbd30f3..667c702 100644
 --- a/app.py
 +++ b/app.py
-@@ -21,3 +21,7 @@
+@@ -21,3 +21,7 @@ def sort_by_priority() -> None:
  def sort_by_due_date() -> None:
      # Sort tasks by due date.
      pass

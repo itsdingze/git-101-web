@@ -3,31 +3,13 @@ import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
 import { flagValue, hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { assertNoBranchNameClash } from '@/lib/git-sim/branch/branchNameClash'
+import { listBranches } from '@/lib/git-sim/branch/branchListing'
 import { say, stderr } from '@/lib/git-sim/output'
 import { currentBranch, headOid, refOid, shortOid } from '@/lib/git-sim/history/repository'
 import { resolveCommitish } from '@/lib/git-sim/history/resolveCommitish'
 import type { CommandContext, CommandOutput, GitSubcommand } from '@/lib/git-sim/types'
 
 const DELETE_FLAGS = ['-d', '--delete', '-D']
-
-async function listBranches(
-  ctx: CommandContext,
-  dir: string,
-  includeRemotes: boolean,
-): Promise<CommandOutput[]> {
-  const branch = await currentBranch(ctx, dir)
-  const locals = await git.listBranches({ fs: gitFs(ctx.fs), dir })
-  const lines = locals.map((name) => (name === branch ? `* ${name}` : `  ${name}`))
-
-  if (includeRemotes) {
-    for (const { remote } of await git.listRemotes({ fs: gitFs(ctx.fs), dir })) {
-      const names = await git.listBranches({ fs: gitFs(ctx.fs), dir, remote })
-      lines.push(...names.map((name) => `  remotes/${remote}/${name}`))
-    }
-  }
-
-  return say(lines.join('\n'))
-}
 
 async function startPointOid(
   ctx: CommandContext,
@@ -104,7 +86,7 @@ export const branch: GitSubcommand = {
     if (hasFlag(args, ...DELETE_FLAGS)) throw new SandboxError('fatal: branch name required')
 
     const [name, startPoint] = operandsOf(args)
-    if (!name) return listBranches(ctx, dir, hasFlag(args, '-a', '--all', '-r', '--remotes'))
+    if (!name) return listBranches(ctx, dir, args)
 
     if (await refOid(ctx, dir, `refs/heads/${name}`)) {
       throw new SandboxError(`fatal: a branch named '${name}' already exists`)

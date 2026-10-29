@@ -2,6 +2,8 @@ import { structuredPatch } from 'diff'
 import git from 'isomorphic-git'
 
 const NULL_OID = '0000000'
+const FUNCTION_LINE = /^[A-Za-z_$]/
+const FUNCTION_CONTEXT_WIDTH = 80
 
 async function shortHash(text: string | undefined): Promise<string> {
   if (text === undefined) return NULL_OID
@@ -14,10 +16,19 @@ function hunkRange(start: number, count: number): string {
   return count === 1 ? `${start}` : `${start},${count}`
 }
 
+function functionContext(oldLines: readonly string[], oldStart: number): string {
+  for (let index = oldStart - 2; index >= 0; index -= 1) {
+    const line = oldLines[index] ?? ''
+    if (FUNCTION_LINE.test(line)) return ` ${line.slice(0, FUNCTION_CONTEXT_WIDTH).trimEnd()}`
+  }
+  return ''
+}
+
 function hunkLines(before: string, after: string, path: string): string[] {
   const patch = structuredPatch(path, path, before, after, '', '', { context: 3 })
+  const oldLines = before.split('\n')
   return patch.hunks.flatMap((hunk) => [
-    `@@ -${hunkRange(hunk.oldStart, hunk.oldLines)} +${hunkRange(hunk.newStart, hunk.newLines)} @@`,
+    `@@ -${hunkRange(hunk.oldStart, hunk.oldLines)} +${hunkRange(hunk.newStart, hunk.newLines)} @@${functionContext(oldLines, hunk.oldStart)}`,
     ...hunk.lines,
   ])
 }

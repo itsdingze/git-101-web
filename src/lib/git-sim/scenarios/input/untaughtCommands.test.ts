@@ -12,7 +12,21 @@ describe('the git commands the simulator runs', () => {
     expect(Object.keys(GIT_COMMANDS).sort()).toEqual([...COURSE_COMMANDS].sort())
   })
 
-  it.each(['checkout', 'fetch', 'reflog', 'reset', 'revert'])(
+  it('points git checkout to switch and restore', async () => {
+    const sandbox = await createSandbox({ dir: 'todo-app', setup: [{ run: 'git init' }] })
+
+    const result = await sandbox.run('git checkout main')
+
+    expect(result.outputs).toEqual([
+      {
+        stream: 'stderr',
+        text: "git checkout is a real Git command, but this practice sandbox doesn't simulate it. Use git switch <branch> to change branches, or git restore <file> to discard edits.",
+        prose: true,
+      },
+    ])
+  })
+
+  it.each(['fetch', 'reflog', 'reset', 'revert'])(
     'call git %s a real command this sandbox does not simulate',
     async (name) => {
       const sandbox = await createSandbox({ dir: 'todo-app', setup: [{ run: 'git init' }] })

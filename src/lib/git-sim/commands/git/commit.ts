@@ -9,7 +9,7 @@ import { formatCommitSummary } from '@/lib/git-sim/history/commitSummary'
 import { readCommitFilesOrEmpty, readIndexFiles } from '@/lib/git-sim/working-tree/treeContents'
 import { readWorkingTree } from '@/lib/git-sim/working-tree/workingTree'
 import { endMerge, readMergeInProgress } from '@/lib/git-sim/merge/mergeInProgress'
-import { repoPrefix, specMatcher } from '@/lib/git-sim/fs/pathspec'
+import { refuseOutsideRepository, repoPrefix, specMatcher } from '@/lib/git-sim/fs/pathspec'
 import { joinPath } from '@/lib/git-sim/fs/paths'
 import { pathExists } from '@/lib/git-sim/fs/fileOperations'
 import { formatStatus } from '@/lib/git-sim/working-tree/longStatus'
@@ -86,7 +86,8 @@ async function recordCommit(
 
   try {
     const tree = await readWorkingTree(ctx, dir)
-    if (!merge && tree.staged.length === 0) throw new SandboxError(await formatStatus(ctx, dir))
+    const allowEmpty = hasFlag(args, '--allow-empty')
+    if (!merge && !allowEmpty && tree.staged.length === 0) throw new SandboxError(await formatStatus(ctx, dir))
 
     const base = await headOid(ctx, dir)
     const joined = merge && base ? [base, merge.theirs] : undefined
@@ -155,6 +156,7 @@ async function namedPaths(args: readonly string[], ctx: CommandContext, dir: str
   const prefix = repoPrefix(ctx, dir)
   const matched = new Set<string>()
   for (const spec of specs) {
+    refuseOutsideRepository(spec, prefix, dir)
     const hits = known.filter(specMatcher(spec, prefix))
     if (hits.length === 0) {
       throw new SandboxError(`error: pathspec '${spec}' did not match any file(s) known to git`)
@@ -214,6 +216,9 @@ export const commit: GitSubcommand = {
 
 async function commitOrAmend(args: readonly string[], ctx: CommandContext, dir: string): Promise<CommandOutput[]> {
   if (!hasFlag(args, '--amend')) return recordCommit(args, ctx, dir)
+  if (await readMergeInProgress(ctx, dir)) {
+    throw new SandboxError('fatal: You are in the middle of a merge -- cannot amend.')
+  }
 
   for (const path of await namedPaths(args, ctx, dir)) {
     await git.add({ fs: gitFs(ctx.fs), dir, filepath: path, force: true })

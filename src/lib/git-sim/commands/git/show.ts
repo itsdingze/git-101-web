@@ -2,9 +2,10 @@ import git from 'isomorphic-git'
 import type { ReadCommitResult } from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
 import { SandboxError } from '@/lib/git-sim/errors'
-import { operandsOf } from '@/lib/git-sim/input/parseArgs'
+import { hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { say } from '@/lib/git-sim/output'
 import { formatFileDiff } from '@/lib/git-sim/diff/unifiedDiff'
+import { compareTrees, formatDiffStat } from '@/lib/git-sim/diff/diffStat'
 import { readCommitFiles } from '@/lib/git-sim/working-tree/treeContents'
 import { currentBranch, headOid } from '@/lib/git-sim/history/repository'
 import { resolveCommitish } from '@/lib/git-sim/history/resolveCommitish'
@@ -27,12 +28,18 @@ async function requireCommit(ctx: CommandContext, dir: string, spec: string): Pr
   return git.readCommit({ fs: gitFs(ctx.fs), dir, oid })
 }
 
-async function changedFileDiffs(ctx: CommandContext, dir: string, entry: ReadCommitResult): Promise<string[]> {
+async function changeLines(
+  ctx: CommandContext,
+  dir: string,
+  entry: ReadCommitResult,
+  statOnly: boolean,
+): Promise<string[]> {
   const [parent, mergedParent] = entry.commit.parent
-  if (mergedParent) return []
+  if (mergedParent && !statOnly) return []
 
   const before = parent ? await readCommitFiles(ctx, dir, parent) : new Map<string, string>()
   const after = await readCommitFiles(ctx, dir, entry.oid)
+  if (statOnly) return [formatDiffStat(compareTrees(before, after))]
 
   const diffs: string[] = []
   for (const path of [...new Set([...before.keys(), ...after.keys()])].sort()) {
@@ -50,7 +57,7 @@ export const show: GitSubcommand = {
     return say(
       [
         ...fullCommitLines(entry, await readDecorations(ctx, dir)),
-        ...(await changedFileDiffs(ctx, dir, entry)),
+        ...(await changeLines(ctx, dir, entry, hasFlag(args, '--stat'))),
       ]
         .join('\n')
         .trimEnd(),

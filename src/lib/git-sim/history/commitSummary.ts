@@ -29,7 +29,7 @@ export async function formatCommitSummary(
     ...(recorded.showAuthorDate
       ? [` Date: ${formatGitDate(commit.author.timestamp, commit.author.timezoneOffset)}`]
       : []),
-    formatShortStat(deltas),
+    ...(deltas.length > 0 ? [formatShortStat(deltas)] : []),
     ...formatModeChanges(deltas),
   ].join('\n')
 }

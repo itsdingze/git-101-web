@@ -41,6 +41,35 @@ describe('git log against a revision', () => {
   })
 })
 
+describe('git log against several revisions', () => {
+  async function withSideBranch(): Promise<Sandbox> {
+    const sandbox = await createSandbox(SEED)
+    await sandbox.run('git switch -q -c side main~1')
+    await sandbox.run('git commit -q --allow-empty -m "Side work"')
+    await sandbox.run('git switch -q main')
+    return sandbox
+  }
+
+  function subjects(text: string): string[] {
+    return text.split('\n').map((line) => line.slice(8))
+  }
+
+  it('shows the history of both branches together', async () => {
+    const sandbox = await withSideBranch()
+
+    expect(subjects(await textOf(sandbox, 'git log --oneline --no-decorate main side')).sort()).toEqual(
+      ['Add alpha', 'Add beta', 'Add gamma', 'Side work'],
+    )
+  })
+
+  it('shows only what a range adds on top of its start', async () => {
+    const sandbox = await withSideBranch()
+
+    expect(subjects(await textOf(sandbox, 'git log --oneline --no-decorate main..side'))).toEqual(['Side work'])
+    expect(subjects(await textOf(sandbox, 'git log --oneline --no-decorate side..main'))).toEqual(['Add gamma'])
+  })
+})
+
 describe('git log flags that take a separate value', () => {
   it('limits the history with -n 1 and --max-count 1', async () => {
     const sandbox = await createSandbox(SEED)

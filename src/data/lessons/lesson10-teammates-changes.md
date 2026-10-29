@@ -118,7 +118,7 @@ diff --git a/app.py b/app.py
 index 6e4cec5..d3c9d05 100644
 --- a/app.py
 +++ b/app.py
-@@ -3,7 +3,7 @@
+@@ -3,7 +3,7 @@ def load_tasks() -> None:
      pass
 
  def show_tasks() -> None:

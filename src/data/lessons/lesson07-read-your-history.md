@@ -133,7 +133,7 @@ diff --git a/app.py b/app.py
 index bd00b1a..dbd30f3 100644
 --- a/app.py
 +++ b/app.py
-@@ -17,3 +17,7 @@
+@@ -17,3 +17,7 @@ def show_search() -> None:
  def sort_by_priority() -> None:
      # Sort tasks by priority.
      pass
@@ -160,7 +160,7 @@ diff --git a/app.py b/app.py
 index bd00b1a..dbd30f3 100644
 --- a/app.py
 +++ b/app.py
-@@ -17,3 +17,7 @@
+@@ -17,3 +17,7 @@ def show_search() -> None:
  def sort_by_priority() -> None:
      # Sort tasks by priority.
      pass
