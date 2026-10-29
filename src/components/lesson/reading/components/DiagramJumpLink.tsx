@@ -1,7 +1,7 @@
 import type { RefObject } from 'react'
 import { ArrowDown } from 'lucide-react'
 import { useReducedMotion } from 'framer-motion'
-import { FOCUS_RING } from '@/components/ui/focusRing'
+import { Button } from '@/components/ui/Button'
 import { messages } from '@/messages/en'
 
 interface DiagramJumpLinkProps {
@@ -16,13 +16,9 @@ export function DiagramJumpLink({ target }: DiagramJumpLinkProps) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={`inline-flex min-h-8 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-bg-secondary px-3 py-1 text-xs text-text-secondary hover:text-text-primary ${FOCUS_RING}`}
-    >
+    <Button variant="outlined" size="sm" onClick={handleClick}>
       <ArrowDown size={13} aria-hidden />
       {messages.reading.showDiagram}
-    </button>
+    </Button>
   )
 }

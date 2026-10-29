@@ -2,7 +2,8 @@ import { X } from 'lucide-react'
 import { useProgressStore } from '@/stores/progressStore'
 import { cheatsheet } from '@/data/cheatsheet'
 import { messages } from '@/messages/en'
-import { FOCUS_RING, FOCUS_RING_INSET } from '@/components/ui/focusRing'
+import { Button } from '@/components/ui/Button'
+import { FOCUS_RING_INSET } from '@/components/ui/focusRing'
 import { CheatsheetCategory } from './components/CheatsheetCategory'
 import { useModalDialog } from './hooks/useModalDialog'
 
@@ -28,16 +29,9 @@ export function CheatsheetModal({ onClose }: CheatsheetModalProps) {
           rounded-2xl border border-border bg-bg-primary shadow-xl"
       >
         <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border p-1.5">
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={messages.cheatsheet.close}
-            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg
-              text-text-muted transition-colors cursor-pointer
-              hover:bg-bg-secondary hover:text-text-primary ${FOCUS_RING}`}
-          >
+          <Button variant="text" size="icon" onClick={onClose} aria-label={messages.cheatsheet.close} className="shrink-0">
             <X size={18} />
-          </button>
+          </Button>
           <h2 id="cheatsheet-title" className="text-base font-semibold text-text-primary">
             {messages.cheatsheet.title}
           </h2>

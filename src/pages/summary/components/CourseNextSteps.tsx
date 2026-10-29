@@ -19,7 +19,13 @@ export function CourseNextSteps() {
           <BookOpen size={16} className="text-accent-green shrink-0 mt-0.5" aria-hidden />
           <span>
             {copy.lookUp}{' '}
-            <CheatsheetTrigger className={LINK_CLASS}>{copy.openCheatsheet}</CheatsheetTrigger>
+            <CheatsheetTrigger>
+              {(open) => (
+                <button type="button" onClick={open} aria-haspopup="dialog" className={`${LINK_CLASS} cursor-pointer`}>
+                  {copy.openCheatsheet}
+                </button>
+              )}
+            </CheatsheetTrigger>
           </span>
         </li>
         <li className="flex items-start gap-2.5">

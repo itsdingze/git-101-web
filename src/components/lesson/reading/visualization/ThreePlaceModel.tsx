@@ -80,14 +80,9 @@ export function ThreePlaceModel(data: ThreePlaceModelData) {
       <p className="text-xs text-text-muted leading-relaxed">{messages.reading.threePlaces.explanation}</p>
 
       {!atEnd ? (
-        <button
-          type="button"
-          onClick={next}
-          className={`w-full min-h-11 px-4 bg-bg-secondary hover:bg-bg-card border border-border rounded-lg text-sm font-mono text-text-primary cursor-pointer transition-colors
-            ${FOCUS_RING}`}
-        >
+        <Button variant="outlined" onClick={next} className="w-full font-mono">
           $ {commands[index]}
-        </button>
+        </Button>
       ) : (
         <div
           ref={doneRef}
