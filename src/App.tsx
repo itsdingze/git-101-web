@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
 import { Header } from './components/layout/Header'
 import { LessonFooter } from './components/layout/LessonFooter'
@@ -18,9 +17,7 @@ export function App() {
         </a>
         <Header />
         <main id="main-content" className="flex-1 w-full flex flex-col">
-          <Suspense fallback={null}>
-            <Outlet />
-          </Suspense>
+          <Outlet />
         </main>
         <LessonFooter />
       </div>
