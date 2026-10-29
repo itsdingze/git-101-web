@@ -13,7 +13,7 @@ export function InlineMarkdown({ value, id, className, as: Tag = 'p' }: InlineMa
     <Tag
       id={id}
       className={className}
-      // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- TRUSTED: static developer-authored lesson content from src/data/lessons/; never user input
+      // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- SAFE: inlineMarkdown escapes every & < > " ' in the input, including learner input echoed in coach tips, before adding its own tags, and links accept only http(s) or /downloads/*.zip addresses
       dangerouslySetInnerHTML={{ __html: inlineMarkdown(value) }}
     />
   )

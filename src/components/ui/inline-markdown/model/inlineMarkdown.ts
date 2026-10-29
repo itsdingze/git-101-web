@@ -18,14 +18,22 @@ function codeChip(code: string): string {
 }
 
 function escapeHtml(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/@/g, '&#64;')
 }
 
 export function inlineMarkdown(value: string): string {
   const parked: string[] = []
   const park = (html: string) => `@@PARK${parked.push(html) - 1}@@`
+  const unpark = (html: string): string => html.replace(PARKED, (_, index: string) => unpark(parked[Number(index)] ?? ''))
 
-  return escapeHtml(value)
+  const html = escapeHtml(value)
+    .replace(CODE, (_, code: string) => park(codeChip(code)))
     .replace(LINK, (_, text: string, href: string) => {
       if (href.startsWith('/downloads/')) {
         const url = `${import.meta.env.BASE_URL}${href.slice(1)}`
@@ -33,9 +41,8 @@ export function inlineMarkdown(value: string): string {
       }
       return park(`<a href="${href}" target="_blank" rel="noopener noreferrer" class="${LINK_CLASS}">${text}</a>`)
     })
-    .replace(CODE, (_, code: string) => park(codeChip(code)))
     .replace(BOLD, '<strong class="text-text-primary font-medium">$1</strong>')
     .replace(ITALIC, '$1<em class="italic">$2</em>')
     .replace(/\n/g, '<br />')
-    .replace(PARKED, (_, index: string) => parked[Number(index)] ?? '')
+  return unpark(html)
 }
