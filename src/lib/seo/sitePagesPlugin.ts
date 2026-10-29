@@ -1,11 +1,11 @@
 import type { Plugin } from 'vite'
 import type { RollupFsModule } from 'rollup'
 import { messages } from '../../messages/en'
-import { homeMeta, lessonMeta, notFoundMeta, type LessonSummary } from './pageMeta'
+import { homeMeta, lessonMeta, notFoundMeta, summaryMeta, type LessonSummary } from './pageMeta'
 import { renderHead } from './renderHead'
 import { renderShareImage, sharePalette, type ShareCard, type ShareImageAssets } from './shareImage'
 import { sitemapXml } from './sitemap'
-import { lessonPath, shareImagePath } from './site'
+import { lessonPath, lessonSummaryPath, shareImagePath } from './site'
 import { readLessons } from './readLessons'
 
 const FONT_FOLDER = 'node_modules/@fontsource/inter/files'
@@ -59,6 +59,8 @@ export function sitePages(): Plugin {
       for (const lesson of lessons) {
         const source = pageHtml(renderHead(lessonMeta(lesson)))
         this.emitFile({ type: 'asset', fileName: `${lessonPath(lesson.id)}index.html`, source })
+        const summary = pageHtml(renderHead(summaryMeta(lesson)))
+        this.emitFile({ type: 'asset', fileName: `${lessonSummaryPath(lesson.id)}index.html`, source: summary })
       }
       this.emitFile({ type: 'asset', fileName: '404.html', source: pageHtml(renderHead(notFoundMeta())) })
       this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemapXml(lessons) })

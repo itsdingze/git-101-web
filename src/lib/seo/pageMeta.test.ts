@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { homeMeta, lessonMeta, notFoundMeta, type LessonSummary } from './pageMeta'
+import { homeMeta, lessonMeta, notFoundMeta, summaryMeta, type LessonSummary } from './pageMeta'
 
 const LESSONS: LessonSummary[] = [
   { id: 0, title: 'What is Git?', description: 'Understand what Git records' },
@@ -48,6 +48,20 @@ describe('lesson page metadata', () => {
       name: 'The terminal',
       position: 2,
       isPartOf: { '@type': 'Course', url: 'https://itsdingze.github.io/git-101-web/' },
+    })
+  })
+})
+
+describe('lesson summary page metadata', () => {
+  const meta = summaryMeta(LESSONS[1]!)
+
+  it('names the finished lesson and stays out of search results', () => {
+    expect(meta).toMatchObject({
+      title: 'The terminal complete — Git 101',
+      canonical: null,
+      image: { url: 'https://itsdingze.github.io/git-101-web/og/lesson-1.png' },
+      noindex: true,
+      jsonLd: null,
     })
   })
 })

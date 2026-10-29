@@ -64,6 +64,17 @@ export function lessonMeta(lesson: LessonSummary): PageMeta {
   }
 }
 
+export function summaryMeta(lesson: LessonSummary): PageMeta {
+  return {
+    title: messages.summary.documentTitle(lesson.title),
+    description: lesson.description,
+    canonical: null,
+    image: { url: SITE_URL + shareImagePath(lesson.id), alt: messages.share.lessonImageAlt(lesson.title) },
+    noindex: true,
+    jsonLd: null,
+  }
+}
+
 export function notFoundMeta(): PageMeta {
   return {
     title: messages.app.pageNotFoundTitle,
