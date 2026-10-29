@@ -1,4 +1,4 @@
-import type { Stage, Position, Connection } from './types'
+import type { Branch, Stage, Position, Connection, PhantomCommit } from './types'
 import {
   COMMIT_RADIUS,
   COMMIT_SPACING_Y,
@@ -57,6 +57,29 @@ export function computeConnections(stage: Stage, positions: Record<string, Posit
   return connections
 }
 
+export function branchHeads(stage: Stage): Record<string, string> {
+  const heads: Record<string, string> = {}
+  for (const branch of stage.branches) if (branch.startsAt) heads[branch.name] = branch.startsAt
+  for (const commit of stage.commits) heads[commit.branch] = commit.id
+  return heads
+}
+
+function emptyBranches(stage: Stage): Branch[] {
+  return stage.branches.filter(
+    (branch) => branch.startsAt && !stage.commits.some((commit) => commit.branch === branch.name),
+  )
+}
+
+export function phantomCommits(stage: Stage, positions: Record<string, Position>): PhantomCommit[] {
+  return emptyBranches(stage).flatMap((branch) => {
+    const from = branch.startsAt ? positions[branch.startsAt] : undefined
+    if (!from) return []
+    const x = PADDING.left + branch.lane * LANE_SPACING_X
+    const y = from.y - COMMIT_SPACING_Y
+    return [{ branch, x, y, pathD: curvePath(from, { x, y }) }]
+  })
+}
+
 export function computeFixedDimensions(stages: Stage[]): { svgHeight: number; svgWidth: number } {
   let maxCommits = 0
   let maxRightExtent = 0
@@ -70,10 +93,8 @@ export function computeFixedDimensions(stages: Stage[]): { svgHeight: number; sv
       laneMap[b.name] = b.lane
     }
 
-    const emptyBranches = s.branches.filter(
-      (b) => b.startsAt && !s.commits.some((c) => c.branch === b.name),
-    )
-    const phantomRows = emptyBranches.length > 0 ? 1 : 0
+    const empty = emptyBranches(s)
+    const phantomRows = empty.length > 0 ? 1 : 0
     maxCommits = Math.max(maxCommits, s.commits.length + phantomRows)
 
     for (const c of s.commits) {
@@ -89,7 +110,7 @@ export function computeFixedDimensions(stages: Stage[]): { svgHeight: number; sv
       maxRightExtent = Math.max(maxRightExtent, labelEnd)
     }
 
-    for (const b of emptyBranches) {
+    for (const b of empty) {
       const x = PADDING.left + b.lane * LANE_SPACING_X
       const textEnd = x + textOffset + messages.reading.graph.newBranch.length * CHAR_WIDTH
       maxRightExtent = Math.max(maxRightExtent, textEnd)

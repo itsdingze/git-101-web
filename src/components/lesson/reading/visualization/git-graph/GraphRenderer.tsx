@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import type { Stage, PhantomCommit } from './types'
-import { branchColorOf, computeLayout, computeConnections, curvePath } from './layout'
-import { COMMIT_RADIUS, COMMIT_SPACING_Y, LANE_SPACING_X, PADDING, TRANSITION } from './constants'
+import type { Stage } from './types'
+import { branchColorOf, branchHeads, computeLayout, computeConnections, phantomCommits } from './layout'
+import { COMMIT_RADIUS, TRANSITION } from './constants'
 import { messages } from '@/messages/en'
 import { describeStage } from './describeStage'
 import { BranchLabel } from './components/BranchLabel'
@@ -28,25 +28,9 @@ export function GraphRenderer({ stage, svgHeight, svgWidth }: GraphRendererProps
     [stage, positions],
   )
 
-  const branchHeads = useMemo(() => {
-    const heads: Record<string, string> = {}
-    for (const b of stage.branches) if (b.startsAt) heads[b.name] = b.startsAt
-    for (const commit of stage.commits) heads[commit.branch] = commit.id
-    return heads
-  }, [stage.branches, stage.commits])
+  const heads = useMemo(() => branchHeads(stage), [stage])
 
-  const phantoms = useMemo((): PhantomCommit[] => {
-    return stage.branches
-      .filter((b) => !stage.commits.some((c) => c.branch === b.name))
-      .map((branch) => {
-        const from = branch.startsAt ? positions[branch.startsAt] : undefined
-        if (!from) return null
-        const x = PADDING.left + branch.lane * LANE_SPACING_X
-        const y = from.y - COMMIT_SPACING_Y
-        return { branch, x, y, pathD: curvePath(from, { x, y }) }
-      })
-      .filter((p): p is PhantomCommit => p !== null)
-  }, [stage.branches, stage.commits, positions])
+  const phantoms = useMemo(() => phantomCommits(stage, positions), [stage, positions])
 
   return (
     <svg
@@ -148,7 +132,7 @@ export function GraphRenderer({ stage, svgHeight, svgWidth }: GraphRendererProps
 
       <AnimatePresence>
         {stage.branches.map((branch) => {
-          const headId = branchHeads[branch.name]
+          const headId = heads[branch.name]
           if (!headId) return null
           const isHead = stage.head === branch.name
 
