@@ -1,4 +1,5 @@
 import { CheckCircle, Trophy } from 'lucide-react'
+import { MessageTemplate } from '@/components/ui/MessageTemplate'
 import { messages } from '@/messages/en'
 
 interface SummaryHeroProps {
@@ -24,8 +25,10 @@ export function SummaryHero({ lessonTitle, courseComplete, completedCount, total
 
         <div className="flex flex-col gap-1">
           <p className="text-base text-text-secondary leading-relaxed">
-            {courseComplete ? messages.summary.lessonCompletePrefix : messages.summary.finishedLessonPrefix}
-            <span className="font-medium text-text-primary">{lessonTitle}</span>
+            <MessageTemplate
+              template={courseComplete ? messages.summary.lessonCompleteNamed : messages.summary.finishedLesson}
+              slots={{ lesson: <span className="font-medium text-text-primary">{lessonTitle}</span> }}
+            />
           </p>
 
           <p className="text-sm text-text-muted">

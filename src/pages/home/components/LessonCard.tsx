@@ -45,8 +45,14 @@ export function LessonCard({ lesson, position, isCompleted, isCurrent }: LessonC
         <div className="flex flex-1 min-w-0 flex-col gap-1">
           <div className="flex flex-col gap-0.5">
             <h2 className="text-sm font-medium text-text-primary leading-snug">
-              {isCurrent && <span className="sr-only">{messages.home.card.upNext}</span>}
-              {lesson.title}
+              {isCurrent ? (
+                <>
+                  <span className="sr-only">{messages.home.card.upNext(lesson.title)}</span>
+                  <span aria-hidden>{lesson.title}</span>
+                </>
+              ) : (
+                lesson.title
+              )}
             </h2>
             <p className="text-xs text-text-muted leading-relaxed">
               {lesson.description}

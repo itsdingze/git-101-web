@@ -1,6 +1,7 @@
 import { BookOpen, ExternalLink, FolderGit2 } from 'lucide-react'
 import { CheatsheetTrigger } from '@/components/cheatsheet/CheatsheetTrigger'
 import { LINK_CLASS as INLINE_LINK_CLASS } from '@/components/ui/linkClass'
+import { MessageTemplate } from '@/components/ui/MessageTemplate'
 import { messages } from '@/messages/en'
 
 const LINK_CLASS = `inline-flex items-center gap-1.5 ${INLINE_LINK_CLASS}`
@@ -31,15 +32,21 @@ export function CourseNextSteps() {
         <li className="flex items-start gap-2.5">
           <ExternalLink size={16} className="text-accent-green shrink-0 mt-0.5" aria-hidden />
           <span>
-            {copy.goFurther}{' '}
-            <a className={LINK_CLASS} href="https://docs.github.com/en/get-started" target="_blank" rel="noopener noreferrer">
-              {copy.gettingStartedGuide}
-            </a>{' '}
-            {copy.andTheFree}{' '}
-            <a className={LINK_CLASS} href="https://git-scm.com/book/en/v2" target="_blank" rel="noopener noreferrer">
-              {copy.proGitBook}
-            </a>
-            .
+            <MessageTemplate
+              template={copy.goFurther}
+              slots={{
+                guide: (
+                  <a className={LINK_CLASS} href="https://docs.github.com/en/get-started" target="_blank" rel="noopener noreferrer">
+                    {copy.gettingStartedGuide}
+                  </a>
+                ),
+                book: (
+                  <a className={LINK_CLASS} href="https://git-scm.com/book/en/v2" target="_blank" rel="noopener noreferrer">
+                    {copy.proGitBook}
+                  </a>
+                ),
+              }}
+            />
           </span>
         </li>
       </ul>
