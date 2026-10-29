@@ -33,7 +33,7 @@ describe('ThemeToggle', () => {
   it('marks matching the system as the starting choice', () => {
     render(createElement(ThemeToggle))
 
-    expect(pressed('Match system')).toBe('true')
+    expect(pressed('System')).toBe('true')
     expect(pressed('Dark')).toBe('false')
   })
 

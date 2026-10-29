@@ -19,8 +19,8 @@ export const messages = {
     pageNotFoundTitle: 'Page not found — Git 101',
   },
   error: {
-    documentTitle: 'Something went wrong — Git 101',
-    title: 'Something went wrong',
+    documentTitle: 'Page error — Git 101',
+    title: 'This page stopped working',
     body: 'Reload the page to try again. If it keeps happening, go back to all lessons.',
     reload: 'Reload the page',
     back: 'Back to all lessons',
@@ -35,7 +35,7 @@ export const messages = {
     cheatsheet: 'Cheat sheet',
     progress: (step: number, total: number) => `Lesson progress: step ${step} of ${total}`,
     theme: 'Theme',
-    themeChoice: { system: 'Match system', light: 'Light', dark: 'Dark' },
+    themeChoice: { system: 'System', light: 'Light', dark: 'Dark' },
   },
   footer: {
     goBack: 'Go back',
@@ -114,7 +114,7 @@ export const messages = {
     genericWrong: 'Choose another answer, then check it again.',
   },
   blocks: {
-    emptyAnswer: 'Tap the blocks below, or drag them here, to build the command',
+    emptyAnswer: 'Select the blocks below, or drag them here, to build the command',
     correct: (answer: string) => `That's the command: \`${answer}\``,
     add: (block: string) => `Add ${block} to answer`,
     remove: (block: string) => `Remove ${block} from your answer`,

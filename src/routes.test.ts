@@ -37,7 +37,7 @@ describe('pages that are not lessons', () => {
   it('shows a styled error page when a page crashes', async () => {
     renderAt('/', [{ path: '/', errorElement: createElement(RouteErrorPage), Component: Crash }])
 
-    expect(await screen.findByRole('heading', { name: 'Something went wrong' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'This page stopped working' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Reload the page' })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Back to all lessons' })).toBeTruthy()
   })
