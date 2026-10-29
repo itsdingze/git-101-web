@@ -1,4 +1,12 @@
-import { parseLine, type Redirection } from './input/tokenize'
+import {
+  parseCommandList,
+  type Connector,
+  type ListedCommand,
+  type ParsedCommand,
+  type Redirection,
+} from './input/tokenize'
+import { endsWithOperator, unsupportedSyntaxMessage } from './input/unsupportedSyntax'
+import { expandWords } from './input/expandGlobs'
 import { runGit } from './runGit'
 import { runGh } from './runGh'
 import { SHELL_COMMANDS } from './commands/shell/registry'
@@ -23,6 +31,12 @@ export type RunResult = {
   clearScreen: boolean
 }
 
+type LastRan = { typed: string; failed: boolean }
+
+type CommandRun = RunResult & { lastRan: LastRan | null }
+
+type BeforeEachCommand = (command: ParsedCommand) => Promise<void>
+
 async function redirectionProblem(
   ctx: CommandContext,
   redirection: Redirection,
@@ -43,14 +57,12 @@ async function redirect(
   redirection: Redirection,
 ): Promise<CommandOutput[]> {
   const path = resolvePath(redirection.target, ctx.cwd, ctx.root)
-  const captured = outputs
-    .filter((output) => output.stream === 'stdout')
-    .map((output) => output.text)
-    .join('\n')
+  const printed = outputs.filter((output) => output.stream === 'stdout')
+  const captured = printed.map((output) => (output.unterminated ? output.text : `${output.text}\n`)).join('')
 
   const existing =
     redirection.append && (await pathExists(ctx.fs, path)) ? await readText(ctx.fs, path) : ''
-  await writeText(ctx.fs, path, `${existing}${captured}\n`)
+  await writeText(ctx.fs, path, `${existing}${captured}`)
 
   return outputs.filter((output) => output.stream === 'stderr')
 }
@@ -92,33 +104,28 @@ function errorOutputs(error: unknown): CommandOutput[] {
   return fail(describeGitError(error))
 }
 
-export async function runCommand(
-  line: string,
+async function runParsedCommand(
+  { words, redirection, input }: ParsedCommand,
   ctx: CommandContext,
-  locks: CommandLocks = NO_LOCKS,
-  access: ShellAccess = 'full',
+  locks: CommandLocks,
+  access: ShellAccess,
 ): Promise<RunResult> {
-  const { tokens, redirection, input, redirectionMissingTarget, continuesLine } = parseLine(line)
-  const [name, ...args] = tokens
-
-  if (continuesLine) return { outputs: refuse(LINE_CONTINUES), clearScreen: false }
-  if (redirectionMissingTarget) {
-    return { outputs: fail("bash: syntax error near unexpected token `newline'"), clearScreen: false }
-  }
-  if (!name) return { outputs: [], clearScreen: false }
-  if (name === 'clear') return { outputs: [], clearScreen: true }
-
-  const refusal = accessRefusal(name, redirection, access, locks)
-  if (refusal) return { outputs: refusal, clearScreen: false }
-
   try {
+    const [name, ...args] = await expandWords(ctx, words)
+
+    if (!name && !redirection) return { outputs: [], clearScreen: false }
+    if (name === 'clear') return { outputs: [], clearScreen: true }
+
+    const refusal = accessRefusal(name ?? '', redirection, access, locks)
+    if (refusal) return { outputs: refusal, clearScreen: false }
+
     const stdin = input === null ? '' : await readInput(ctx, input)
     if (stdin === null) return { outputs: fail(`bash: ${input}: No such file or directory`), clearScreen: false }
 
     const problem = redirection ? await redirectionProblem(ctx, redirection) : null
     if (problem) return { outputs: fail(problem), clearScreen: false }
 
-    const outputs = await dispatch(name, args, ctx, locks, stdin)
+    const outputs = name ? await dispatch(name, args, ctx, locks, stdin) : []
     return {
       outputs: redirection ? await redirect(ctx, outputs, redirection) : outputs,
       clearScreen: false,
@@ -126,4 +133,60 @@ export async function runCommand(
   } catch (error) {
     return { outputs: errorOutputs(error), clearScreen: false }
   }
+}
+
+function failed(outputs: readonly CommandOutput[]): boolean {
+  return outputs.some((output) => output.stream === 'stderr')
+}
+
+function skips(connector: Connector | null, previousFailed: boolean): boolean {
+  return (connector === '&&' && previousFailed) || (connector === '||' && !previousFailed)
+}
+
+async function runCommands(
+  commands: readonly ListedCommand[],
+  ctx: CommandContext,
+  locks: CommandLocks,
+  access: ShellAccess,
+  beforeEach: BeforeEachCommand,
+): Promise<CommandRun> {
+  let outputs: CommandOutput[] = []
+  let clearScreen = false
+  let lastRan: LastRan | null = null
+
+  for (const { connector, command } of commands) {
+    if (skips(connector, lastRan?.failed ?? false)) continue
+    await beforeEach(command)
+    const result = await runParsedCommand(command, ctx, locks, access)
+    if (result.clearScreen) {
+      outputs = []
+      clearScreen = true
+    }
+    outputs.push(...result.outputs)
+    lastRan = { typed: command.typed, failed: failed(result.outputs) }
+  }
+
+  return { outputs, clearScreen, lastRan }
+}
+
+export async function runCommand(
+  line: string,
+  ctx: CommandContext,
+  locks: CommandLocks = NO_LOCKS,
+  access: ShellAccess = 'full',
+  beforeEach: BeforeEachCommand = () => Promise.resolve(),
+): Promise<CommandRun> {
+  const list = parseCommandList(line)
+  if (list.kind === 'continues') {
+    const message = list.after === '\\' ? LINE_CONTINUES : endsWithOperator(list.after)
+    return { outputs: refuse(message), clearScreen: false, lastRan: null }
+  }
+  if (list.kind === 'syntax-error') {
+    const outputs = fail(`bash: syntax error near unexpected token \`${list.token}'`)
+    return { outputs, clearScreen: false, lastRan: null }
+  }
+  if (list.kind === 'unsupported') {
+    return { outputs: refuse(unsupportedSyntaxMessage(list.syntax)), clearScreen: false, lastRan: null }
+  }
+  return runCommands(list.commands, ctx, locks, access, beforeEach)
 }

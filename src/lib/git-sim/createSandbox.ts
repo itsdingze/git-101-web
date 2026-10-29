@@ -169,10 +169,12 @@ export async function createSandbox(
 
   return {
     run: async (line) => {
-      lastCommand = line
-      lastCommandNamedCommit = await namedCommitMessage(ctx, line)
-      const result = await runCommand(line, ctx, locks, access)
-      lastCommandFailed = result.outputs.some((output) => output.stream === 'stderr')
+      lastCommandNamedCommit = null
+      const { lastRan, ...result } = await runCommand(line, ctx, locks, access, async ({ words }) => {
+        lastCommandNamedCommit = await namedCommitMessage(ctx, words.map((word) => word.text))
+      })
+      lastCommand = lastRan?.typed ?? line
+      lastCommandFailed = lastRan?.failed ?? result.outputs.some((output) => output.stream === 'stderr')
       return result
     },
     prompt: async () => {

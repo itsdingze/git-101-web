@@ -36,6 +36,16 @@ export function coachAfterCommand(
   return [...tipLines, ...detourLines, ...progressCoach(step, before, after)]
 }
 
+export function coachAfterClear(
+  step: SandboxExerciseStep,
+  before: CoachState,
+  after: CoachState,
+  tip: string | null,
+): CoachLine[] {
+  const shownByOpening = (line: CoachLine) => line.kind === 'goal' || (step.mode === 'goal' && line.kind === 'done')
+  return coachAfterCommand(step, before, after, tip).filter((line) => !shownByOpening(line))
+}
+
 function progressCoach(step: SandboxExerciseStep, before: CoachState, after: CoachState): CoachLine[] {
   const newlyMet = step.goals.filter((_, index) => after.completed[index] && !before.completed[index])
   if (newlyMet.length === 0) return []

@@ -53,6 +53,15 @@ describe('useSandboxExercise', () => {
     expect(result.current.snapshot?.isRepo).toBe(true)
   })
 
+  it('still tells the learner the goal is met when the same line ends with clear', async () => {
+    const { result } = await openSandbox()
+
+    act(() => result.current.terminal.submit('git init && clear'))
+
+    await waitFor(() => expect(result.current.allCompleted).toBe(true), SANDBOX_WAIT)
+    await waitFor(() => expect(result.current.terminal.lines.map((line) => line.kind)).toEqual(['done', 'complete']), SANDBOX_WAIT)
+  })
+
   it('puts the project and the goals back when the learner starts over', async () => {
     const { result } = await openSandbox()
     act(() => result.current.terminal.submit('git init'))

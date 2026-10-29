@@ -8,12 +8,13 @@ import {
   type TerminalLine,
 } from '@/components/lesson/sandbox-exercise/model/transcript'
 import type { CoachLine } from '@/components/lesson/sandbox-exercise/model/coachLines'
+import type { RunResult } from '@/lib/git-sim/runCommand'
 
 interface TranscriptState {
   lines: readonly TerminalLine[]
   append: (entries: readonly TerminalEntry[]) => void
   restart: (entries: readonly TerminalEntry[]) => void
-  settle: (clearScreen: boolean, coach: { opening: readonly CoachLine[]; coach: readonly CoachLine[] }) => void
+  settle: (result: RunResult, coach: { opening: readonly CoachLine[]; coach: readonly CoachLine[] }) => void
 }
 
 export function useTranscript(): TranscriptState {
@@ -27,8 +28,8 @@ export function useTranscript(): TranscriptState {
     setTranscript((current) => restartTranscript(current, entries))
   }, [])
 
-  const settle = useCallback<TranscriptState['settle']>((clearScreen, coach) => {
-    setTranscript((current) => settleCommand(current, clearScreen, coach))
+  const settle = useCallback<TranscriptState['settle']>((result, coach) => {
+    setTranscript((current) => settleCommand(current, result, coach))
   }, [])
 
   return { lines: transcript.lines, append, restart, settle }

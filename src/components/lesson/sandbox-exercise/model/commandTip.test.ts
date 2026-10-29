@@ -32,6 +32,13 @@ describe('commandTip for commit messages', () => {
     )
   })
 
+  it('ends the message at a list operator', () => {
+    expect(commandTip('git commit -m fix && git push', quiet)).toBeNull()
+    expect(commandTip('git commit -m Fix the year && git push', pathspecError)).toBe(
+      'Put the message in quotes, so Git reads it as one message: `git commit -m "Fix the year" && git push`',
+    )
+  })
+
   it('stays quiet when the message is quoted, even if it mentions -m', () => {
     expect(commandTip('git commit -m "first commit"', quiet)).toBeNull()
     expect(commandTip("git commit -m 'first commit'", quiet)).toBeNull()

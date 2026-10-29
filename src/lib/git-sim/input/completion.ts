@@ -1,5 +1,6 @@
 import { completionCandidates, type Candidate } from './completionCandidates'
 import type { CommandLocks } from './commandLocks'
+import { lastCommandWords } from './tokenize'
 import type { CommandContext } from '@/lib/git-sim/types'
 
 export type Completion = {
@@ -32,7 +33,7 @@ export async function completeLine(
   const head = line.slice(0, cursor)
   const wordStart = head.search(/\S*$/)
   const word = head.slice(wordStart)
-  const before = head.slice(0, wordStart).trim().split(/\s+/).filter(Boolean)
+  const before = lastCommandWords(head.slice(0, wordStart))
 
   const candidates = await completionCandidates(ctx, locks, before, word)
   if (candidates.length === 0) return { line, cursor, matches: [] }

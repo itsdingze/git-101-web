@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SandboxExerciseStep, SandboxGoal } from '@/types'
-import { coachAfterCommand, hintCoach, openingCoach } from './coachLines'
+import { coachAfterClear, coachAfterCommand, hintCoach, openingCoach } from './coachLines'
 
 function goal(id: string, extra: Partial<SandboxGoal> = {}): SandboxGoal {
   return { id, label: `Label ${id}`, check: { kind: 'repo-initialized' }, ...extra }
@@ -72,6 +72,26 @@ describe('coachAfterCommand', () => {
     expect(coachAfterCommand(guided, idle, strayed, 'Merge direction tip.')).toEqual([
       { kind: 'warning', text: 'Merge the other way.' },
     ])
+  })
+})
+
+describe('coachAfterClear', () => {
+  const idle = { completed: [false, false], detour: null }
+  const after = { completed: [true, false], detour: null }
+
+  it('ticks the guided goal the command met and leaves the next goal to the opening', () => {
+    const guided = step('guided', [goal('a', { narration: 'Run `pwd`.' }), goal('b', { narration: 'Run `ls`.' })])
+
+    expect(coachAfterClear(guided, idle, after, 'Tip.')).toEqual([
+      { kind: 'tip', text: 'Tip.' },
+      { kind: 'done', text: 'Label a' },
+    ])
+  })
+
+  it('leaves goal-mode ticks to the opening list', () => {
+    const open = step('goal', [goal('a'), goal('b')])
+
+    expect(coachAfterClear(open, idle, after, 'Tip.')).toEqual([{ kind: 'tip', text: 'Tip.' }])
   })
 })
 

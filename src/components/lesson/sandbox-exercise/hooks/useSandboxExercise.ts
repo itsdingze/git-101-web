@@ -4,7 +4,7 @@ import type { RepoSnapshot } from '@/lib/git-sim/goals/snapshot'
 import type { SandboxExerciseStep } from '@/types'
 import { commandTip } from '@/components/lesson/sandbox-exercise/model/commandTip'
 import { createCommandQueue } from '@/components/lesson/sandbox-exercise/model/commandQueue'
-import { coachAfterCommand, openingCoach, type CoachLine } from '@/components/lesson/sandbox-exercise/model/coachLines'
+import { coachAfterClear, coachAfterCommand, openingCoach, type CoachLine } from '@/components/lesson/sandbox-exercise/model/coachLines'
 import { printedEntries } from '@/components/lesson/sandbox-exercise/model/transcript'
 import type { TerminalSession } from '@/components/lesson/sandbox-exercise/model/terminalSession'
 import type { SandboxFiles } from '@/components/lesson/sandbox-exercise/model/sandboxFiles'
@@ -76,9 +76,10 @@ export function useSandboxExercise(
       append(printedEntries(result))
 
       const after = await refresh(sandbox)
-      settle(result.clearScreen, {
+      const coachAfter = result.clearScreen ? coachAfterClear : coachAfterCommand
+      settle(result, {
         opening: openingCoach(step, after.completed),
-        coach: coachAfterCommand(step, before, after, tip),
+        coach: coachAfter(step, before, after, tip),
       })
     },
     [sandboxRef, current, append, refresh, settle, step],

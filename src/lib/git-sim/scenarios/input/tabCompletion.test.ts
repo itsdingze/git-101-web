@@ -113,3 +113,17 @@ describe('tab completion of git commands', () => {
     expect(await complete('gi')).toEqual({ line: 'gi', cursor: 2, matches: [] })
   })
 })
+
+describe('tab completion after a list operator', () => {
+  it('completes the command after && on its own', async () => {
+    expect((await complete('git add . && git comm')).line).toBe('git add . && git commit ')
+  })
+
+  it('completes paths for the command after ; even with no space before it', async () => {
+    expect((await complete('git status;cat READ')).line).toBe('git status;cat README.md ')
+  })
+
+  it('leaves operators inside quotes alone', async () => {
+    expect((await complete('git add "a && b" READ')).line).toBe('git add "a && b" README.md ')
+  })
+})

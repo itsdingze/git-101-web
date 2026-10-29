@@ -38,11 +38,15 @@ export function restartTranscript(transcript: Transcript, entries: readonly Term
   return { lines: numbered(entries, transcript.nextId), nextId: transcript.nextId + entries.length }
 }
 
-export function printedEntries(result: RunResult): TerminalEntry[] {
-  if (result.clearScreen) return []
+function outputEntries(result: RunResult): TerminalEntry[] {
   return result.outputs.filter((output) => output.text !== '').map((output) => ({ kind: output.stream, text: output.text }))
 }
 
-export function settleCommand(transcript: Transcript, clearScreen: boolean, { opening, coach }: SettleCoach): Transcript {
-  return clearScreen ? restartTranscript(transcript, opening) : appendToTranscript(transcript, coach)
+export function printedEntries(result: RunResult): TerminalEntry[] {
+  return result.clearScreen ? [] : outputEntries(result)
+}
+
+export function settleCommand(transcript: Transcript, result: RunResult, { opening, coach }: SettleCoach): Transcript {
+  if (result.clearScreen) return restartTranscript(transcript, [...opening, ...outputEntries(result), ...coach])
+  return appendToTranscript(transcript, coach)
 }

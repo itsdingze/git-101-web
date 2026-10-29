@@ -1,6 +1,7 @@
 import type { CommandWord } from '@/lib/git-sim/input/tokenize'
 
 const MESSAGE_FLAGS = new Set(['-m', '-am', '-ma', '--message'])
+const LIST_OPERATORS = new Set(['&&', '||', ';', ';;', '|'])
 
 export function joinRaw(words: readonly CommandWord[]): string {
   return words.map((word) => word.raw).join(' ')
@@ -15,7 +16,7 @@ export function texts(tokens: readonly CommandWord[]): string[] {
 }
 
 function isWord(token: CommandWord | undefined): token is CommandWord {
-  return token !== undefined && !token.quoted && !token.raw.startsWith('-')
+  return token !== undefined && !token.quoted && !token.raw.startsWith('-') && !LIST_OPERATORS.has(token.raw)
 }
 
 export function wordsAfter(tokens: readonly CommandWord[], start: number): number {

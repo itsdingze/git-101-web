@@ -9,6 +9,7 @@ export type CommandOutput = {
   text: string
   stream: CommandStream
   prose?: true
+  unterminated?: true
 }
 
 export type UserIdentity = {

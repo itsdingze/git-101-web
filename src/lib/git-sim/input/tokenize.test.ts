@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { commandWords, parseLine } from './tokenize'
+import { commandWords, parseCommandList, type ParsedCommand } from './tokenize'
+
+function firstCommand(line: string): ParsedCommand {
+  const list = parseCommandList(line)
+  if (list.kind !== 'commands') throw new Error(`expected a command, got ${list.kind}`)
+  const [first] = list.commands
+  if (!first) throw new Error('expected a command, got none')
+  return first.command
+}
+
+function tokens(line: string): string[] {
+  return firstCommand(line).words.map((word) => word.text)
+}
 
 describe('command words', () => {
   it('keeps each word as typed beside its parsed text', () => {
@@ -15,51 +27,64 @@ describe('command words', () => {
   it('keeps redirection operators as words so the line can be rebuilt', () => {
     expect(commandWords("echo 'hi' >> notes.txt").map((word) => word.raw)).toEqual(['echo', "'hi'", '>>', 'notes.txt'])
   })
+
+  it('keeps list operators as their own words, even with no spaces around them', () => {
+    expect(commandWords('cd sub&&ls;pwd || echo "a|b"').map((word) => word.raw)).toEqual([
+      'cd',
+      'sub',
+      '&&',
+      'ls',
+      ';',
+      'pwd',
+      '||',
+      'echo',
+      '"a|b"',
+    ])
+  })
 })
 
 describe('quoted values', () => {
   it('keeps a quoted value joined to its option in one token', () => {
-    expect(parseLine('git commit -m"Add g"').tokens).toEqual(['git', 'commit', '-mAdd g'])
-    expect(parseLine("git commit -m'Add g'").tokens).toEqual(['git', 'commit', '-mAdd g'])
+    expect(tokens('git commit -m"Add g"')).toEqual(['git', 'commit', '-mAdd g'])
+    expect(tokens("git commit -m'Add g'")).toEqual(['git', 'commit', '-mAdd g'])
   })
 
   it('keeps a spaced quoted value in its own token', () => {
-    expect(parseLine('git commit -m "Add g"').tokens).toEqual(['git', 'commit', '-m', 'Add g'])
+    expect(tokens('git commit -m "Add g"')).toEqual(['git', 'commit', '-m', 'Add g'])
   })
 
   it('keeps an empty quoted value as an empty token', () => {
-    expect(parseLine('git commit -m ""').tokens).toEqual(['git', 'commit', '-m', ''])
+    expect(tokens('git commit -m ""')).toEqual(['git', 'commit', '-m', ''])
   })
 })
 
 describe('input redirection', () => {
   it('takes the file after < out of the arguments', () => {
-    const parsed = parseLine('gh auth login --with-token < ~/token.txt')
+    const parsed = firstCommand('gh auth login --with-token < ~/token.txt')
 
-    expect(parsed.tokens).toEqual(['gh', 'auth', 'login', '--with-token'])
+    expect(parsed.words.map((word) => word.text)).toEqual(['gh', 'auth', 'login', '--with-token'])
     expect(parsed.input).toBe('~/token.txt')
-    expect(parsed.redirectionMissingTarget).toBe(false)
   })
 
   it('reads a file joined to the <', () => {
-    expect(parseLine('gh auth login --with-token <token.txt').input).toBe('token.txt')
+    expect(firstCommand('gh auth login --with-token <token.txt').input).toBe('token.txt')
   })
 
   it('keeps a quoted < as an ordinary argument', () => {
-    const parsed = parseLine('git commit -m "<"')
+    const parsed = firstCommand('git commit -m "<"')
 
-    expect(parsed.tokens).toEqual(['git', 'commit', '-m', '<'])
+    expect(parsed.words.map((word) => word.text)).toEqual(['git', 'commit', '-m', '<'])
     expect(parsed.input).toBeNull()
   })
 
   it('flags a < with no file after it', () => {
-    expect(parseLine('gh auth login --with-token <').redirectionMissingTarget).toBe(true)
+    expect(parseCommandList('gh auth login --with-token <').kind).toBe('syntax-error')
   })
 
   it('reads input and writes output in the same line', () => {
-    const parsed = parseLine('gh auth status < in.txt > out.txt')
+    const parsed = firstCommand('gh auth status < in.txt > out.txt')
 
-    expect(parsed.tokens).toEqual(['gh', 'auth', 'status'])
+    expect(parsed.words.map((word) => word.text)).toEqual(['gh', 'auth', 'status'])
     expect(parsed.input).toBe('in.txt')
     expect(parsed.redirection).toEqual({ target: 'out.txt', append: false })
   })
@@ -67,19 +92,19 @@ describe('input redirection', () => {
 
 describe('backslashes, like bash', () => {
   it('escapes the next character outside quotes', () => {
-    expect(parseLine('mkdir my\\ notes').tokens).toEqual(['mkdir', 'my notes'])
-    expect(parseLine('mkdir a\\b').tokens).toEqual(['mkdir', 'ab'])
-    expect(parseLine('echo a\\>b').tokens).toEqual(['echo', 'a>b'])
+    expect(tokens('mkdir my\\ notes')).toEqual(['mkdir', 'my notes'])
+    expect(tokens('mkdir a\\b')).toEqual(['mkdir', 'ab'])
+    expect(tokens('echo a\\>b')).toEqual(['echo', 'a>b'])
   })
 
   it('keeps backslashes inside single quotes and before ordinary characters in double quotes', () => {
-    expect(parseLine("echo 'a\\b'").tokens).toEqual(['echo', 'a\\b'])
-    expect(parseLine('echo "a\\b"').tokens).toEqual(['echo', 'a\\b'])
-    expect(parseLine('echo "say \\"hi\\""').tokens).toEqual(['echo', 'say "hi"'])
+    expect(tokens("echo 'a\\b'")).toEqual(['echo', 'a\\b'])
+    expect(tokens('echo "a\\b"')).toEqual(['echo', 'a\\b'])
+    expect(tokens('echo "say \\"hi\\""')).toEqual(['echo', 'say "hi"'])
   })
 
   it('flags a trailing backslash as a line that continues', () => {
-    expect(parseLine('mkdir \\').continuesLine).toBe(true)
-    expect(parseLine('mkdir notes').continuesLine).toBe(false)
+    expect(parseCommandList('mkdir \\')).toEqual({ kind: 'continues', after: '\\' })
+    expect(parseCommandList('mkdir notes').kind).toBe('commands')
   })
 })

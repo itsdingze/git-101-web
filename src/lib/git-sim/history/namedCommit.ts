@@ -1,6 +1,5 @@
 import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
-import { parseLine } from '@/lib/git-sim/input/tokenize'
 import { operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { findRepoDir } from './repository'
 import { resolveCommitish } from './resolveCommitish'
@@ -16,8 +15,8 @@ async function commitMessageAt(ctx: CommandContext, dir: string, spec: string): 
   }
 }
 
-export async function namedCommitMessage(ctx: CommandContext, line: string): Promise<string | null> {
-  const [program, , ...args] = parseLine(line).tokens
+export async function namedCommitMessage(ctx: CommandContext, tokens: readonly string[]): Promise<string | null> {
+  const [program, , ...args] = tokens
   const dir = program === 'git' ? await findRepoDir(ctx) : null
   if (!dir) return null
 
