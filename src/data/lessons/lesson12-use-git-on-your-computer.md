@@ -11,7 +11,7 @@ Git and GitHub CLI are set up. [Download todo-app.zip](/downloads/todo-app.zip) 
 
 The archive contains the project files as they look at the end of the practice lessons. It has no Git history, so you'll make a new initial commit.
 
-Extract the download wherever you like. Open your terminal and use `cd` to go into the extracted folder. If its path contains spaces, put the path in quotes. Run `ls` to check that it lists `app.py` and `README.md`.
+Open your terminal and use `cd` to go into the extracted folder. If its path contains spaces, put the path in quotes. Run `ls` to check that it lists `app.py` and `README.md`. If it lists only `todo-app`, run `cd todo-app` once more.
 
 ## Make the initial commit {#initial-commit}
 
@@ -132,6 +132,8 @@ git pull
 git status
 git log --oneline -2
 ```
+
+`git switch` may say `Your branch is up to date with 'origin/main'`. That compares with the last copy Git downloaded, so `git pull` still brings in the merge.
 
 The pull should report a fast-forward: local `main` had no separate new commits, so Git moved it forward to the merge you made on GitHub.
 

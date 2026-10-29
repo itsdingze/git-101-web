@@ -383,7 +383,7 @@ Here, Git combines the edits and removes the stash. The empty `git stash list` c
 The name change is back in the working file, ready to stage and commit.
 
 > [!WARNING] A conflicting pop keeps the stash
-> If `git stash pop` reports a conflict, Git keeps the stash. Resolve the file's conflict markers before continuing.
+> If `git stash pop` reports a conflict, Git keeps the stash. Remove the conflict markers, save, and run `git add <file>`. There's no merge commit to make. Once the file looks right, run `git stash drop` to delete the kept stash.
 
 ```quiz
 id: quiz-pull-refused

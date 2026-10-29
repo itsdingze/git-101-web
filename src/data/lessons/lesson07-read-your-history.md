@@ -146,6 +146,8 @@ index bd00b1a..dbd30f3 100644
 
 Git shows a few unchanged lines around each change, so you can tell where in the file it is.
 
+The `@@` line gives the line numbers of what's shown. After them, Git adds the nearest unindented line above, here `def show_search() -> None:`, as a landmark.
+
 ## Check, then commit {#check-then-commit}
 
 For tracked files, `git diff` compares working contents with staged contents. When they match, it prints nothing.
