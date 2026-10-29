@@ -4,6 +4,13 @@ function count(n: number, one: string, other: string): string {
   return `${n} ${plural.select(n) === 'one' ? one : other}`
 }
 
+function fileList(names: readonly string[]): string {
+  const last = names[names.length - 1]
+  if (last === undefined) return 'empty'
+  if (names.length === 1) return last
+  return `${names.slice(0, -1).join(', ')} and ${last}`
+}
+
 export const messages = {
   app: {
     name: 'Git 101',
@@ -117,6 +124,7 @@ export const messages = {
     missingBetween: (before: string, after: string) => `Add the piece that goes between \`${before}\` and \`${after}\`.`,
     doesNotBelong: (piece: string) => `\`${piece}\` doesn't belong in this command.`,
     wrongOrder: 'The pieces are right. Change their order, then check the command again.',
+    answerArea: 'Your answer',
   },
   editor: {
     added: 'added',
@@ -162,6 +170,8 @@ export const messages = {
       explanation:
         'Your files stay in the working directory. Staging copies their current contents into the staging area. Committing records a project version using those staged contents.',
       done: 'This commit records the staged files. Your files are still in the working directory.',
+      ranCommand: (command: string, staging: readonly string[], repo: readonly string[]) =>
+        `Ran ${command}. Staging area: ${fileList(staging)}. Repository history: ${fileList(repo)}.`,
     },
     stepper: {
       previous: 'Previous step',

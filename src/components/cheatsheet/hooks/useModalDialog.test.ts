@@ -8,6 +8,7 @@ function Dialog({ onClose }: { onClose: () => void }) {
   const { dialogRef, closeOnBackdrop } = useModalDialog(onClose)
   return createElement('dialog', { ref: dialogRef, onClick: closeOnBackdrop, 'aria-label': 'Sheet' },
     createElement('p', null, 'Inside'),
+    createElement('button', { type: 'button' }, 'Close'),
   )
 }
 
@@ -34,6 +35,19 @@ describe('useModalDialog', () => {
     unmount()
 
     expect(document.documentElement.style.overflow).toBe('')
+  })
+
+  it('returns focus to the control that opened it once it closes', () => {
+    const opener = document.createElement('button')
+    document.body.append(opener)
+    opener.focus()
+
+    const { unmount } = render(createElement(Dialog, { onClose: vi.fn() }))
+    screen.getByRole('button', { name: 'Close', hidden: true }).focus()
+    unmount()
+
+    expect(document.activeElement).toBe(opener)
+    opener.remove()
   })
 
   it('closes on a click on the backdrop, but not inside the dialog', () => {

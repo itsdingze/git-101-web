@@ -8,7 +8,7 @@ interface SortableBlockProps {
   id: string
   index: number
   children: ReactNode
-  onRemove: () => void
+  onRemove: (tile: HTMLButtonElement) => void
   disabled: boolean
 }
 
@@ -27,9 +27,9 @@ export function SortableBlock({ id, index, children, onRemove, disabled }: Sorta
     <button
       ref={ref}
       type="button"
-      data-block
+      data-block={id}
       aria-label={messages.blocks.remove(id)}
-      onClick={onRemove}
+      onClick={(event) => onRemove(event.currentTarget)}
       onKeyDown={(e) => { if (e.key === ' ') e.preventDefault() }}
       className={`${blockShell} bg-accent-blue text-text-on-accent cursor-grab active:cursor-grabbing ${FOCUS_RING}`}
     >

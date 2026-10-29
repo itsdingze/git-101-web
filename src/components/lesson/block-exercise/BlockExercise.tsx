@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react'
 import type { BlockExerciseStep } from '@/types'
 import { GlossaryBlock } from './components/GlossaryBlock'
+import { handOffFocus } from './components/handOffFocus'
 import { OverlayBlock } from './components/OverlayBlock'
 import { SolutionDropZone } from './components/SolutionDropZone'
 import { SolutionBlocks } from './components/SolutionBlocks'
@@ -47,7 +48,11 @@ export function BlockExercise({ step, lessonId }: BlockExerciseProps) {
               overSolution={overSolution}
               activeBlock={activeBlock}
               solved={solved}
-              onRemove={remove}
+              onRemove={(block, tile) => {
+                if (solved) return
+                handOffFocus(tile, zoneRef.current)
+                remove(block)
+              }}
             />
           )}
         </SolutionDropZone>
@@ -58,7 +63,10 @@ export function BlockExercise({ step, lessonId }: BlockExerciseProps) {
               key={block}
               block={block}
               isUsed={answer.includes(block) || !!(isActiveFromGlossary && activeBlock === block)}
-              onAdd={() => add(block)}
+              onAdd={(tile) => {
+                handOffFocus(tile, zoneRef.current)
+                add(block)
+              }}
               disabled={solved}
             />
           ))}
@@ -82,7 +90,9 @@ export function BlockExercise({ step, lessonId }: BlockExerciseProps) {
         {step.hints && <HintButton open={hintOpen} onHint={toggleHint} />}
       </ExerciseControls>
 
-      {visibleHint && <HintPanel hint={visibleHint} />}
+      <div aria-live="polite" className="empty:-mt-6">
+        {visibleHint && <HintPanel hint={visibleHint} />}
+      </div>
     </div>
   )
 }

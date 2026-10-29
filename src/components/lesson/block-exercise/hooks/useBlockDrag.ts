@@ -3,6 +3,7 @@ import { move } from '@dnd-kit/helpers'
 import type { DragDropEventHandlers } from '@dnd-kit/react'
 import type { DragOperation, UniqueIdentifier } from '@dnd-kit/abstract'
 import { insertIndex } from '@/components/lesson/block-exercise/model/insertIndex'
+import { focusDroppedBlock } from '@/components/lesson/block-exercise/components/handOffFocus'
 import type { BlockAnswer } from './useBlockAnswer'
 
 const GLOSSARY_PREFIX = 'avail-'
@@ -106,6 +107,10 @@ export function useBlockDrag({ answer, solved, changeAnswer }: Pick<BlockAnswer,
         else drop(event.operation)
       }
       markDropIndex(null)
+      const sourceId = event.operation.source?.id
+      if (sourceId !== undefined) {
+        requestAnimationFrame(() => focusDroppedBlock(zoneRef.current, blockOf(String(sourceId))))
+      }
     },
   }
 

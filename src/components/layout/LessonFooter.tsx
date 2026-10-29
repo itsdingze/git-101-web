@@ -12,7 +12,7 @@ export function LessonFooter() {
   if (!showLessonNav) return null
 
   return (
-    <footer className="sticky bottom-0 z-50 w-full bg-bg-primary border-t border-border">
+    <footer data-lesson-footer className="sticky bottom-0 z-50 w-full bg-bg-primary border-t border-border">
       <ContentColumn className="h-20 flex items-center">
         <div className="flex items-center gap-2 w-full">
           <Button

@@ -9,7 +9,7 @@ interface SolutionBlocksProps {
   overSolution: boolean
   activeBlock: string | null
   solved: boolean
-  onRemove: (block: string) => void
+  onRemove: (block: string, tile: HTMLButtonElement) => void
 }
 
 export function SolutionBlocks({ answer, insertIndex, isActiveFromGlossary, overSolution, activeBlock, solved, onRemove }: SolutionBlocksProps) {
@@ -18,7 +18,7 @@ export function SolutionBlocks({ answer, insertIndex, isActiveFromGlossary, over
       key={block}
       id={block}
       index={i}
-      onRemove={() => onRemove(block)}
+      onRemove={(tile) => onRemove(block, tile)}
       disabled={solved}
     >
       {block}

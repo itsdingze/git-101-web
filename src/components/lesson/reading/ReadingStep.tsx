@@ -28,7 +28,7 @@ export function ReadingStep({ step }: ReadingStepProps) {
 
       <ContentBlockList blocks={step.content} />
 
-      <div ref={diagramRef} className="scroll-mt-24">
+      <div ref={diagramRef} className="scroll-mt-8">
         <Suspense fallback={<div className="min-h-48 bg-bg-card rounded-xl animate-pulse" />}>
           {step.visualization && <StepDiagram visualization={step.visualization} />}
         </Suspense>

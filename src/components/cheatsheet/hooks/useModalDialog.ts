@@ -7,8 +7,11 @@ interface ModalDialog {
 
 export function useModalDialog(onClose: () => void): ModalDialog {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const openerRef = useRef<Element | null>(null)
 
   useEffect(() => {
+    openerRef.current ??= document.activeElement
+    const opener = openerRef.current
     const dialog = dialogRef.current
     if (!dialog?.open) dialog?.showModal()
 
@@ -17,6 +20,7 @@ export function useModalDialog(onClose: () => void): ModalDialog {
 
     return () => {
       root.style.overflow = ''
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus()
     }
   }, [])
 

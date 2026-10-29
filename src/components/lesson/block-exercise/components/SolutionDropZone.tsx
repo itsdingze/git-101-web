@@ -1,6 +1,8 @@
 import type { ReactNode, RefObject } from 'react'
 import { useDroppable } from '@dnd-kit/react'
 import { Shake } from '@/components/lesson/components/Shake'
+import { FOCUS_RING } from '@/components/ui/focusRing'
+import { messages } from '@/messages/en'
 
 interface SolutionDropZoneProps {
   children: ReactNode
@@ -17,7 +19,10 @@ export function SolutionDropZone({ children, zoneRef, solved, shakeSlots, overSo
     <Shake
       ref={zoneRef}
       shaking={shakeSlots}
-      className={`min-h-14 flex flex-wrap items-center gap-2 px-4 py-3.5 rounded-xl border-2 border-dashed transition-colors ${
+      role="group"
+      aria-label={messages.blocks.answerArea}
+      tabIndex={-1}
+      className={`${FOCUS_RING} min-h-14 flex flex-wrap items-center gap-2 px-4 py-3.5 rounded-xl border-2 border-dashed transition-colors ${
         solved
           ? 'border-accent-green-edge bg-accent-green-tint'
           : shakeSlots

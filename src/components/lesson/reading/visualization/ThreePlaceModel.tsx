@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button'
 import { FOCUS_RING } from '@/components/ui/focusRing'
 import type { ThreePlaceModelData } from '@/types'
 import { commandsFor, stagesFor, zoneFiles, type FileState, type FileTone, type ZoneId } from './model/threePlaceStages'
+import { useFocusOnFinish } from './hooks/useFocusOnFinish'
 import { useStageStepper } from './hooks/useStageStepper'
 import { messages } from '@/messages/en'
 
@@ -36,8 +37,11 @@ export function ThreePlaceModel(data: ThreePlaceModelData) {
   const stages = stagesFor(data)
   const commands = commandsFor(data)
   const { index, atEnd, next, reset } = useStageStepper(stages.length)
+  const doneRef = useFocusOnFinish<HTMLDivElement>(atEnd)
   const current = stages[index]
   if (!current) return null
+  const lastCommand = commands[index - 1]
+  const announcement = lastCommand ? messages.reading.threePlaces.ranCommand(lastCommand, current.staging, current.repo) : ''
 
   return (
     <div className="border border-border rounded-lg p-4 space-y-4">
@@ -85,10 +89,16 @@ export function ThreePlaceModel(data: ThreePlaceModelData) {
           $ {commands[index]}
         </button>
       ) : (
-        <div className="min-h-11 flex items-center justify-center text-center text-sm text-accent-green-strong font-medium">
+        <div
+          ref={doneRef}
+          tabIndex={-1}
+          className={`min-h-11 flex items-center justify-center text-center text-sm text-accent-green-strong font-medium rounded-lg ${FOCUS_RING}`}
+        >
           {messages.reading.threePlaces.done}
         </div>
       )}
+
+      <p role="status" className="sr-only">{announcement}</p>
     </div>
   )
 }

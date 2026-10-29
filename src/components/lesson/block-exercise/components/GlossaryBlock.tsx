@@ -6,7 +6,7 @@ import { blockShell } from './blockShell'
 interface GlossaryBlockProps {
   block: string
   isUsed: boolean
-  onAdd: () => void
+  onAdd: (tile: HTMLButtonElement) => void
   disabled: boolean
 }
 
@@ -28,7 +28,7 @@ export function GlossaryBlock({ block, isUsed, onAdd, disabled }: GlossaryBlockP
     <button
       ref={ref}
       type="button"
-      onClick={onAdd}
+      onClick={(event) => onAdd(event.currentTarget)}
       aria-label={messages.blocks.add(block)}
       className={`${blockShell} bg-bg-card border border-border text-text-primary cursor-grab active:cursor-grabbing transition-colors hover:border-text-muted
         ${FOCUS_RING}`}
