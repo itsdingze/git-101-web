@@ -177,6 +177,7 @@ export const messages = {
       previous: 'Previous step',
       next: 'Next step',
     },
+    diagramFailed: "The diagram didn't load. Reload the page to try again.",
   },
   sandbox: {
     windowTitle: 'terminal',

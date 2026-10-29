@@ -3,6 +3,7 @@ import type { ReadingStep as ReadingStepType } from '@/types'
 import { useExerciseNav } from '@/components/lesson/hooks/useExerciseNav'
 import { InlineMarkdown } from '@/components/ui/inline-markdown/InlineMarkdown'
 import { ContentBlockList } from './components/ContentBlockList'
+import { DiagramErrorBoundary } from './components/DiagramErrorBoundary'
 import { DiagramJumpLink } from './components/DiagramJumpLink'
 import { StepDiagram } from './components/StepDiagram'
 
@@ -29,9 +30,11 @@ export function ReadingStep({ step }: ReadingStepProps) {
       <ContentBlockList blocks={step.content} />
 
       <div ref={diagramRef} className="scroll-mt-8">
-        <Suspense fallback={<div className="min-h-48 bg-bg-card rounded-xl motion-safe:animate-pulse" />}>
-          {step.visualization && <StepDiagram visualization={step.visualization} />}
-        </Suspense>
+        <DiagramErrorBoundary>
+          <Suspense fallback={<div className="min-h-48 bg-bg-card rounded-xl motion-safe:animate-pulse" />}>
+            {step.visualization && <StepDiagram visualization={step.visualization} />}
+          </Suspense>
+        </DiagramErrorBoundary>
       </div>
     </div>
   )
