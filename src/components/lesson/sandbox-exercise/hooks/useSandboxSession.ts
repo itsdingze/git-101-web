@@ -5,6 +5,9 @@ import { commandLocksFor } from '@/data/lessons/commandLocks'
 interface SandboxSession {
   sandboxRef: RefObject<Sandbox | null>
   ready: boolean
+  failed: boolean
+  retried: boolean
+  retry: () => void
 }
 
 export function useSandboxSession(
@@ -15,6 +18,8 @@ export function useSandboxSession(
   const sandboxRef = useRef<Sandbox | null>(null)
   const locks = useMemo(() => commandLocksFor(lessonId), [lessonId])
   const [ready, setReady] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -27,14 +32,23 @@ export function useSandboxSession(
         const show = await prepare(sandbox)
         if (cancelled) return
         show()
+        setFailed(false)
         setReady(true)
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true)
       })
 
     return () => {
       cancelled = true
       sandboxRef.current = null
     }
-  }, [seed, locks, prepare])
+  }, [seed, locks, prepare, attempt])
 
-  return { sandboxRef, ready }
+  function retry() {
+    setFailed(false)
+    setAttempt((count) => count + 1)
+  }
+
+  return { sandboxRef, ready, failed, retried: attempt > 0, retry }
 }

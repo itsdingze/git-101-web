@@ -25,6 +25,9 @@ function TerminalHarness({ session }: { session: TerminalSession }) {
 function openTerminal(complete: TerminalSession['complete'] = () => Promise.resolve(null)) {
   const session: TerminalSession = {
     ready: true,
+    failed: false,
+    retried: false,
+    retry: vi.fn<() => void>(),
     lines: [],
     prompt: { directory: '~', branch: null },
     submit: vi.fn<(line: string) => void>(),

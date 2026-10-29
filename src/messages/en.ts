@@ -173,6 +173,9 @@ export const messages = {
     output: 'Terminal output',
     input: 'Terminal command input. Tab completes names. Press Escape to leave the terminal.',
     settingUp: 'Setting up the practice terminal…',
+    setupFailed: "The practice terminal didn't load.",
+    setupFailedAgain: "The practice terminal still didn't load. Reload the page to try again.",
+    retrySetup: 'Try again',
     alreadyCompleted: "You've completed this exercise. Practise again, or press Continue.",
     exerciseComplete: 'Exercise complete.',
     keys: {

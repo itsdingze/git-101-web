@@ -56,7 +56,7 @@ export function useSandboxExercise(
     [refresh, restart, step],
   )
 
-  const { sandboxRef, ready } = useSandboxSession(seed, lessonId, prepare)
+  const { sandboxRef, ready, failed, retried, retry } = useSandboxSession(seed, lessonId, prepare)
 
   const runLine = useCallback(
     async (line: string) => {
@@ -138,7 +138,7 @@ export function useSandboxExercise(
   const reset = useCallback(() => queue.replace(startOver), [queue, startOver])
 
   return {
-    terminal: { ready, lines, prompt, submit, complete, listCompletions },
+    terminal: { ready, failed, retried, retry, lines, prompt, submit, complete, listCompletions },
     files: { conflictFiles: conflictFiles(snapshot), read, save },
     snapshot,
     allCompleted,

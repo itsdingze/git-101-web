@@ -4,6 +4,9 @@ import type { TerminalLine } from './transcript'
 
 export interface TerminalSession {
   ready: boolean
+  failed: boolean
+  retried: boolean
+  retry: () => void
   lines: readonly TerminalLine[]
   prompt: PromptInfo
   submit: (line: string) => void

@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react'
+import { RotateCcw } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 import type { PromptInfo } from '@/lib/git-sim/createSandbox'
 import type { TerminalLine } from '@/components/lesson/sandbox-exercise/model/transcript'
 import type { TerminalSession } from '@/components/lesson/sandbox-exercise/model/terminalSession'
@@ -45,9 +47,14 @@ function ShellLine({ kind, text, prompt }: ShellLineProps) {
 }
 
 export function SandboxTerminal({ session, focusRequest }: SandboxTerminalProps) {
-  const { lines, prompt, ready } = session
+  const { lines, prompt, ready, failed, retried, retry } = session
   const { inputRef, draft, setDraft, handleKeyDown, pressTouchKey } = useTerminalInput(session)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const reloadRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (failed && retried) reloadRef.current?.focus()
+  }, [failed, retried])
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, left: 0 })
@@ -68,7 +75,7 @@ export function SandboxTerminal({ session, focusRequest }: SandboxTerminalProps)
   return (
     <div className="flex flex-col gap-2">
       <TerminalFrame title={messages.sandbox.windowTitle} ref={scrollRef} onClick={revealInput}>
-        <div role="log" aria-label={messages.sandbox.output}aria-busy={!ready} className="space-y-1">
+        <div role="log" aria-label={messages.sandbox.output} aria-busy={!ready && !failed} className="space-y-1">
           {lines.map((line) =>
             isShellKind(line.kind) ? (
               <ShellLine key={line.id} kind={line.kind} text={line.text} prompt={line.prompt ?? prompt} />
@@ -89,7 +96,7 @@ export function SandboxTerminal({ session, focusRequest }: SandboxTerminalProps)
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={handleKeyDown}
-              className="min-w-0 flex-1 scroll-mt-16 scroll-mb-24 bg-transparent text-terminal-text caret-terminal-text outline-none"
+              className="min-w-0 flex-1 bg-transparent text-terminal-text caret-terminal-text outline-none"
               aria-label={messages.sandbox.input}
               spellCheck={false}
               autoComplete="off"
@@ -97,10 +104,30 @@ export function SandboxTerminal({ session, focusRequest }: SandboxTerminalProps)
               autoCorrect="off"
             />
           </div>
+        ) : failed ? (
+          <p role="alert" className="font-sans text-terminal-muted">
+            {retried ? messages.sandbox.setupFailedAgain : messages.sandbox.setupFailed}
+          </p>
         ) : (
           <p className="font-sans text-terminal-muted">{messages.sandbox.settingUp}</p>
         )}
       </TerminalFrame>
+
+      {failed && (
+        <div>
+          {retried ? (
+            <Button ref={reloadRef} variant="outlined" onClick={() => window.location.reload()}>
+              <RotateCcw size={14} aria-hidden />
+              {messages.error.reload}
+            </Button>
+          ) : (
+            <Button variant="outlined" onClick={retry}>
+              <RotateCcw size={14} aria-hidden />
+              {messages.sandbox.retrySetup}
+            </Button>
+          )}
+        </div>
+      )}
 
       {ready && (
         <TerminalKeyRow
