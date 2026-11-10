@@ -32,7 +32,7 @@ describe('parseLesson', () => {
         'lesson.md',
       )
 
-    expect(extra).toThrow(/^lesson\.md:8: .*extra/)
+    expect(extra).toThrow(/^lesson\.md:1: .*extra/)
   })
 
   it('rejects a stray ::: under a heading with its line instead of hanging', () => {
@@ -61,11 +61,175 @@ describe('parseLesson', () => {
     expect(steps[0]).toMatchObject({ content: [{ type: 'code', language: 'bash', value: 'git status\n\ngit log' }] })
   })
 
-  it('reads a fence named like a built-in object property as a code block, not an exercise', () => {
-    const { steps } = lesson('## A {#a}', '', '```constructor', 'value', '```')
+  it('rejects a fence named like a built-in object property, naming the file and line', () => {
+    expect(() => lesson('## A {#a}', '', '```constructor', 'value', '```')).toThrow(/^lesson\.md:10: .*"constructor"/)
+  })
+
+  const QUIZ = ['id: q', 'question: Q?', 'options: [{ text: A }, { text: B }]', 'correctIndex: 0', 'explanation: E']
+
+  it('reads an exercise fence with trailing spaces as the exercise', () => {
+    const { steps } = lesson('## A {#a}', '', 'Text.', '', '```quiz  ', ...QUIZ, '```')
+
+    expect(steps[1]).toMatchObject({ type: 'quiz', id: 'q' })
+  })
+
+  it.each(['quizz', 'Quiz', 'python'])('rejects the unknown fence "%s", naming the file and line', (language) => {
+    expect(() => lesson('## A {#a}', '', `\`\`\`${language}`, ...QUIZ, '```')).toThrow(new RegExp(`^lesson\\.md:10: .*"${language}"`))
+  })
+
+  it('rejects a fence with no language, naming the file and line', () => {
+    expect(() => lesson('## A {#a}', '', '```', 'value', '```')).toThrow(/^lesson\.md:10: /)
+  })
+
+  it('ends a paragraph at a fence on the next line, so an exercise keeps its step', () => {
+    const { steps } = lesson('## A {#a}', '', 'Text.', '```quiz', ...QUIZ, '```')
+
+    expect(steps).toHaveLength(2)
+    expect(steps[0]).toMatchObject({ content: [{ type: 'text', value: 'Text.' }] })
+    expect(steps[1]).toMatchObject({ type: 'quiz' })
+  })
+
+  it.each([
+    ['a code block', ['```bash', 'git status', '```'], { type: 'code', language: 'bash' }],
+    ['a bulleted list', ['- one'], { type: 'list', items: ['one'] }],
+    ['a numbered list', ['1. one'], { type: 'list', ordered: true, items: ['one'] }],
+    ['a callout', ['> [!TIP]', '> Body.'], { type: 'callout', variant: 'tip', value: 'Body.' }],
+  ])('ends a paragraph at %s on the next line', (_, block, expected) => {
+    const { steps } = lesson('## A {#a}', '', 'Text.', ...block)
+
+    expect(steps[0]).toMatchObject({ content: [{ type: 'text', value: 'Text.' }, expected] })
+  })
+
+  it('rejects a closing fence with trailing spaces instead of swallowing what follows', () => {
+    const broken = () => lesson('## A {#a}', '', '```bash', 'one', '``` ', '', 'Middle text.', '', '```bash', 'two', '```')
+
+    expect(broken).toThrow(/^lesson\.md:12: /)
+  })
+
+  it.each([
+    ['quiz', QUIZ],
+    ['visualization git-graph', ['setup: []', 'commands: []']],
+  ])('rejects a %s fence inside a tab, naming the file and line', (fence, body) => {
+    const broken = () => lesson('## A {#a}', '', ':::tabs os Pick one', '::tab Mac', `\`\`\`${fence}`, ...body, '```', ':::')
+
+    expect(broken).toThrow(/^lesson\.md:12: .*tab/)
+  })
+
+  it.each(['### Sub', '# Title', '#### Deep'])('rejects the unsupported heading "%s", naming the file and line', (heading) => {
+    expect(() => lesson('## A {#a}', '', heading, '', 'Text.')).toThrow(/^lesson\.md:10: .*heading/)
+  })
+
+  it('rejects an unsupported heading that follows a paragraph line', () => {
+    expect(() => lesson('## A {#a}', '', 'Text.', '### Sub')).toThrow(/^lesson\.md:11: .*heading/)
+  })
+
+  it('rejects a bare > that would end a callout and print literally', () => {
+    expect(() => lesson('## A {#a}', '', '> [!TIP] T', '> one', '>', '> two')).toThrow(/^lesson\.md:12: /)
+  })
+
+  it('rejects a quoted line that is not a callout', () => {
+    expect(() => lesson('## A {#a}', '', '> plain quote')).toThrow(/^lesson\.md:10: /)
+  })
+
+  it('rejects a quoted line that follows a paragraph line', () => {
+    expect(() => lesson('## A {#a}', '', 'Text.', '> plain quote')).toThrow(/^lesson\.md:11: /)
+  })
+
+  it.each(['$ git status', '/home/user $ git status', '$'])('rejects the terminal prompt "%s" that does not start at ~', (prompt) => {
+    expect(() => lesson('## A {#a}', '', '```terminal', '~ $ pwd', prompt, 'On branch main', '```')).toThrow(/^lesson\.md:12: /)
+  })
+
+  it('rejects invalid YAML in an exercise, with the lesson line of the problem', () => {
+    const broken = () => lesson('## A {#a}', '', 'Text.', '', '```quiz', 'id: q', 'question: "unterminated', '```')
+
+    expect(broken).toThrow(/^lesson\.md:14: /)
+  })
+
+  it('rejects invalid YAML in a visualization, with the lesson line of the problem', () => {
+    const broken = () => lesson('## A {#a}', '', '```visualization git-graph', 'setup: []', 'commands: [', '```')
+
+    expect(broken).toThrow(/^lesson\.md:1[12]: /)
+  })
+
+  it('rejects invalid YAML in the frontmatter, with the lesson line of the problem', () => {
+    const broken = () => parseLesson(['---', 'id: 3', 'title: "x', 'description: D', 'unlocks: []', '---'].join('\n'), 'lesson.md')
+
+    expect(broken).toThrow(/^lesson\.md:5: /)
+  })
+
+  it('reports a frontmatter field problem at the frontmatter, not after it', () => {
+    const broken = () => parseLesson(['---', 'id: x', 'title: T', 'description: D', 'unlocks: []', '---'].join('\n'), 'lesson.md')
+
+    expect(broken).toThrow(/^lesson\.md:1: id/)
+  })
+
+  it('rejects a misspelled command in unlocks, naming the file and line', () => {
+    const broken = () => parseLesson(['---', 'id: 3', 'title: T', 'description: D', 'unlocks: [comit]', '---'].join('\n'), 'lesson.md')
+
+    expect(broken).toThrow(/^lesson\.md:1: unlocks/)
+  })
+
+  it('accepts gh in unlocks', () => {
+    const parsed = parseLesson(['---', 'id: 3', 'title: T', 'description: D', 'unlocks: [gh, add]', '---'].join('\n'), 'lesson.md')
+
+    expect(parsed.unlocks).toEqual(['gh', 'add'])
+  })
+
+  it('rejects a heading with nothing under it, naming its line', () => {
+    expect(() => lesson('## A {#a}', '', '## B {#b}', '', 'Text.')).toThrow(/^lesson\.md:8: /)
+  })
+
+  it('rejects a heading with only an exercise under it', () => {
+    expect(() => lesson('## A {#a}', '', '```quiz', ...QUIZ, '```')).toThrow(/^lesson\.md:8: /)
+  })
+
+  it('rejects a last heading with nothing under it', () => {
+    expect(() => lesson('## A {#a}', '', 'Text.', '', '## B {#b}')).toThrow(/^lesson\.md:12: /)
+  })
+
+  it('accepts a heading with only a diagram under it', () => {
+    const { steps } = lesson('## A {#a}', '', '```visualization git-graph', 'setup: []', 'commands: []', '```')
 
     expect(steps).toHaveLength(1)
-    expect(steps[0]).toMatchObject({ content: [{ type: 'code', language: 'constructor', value: 'value' }] })
+  })
+
+  it('rejects tabs with no tabs inside, naming the file and line', () => {
+    expect(() => lesson('## A {#a}', '', ':::tabs os Pick one', ':::')).toThrow(/^lesson\.md:10: /)
+  })
+
+  it('rejects a tab with nothing inside, naming the file and line', () => {
+    expect(() => lesson('## A {#a}', '', ':::tabs os Pick one', '::tab Mac', ':::')).toThrow(/^lesson\.md:11: /)
+  })
+
+  it('rejects a tab with no label, naming the file and line', () => {
+    expect(() => lesson('## A {#a}', '', ':::tabs os Pick one', '::tab ', 'Text.', ':::')).toThrow(/^lesson\.md:11: /)
+  })
+
+  it('rejects a callout with no body, naming the file and line', () => {
+    expect(() => lesson('## A {#a}', '', '> [!TIP] Title')).toThrow(/^lesson\.md:10: /)
+  })
+
+  it.each([
+    ['availableBlocks', 'availableBlocks: []', 'correctAnswer: [git]'],
+    ['correctAnswer', 'availableBlocks: [git]', 'correctAnswer: []'],
+  ])('rejects an empty %s', (field, available, answer) => {
+    const broken = () => lesson('## Q {#q}', '', 'Text.', '', '```block-exercise', 'id: b', 'prompt: P', available, answer, '```')
+
+    expect(broken).toThrow(new RegExp(`^lesson\\.md:12: block-exercise "b": ${field}`))
+  })
+
+  it('rejects an empty acceptable answer', () => {
+    const broken = () =>
+      lesson('## Q {#q}', '', 'Text.', '', '```block-exercise', 'id: b', 'prompt: P', 'availableBlocks: [git]', 'correctAnswer: [git]', 'acceptableAnswers: [[]]', '```')
+
+    expect(broken).toThrow(/^lesson\.md:12: block-exercise "b": acceptableAnswers/)
+  })
+
+  it.each(['decoyReasons', 'missingReasons'])('rejects a %s key that names no block', (field) => {
+    const broken = () =>
+      lesson('## Q {#q}', '', 'Text.', '', '```block-exercise', 'id: b', 'prompt: P', 'availableBlocks: [git, add]', 'correctAnswer: [git, add]', `${field}: { comit: nope }`, '```')
+
+    expect(broken).toThrow(new RegExp(`^lesson\\.md:12: block-exercise "b": ${field}\\.comit`))
   })
 
   it('reads a diff block as a file path and lines marked unchanged, added or removed', () => {

@@ -1,29 +1,34 @@
-import { parse as parseYaml } from 'yaml'
 import type { Lesson, ReadingStep, Step } from '@/types'
 import { LineReader } from './LineReader'
 import { expandSeedStory, type Story } from './storySteps'
 import { FENCE, parseContentBlock } from './contentBlocks'
 import { exerciseSchemas, frontmatterSchema, validate, type ExerciseType } from './lessonSchema'
 import { isVisualizationFence, readVisualizationBlock } from './visualizationBlock'
-import { readYamlFence } from './yamlFence'
+import { parseYamlFrom, readYamlFence } from './yamlFence'
 import { isOwnKey } from '../isOwnKey'
 
 const HEADING = /^## (.+?) \{(.+)\}$/
+const FRONTMATTER_LINE = 1
+const FRONTMATTER_FIRST_FIELD_LINE = 2
 
 export function parseLesson(source: string, fileName: string, story: Story = {}): Lesson {
   const reader = new LineReader(source.split(/\r?\n/), fileName)
   const meta = readFrontmatter(reader)
   const steps: Step[] = []
   let reading: ReadingStep | null = null
+  let readingLine = 0
 
   for (reader.skipBlankLines(); !reader.done; reader.skipBlankLines()) {
     const line = reader.peek()
     const start = reader.lineNumber
     const exerciseType = exerciseTypeOf(line)
     if (line.startsWith('## ')) {
+      requireContent(reader, reading, readingLine)
       reading = readHeading(reader)
+      readingLine = start
       appendStep(reader, steps, reading, start)
     } else if (exerciseType) {
+      requireContent(reader, reading, readingLine)
       appendStep(reader, steps, readExercise(reader, exerciseType, story), start)
       reading = null
     } else if (reading?.visualization) {
@@ -37,7 +42,14 @@ export function parseLesson(source: string, fileName: string, story: Story = {})
     }
   }
 
+  requireContent(reader, reading, readingLine)
   return { ...meta, steps }
+}
+
+function requireContent(reader: LineReader, step: ReadingStep | null, line: number): void {
+  if (step && step.content.length === 0 && !step.visualization) {
+    throw reader.error('this step has no content, so add text under its heading or remove it', line)
+  }
 }
 
 function appendStep(reader: LineReader, steps: Step[], step: Step, line: number): void {
@@ -48,7 +60,7 @@ function appendStep(reader: LineReader, steps: Step[], step: Step, line: number)
 }
 
 function exerciseTypeOf(line: string): ExerciseType | null {
-  const name = line.startsWith(FENCE) ? line.slice(FENCE.length) : ''
+  const name = line.startsWith(FENCE) ? line.slice(FENCE.length).trim() : ''
   return isOwnKey(exerciseSchemas, name) ? name : null
 }
 
@@ -94,5 +106,6 @@ function readFrontmatter(reader: LineReader): Omit<Lesson, 'steps'> {
     lines.push(reader.next())
   }
   reader.next()
-  return reader.failingAt(reader.lineNumber, () => validate(frontmatterSchema, parseYaml(lines.join('\n'))))
+  const fields = parseYamlFrom(reader, lines.join('\n'), FRONTMATTER_FIRST_FIELD_LINE)
+  return reader.failingAt(FRONTMATTER_LINE, () => validate(frontmatterSchema, fields))
 }

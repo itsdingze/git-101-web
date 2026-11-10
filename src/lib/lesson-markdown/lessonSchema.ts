@@ -57,11 +57,33 @@ function unavailableBlock(answer: readonly string[], available: readonly string[
   return null
 }
 
+const LOCKABLE_COMMANDS = {
+  add: 'add',
+  branch: 'branch',
+  clone: 'clone',
+  commit: 'commit',
+  config: 'config',
+  diff: 'diff',
+  init: 'init',
+  log: 'log',
+  merge: 'merge',
+  pull: 'pull',
+  push: 'push',
+  remote: 'remote',
+  restore: 'restore',
+  rm: 'rm',
+  show: 'show',
+  stash: 'stash',
+  status: 'status',
+  switch: 'switch',
+  gh: 'gh',
+} as const satisfies { [Name in LockableCommand]: Name }
+
 export const frontmatterSchema = z.strictObject({
   id: z.number().int().min(0),
   title: text,
   description: text,
-  unlocks: z.array(z.custom<LockableCommand>((value) => typeof value === 'string')),
+  unlocks: z.array(z.enum(LOCKABLE_COMMANDS)),
 }) satisfies z.ZodType<Omit<Lesson, 'steps'>>
 
 export const visualizationSchemas = {
@@ -104,14 +126,20 @@ export const exerciseSchemas = {
       type: z.literal('block-exercise'),
       id: text,
       prompt: text,
-      availableBlocks: texts,
-      correctAnswer: texts,
-      acceptableAnswers: z.array(texts).optional(),
+      availableBlocks: texts.min(1),
+      correctAnswer: texts.min(1),
+      acceptableAnswers: z.array(texts.min(1)).optional(),
       decoyReasons: reasons.optional(),
       missingReasons: reasons.optional(),
       hints: texts.optional(),
     })
     .superRefine((exercise, ctx) => {
+      for (const field of ['decoyReasons', 'missingReasons'] as const) {
+        for (const block of Object.keys(exercise[field] ?? {})) {
+          if (exercise.availableBlocks.includes(block)) continue
+          ctx.addIssue({ code: 'custom', path: [field, block], message: `"${block}" is not in availableBlocks` })
+        }
+      }
       const answers: [PropertyKey[], readonly string[]][] = [
         [['correctAnswer'], exercise.correctAnswer],
         ...(exercise.acceptableAnswers ?? []).map((answer, index): [PropertyKey[], readonly string[]] => [

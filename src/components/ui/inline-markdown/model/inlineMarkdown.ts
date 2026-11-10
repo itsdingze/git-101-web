@@ -1,9 +1,9 @@
 import { LINK_CLASS } from '@/components/ui/linkClass'
 
-const LINK = /\[([^\]]+)\]\((https?:\/\/[^)]+|\/downloads\/[a-zA-Z0-9_-]+\.zip)\)/g
+const LINK = /\[([^\]]+)\]\((https?:\/\/(?:[^()@]|\([^()@]*\))+|\/downloads\/[a-zA-Z0-9_-]+\.zip)\)/g
 const CODE = /`([^`\n]+)`/g
-const BOLD = /\*\*([^*\n]+)\*\*/g
-const ITALIC = /(^|[^*])\*([^*\n]+)\*/g
+const BOLD = /\*\*([^*\s](?:[^*\n]*[^*\s])?)\*\*/g
+const ITALIC = /(^|[^*])\*([^*\s](?:[^*\n]*[^*\s])?)\*/g
 const PARKED = /@@PARK(\d+)@@/g
 
 const CODE_CLASS = 'bg-bg-card px-1.5 py-0.5 rounded text-text-primary font-mono text-xs box-decoration-clone'
@@ -27,6 +27,12 @@ function escapeHtml(value: string): string {
     .replace(/@/g, '&#64;')
 }
 
+function withEmphasis(html: string): string {
+  return html
+    .replace(BOLD, '<strong class="text-text-primary font-medium">$1</strong>')
+    .replace(ITALIC, '$1<em class="italic">$2</em>')
+}
+
 export function inlineMarkdown(value: string): string {
   const parked: string[] = []
   const park = (html: string) => `@@PARK${parked.push(html) - 1}@@`
@@ -37,12 +43,9 @@ export function inlineMarkdown(value: string): string {
     .replace(LINK, (_, text: string, href: string) => {
       if (href.startsWith('/downloads/')) {
         const url = `${import.meta.env.BASE_URL}${href.slice(1)}`
-        return park(`<a href="${url}" download class="${LINK_CLASS}">${text}</a>`)
+        return park(`<a href="${url}" download class="${LINK_CLASS}">${withEmphasis(text)}</a>`)
       }
-      return park(`<a href="${href}" target="_blank" rel="noopener noreferrer" class="${LINK_CLASS}">${text}</a>`)
+      return park(`<a href="${href}" target="_blank" rel="noopener noreferrer" class="${LINK_CLASS}">${withEmphasis(text)}</a>`)
     })
-    .replace(BOLD, '<strong class="text-text-primary font-medium">$1</strong>')
-    .replace(ITALIC, '$1<em class="italic">$2</em>')
-    .replace(/\n/g, '<br />')
-  return unpark(html)
+  return unpark(withEmphasis(html).replace(/\n/g, '<br />'))
 }
