@@ -94,6 +94,20 @@ describe('BlockExercise', () => {
     activate(tile)
 
     expect(document.activeElement).toBe(tile)
+    expect(tile.getAttribute('aria-disabled')).toBe('true')
+  })
+
+  it('tells a screen reader how to use a tile with the keyboard, without dnd-kit attributes', () => {
+    renderExercise()
+    const [tile] = glossaryTiles()
+    if (!tile) throw new Error('No tile')
+
+    const help = document.getElementById(tile.getAttribute('aria-describedby') ?? '')
+
+    expect(help?.textContent).toBe(messages.blocks.addHelp)
+    expect(tile.hasAttribute('aria-pressed')).toBe(false)
+    expect(tile.hasAttribute('aria-grabbed')).toBe(false)
+    expect(tile.hasAttribute('aria-roledescription')).toBe(false)
   })
 
   it('moves focus along the answer as focused tiles are removed, then to the answer itself', () => {

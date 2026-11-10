@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
+import { useId, useMemo } from 'react'
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react'
 import type { BlockExerciseStep } from '@/types'
 import { GlossaryBlock } from './components/GlossaryBlock'
-import { handOffFocus } from './components/handOffFocus'
+import { GlossaryPlaceholder } from './components/GlossaryPlaceholder'
 import { OverlayBlock } from './components/OverlayBlock'
 import { SolutionDropZone } from './components/SolutionDropZone'
 import { SolutionBlocks } from './components/SolutionBlocks'
@@ -14,6 +14,8 @@ import { FeedbackPanel } from '@/components/ui/FeedbackPanel'
 import { messages } from '@/messages/en'
 import { useBlockAnswer } from './hooks/useBlockAnswer'
 import { useBlockDrag } from './hooks/useBlockDrag'
+import { BLOCK_DRAG_PLUGINS, BLOCK_DRAG_SENSORS } from './model/blockDragSetup'
+import { handOffFocus } from './model/handOffFocus'
 import { tileOrder } from './model/tileOrder'
 
 interface BlockExerciseProps {
@@ -24,9 +26,11 @@ interface BlockExerciseProps {
 export function BlockExercise({ step, lessonId }: BlockExerciseProps) {
   const blockAnswer = useBlockAnswer(step, lessonId)
   const { answer, solved, feedback, shaking, hintOpen, visibleHint, add, remove, toggleHint, reset } = blockAnswer
-  const { zoneRef, activeId, activeBlock, isActiveFromGlossary, overSolution, insertIndex, dragProviderProps } =
+  const { zoneRef, activeId, activeBlock, isActiveFromGlossary, overSolution, insertIndex, announcement, dragProviderProps } =
     useBlockDrag(blockAnswer)
   const tiles = useMemo(() => tileOrder(step), [step])
+  const addHelpId = useId()
+  const removeHelpId = useId()
 
   return (
     <div className="space-y-6">
@@ -36,7 +40,11 @@ export function BlockExercise({ step, lessonId }: BlockExerciseProps) {
         value={step.prompt}
       />
 
-      <DragDropProvider {...dragProviderProps}>
+      <p id={addHelpId} hidden>{messages.blocks.addHelp}</p>
+      <p id={removeHelpId} hidden>{messages.blocks.removeHelp}</p>
+      <p role="status" aria-live="polite" className="sr-only">{announcement}</p>
+
+      <DragDropProvider sensors={BLOCK_DRAG_SENSORS} plugins={BLOCK_DRAG_PLUGINS} {...dragProviderProps}>
         <SolutionDropZone zoneRef={zoneRef} solved={solved} shakeSlots={shaking} overSolution={overSolution}>
           {answer.length === 0 && insertIndex === null ? (
             <span className="flex min-h-11 items-center text-text-muted text-sm">{messages.blocks.emptyAnswer}</span>
@@ -53,23 +61,28 @@ export function BlockExercise({ step, lessonId }: BlockExerciseProps) {
                 handOffFocus(tile, zoneRef.current)
                 remove(block)
               }}
+              describedBy={removeHelpId}
             />
           )}
         </SolutionDropZone>
 
         <div className="flex flex-wrap justify-center gap-2">
-          {tiles.map((block) => (
-            <GlossaryBlock
-              key={block}
-              block={block}
-              isUsed={answer.includes(block) || !!(isActiveFromGlossary && activeBlock === block)}
-              onAdd={(tile) => {
-                handOffFocus(tile, zoneRef.current)
-                add(block)
-              }}
-              disabled={solved}
-            />
-          ))}
+          {tiles.map((block) =>
+            answer.includes(block) ? (
+              <GlossaryPlaceholder key={block} block={block} />
+            ) : (
+              <GlossaryBlock
+                key={block}
+                block={block}
+                onAdd={(tile) => {
+                  handOffFocus(tile, zoneRef.current)
+                  add(block)
+                }}
+                disabled={solved}
+                describedBy={addHelpId}
+              />
+            ),
+          )}
         </div>
 
         <DragOverlay>

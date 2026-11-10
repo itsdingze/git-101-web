@@ -1,12 +1,14 @@
-import { type RefObject, useRef, useState } from 'react'
+import { type RefObject, useEffect, useRef, useState } from 'react'
 import { move } from '@dnd-kit/helpers'
 import type { DragDropEventHandlers } from '@dnd-kit/react'
 import type { DragOperation, UniqueIdentifier } from '@dnd-kit/abstract'
+import { blockOf, isFromGlossary } from '@/components/lesson/block-exercise/model/blockDragId'
+import { dropAnnouncement } from '@/components/lesson/block-exercise/model/dragAnnouncement'
+import { focusDroppedBlock } from '@/components/lesson/block-exercise/model/handOffFocus'
 import { insertIndex } from '@/components/lesson/block-exercise/model/insertIndex'
-import { focusDroppedBlock } from '@/components/lesson/block-exercise/components/handOffFocus'
+import { messages } from '@/messages/en'
 import type { BlockAnswer } from './useBlockAnswer'
 
-const GLOSSARY_PREFIX = 'avail-'
 const SOLUTION_AREA = 'solution-area'
 
 interface BlockDrag {
@@ -16,15 +18,8 @@ interface BlockDrag {
   isActiveFromGlossary: boolean
   overSolution: boolean
   insertIndex: number | null
+  announcement: string
   dragProviderProps: Partial<DragDropEventHandlers>
-}
-
-function isFromGlossary(id: UniqueIdentifier | null | undefined): boolean {
-  return String(id ?? '').startsWith(GLOSSARY_PREFIX)
-}
-
-function blockOf(id: string): string {
-  return id.startsWith(GLOSSARY_PREFIX) ? id.slice(GLOSSARY_PREFIX.length) : id
 }
 
 function inserted(answer: readonly string[], block: string, index: number): string[] {
@@ -36,9 +31,17 @@ export function useBlockDrag({ answer, solved, changeAnswer }: Pick<BlockAnswer,
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
   const [overSolution, setOverSolution] = useState(false)
   const [dropIndex, setDropIndex] = useState<number | null>(null)
+  const [announcement, setAnnouncement] = useState('')
   const overSolutionRef = useRef(false)
   const dropIndexRef = useRef<number | null>(null)
   const answerBeforeDrag = useRef(answer)
+  const blockAwaitingFocus = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (activeId !== null || blockAwaitingFocus.current === null) return
+    focusDroppedBlock(zoneRef.current, blockAwaitingFocus.current)
+    blockAwaitingFocus.current = null
+  }, [activeId])
 
   function markOverSolution(isOver: boolean) {
     if (isOver === overSolutionRef.current) return
@@ -71,13 +74,24 @@ export function useBlockDrag({ answer, solved, changeAnswer }: Pick<BlockAnswer,
     return targetId === SOLUTION_AREA || answer.includes(String(targetId))
   }
 
-  function drop(operation: DragOperation) {
+  function drop(operation: DragOperation): boolean {
     const { source, target } = operation
-    if (!source || !isFromGlossary(source.id) || !target || !isOverAnswer(target.id)) return
-    const block = blockOf(String(source.id))
-    if (answer.includes(block)) return
+    if (!source || !isFromGlossary(source.id) || !target || !isOverAnswer(target.id)) return false
+    const block = blockOf(source.id)
+    if (answer.includes(block)) return false
     const index = dropIndexRef.current ?? answer.length
     changeAnswer((current) => inserted(current, block, index))
+    return true
+  }
+
+  function announceMoveWithinAnswer(block: string, targetId: UniqueIdentifier | undefined) {
+    const position = answer.indexOf(String(targetId))
+    if (position >= 0) setAnnouncement(messages.blocks.movedTo(block, position + 1, answer.length))
+  }
+
+  function announceGlossaryCrossing(block: string, isOver: boolean) {
+    if (isOver === overSolutionRef.current) return
+    setAnnouncement(isOver ? messages.blocks.overAnswer(block) : messages.blocks.offAnswer(block))
   }
 
   const dragProviderProps: Partial<DragDropEventHandlers> = {
@@ -87,13 +101,19 @@ export function useBlockDrag({ answer, solved, changeAnswer }: Pick<BlockAnswer,
       setActiveId(sourceId)
       markOverSolution(!isFromGlossary(sourceId))
       answerBeforeDrag.current = answer
+      if (sourceId !== null) setAnnouncement(messages.blocks.pickedUp(blockOf(sourceId)))
     },
     onDragOver(event) {
-      if (!isFromGlossary(event.operation.source?.id)) {
+      const { source, target } = event.operation
+      const block = blockOf(source?.id ?? '')
+      if (!isFromGlossary(source?.id)) {
+        announceMoveWithinAnswer(block, target?.id)
         changeAnswer((current) => move([...current], event))
         return
       }
-      markOverSolution(isOverAnswer(event.operation.target?.id))
+      const isOver = isOverAnswer(target?.id)
+      announceGlossaryCrossing(block, isOver)
+      markOverSolution(isOver)
       trackDropIndex(event.operation)
     },
     onDragMove(event) {
@@ -102,27 +122,37 @@ export function useBlockDrag({ answer, solved, changeAnswer }: Pick<BlockAnswer,
     onDragEnd(event) {
       setActiveId(null)
       markOverSolution(false)
+      const { source, canceled } = event.operation
+      let added = false
       if (!solved) {
-        if (event.operation.canceled) changeAnswer(() => answerBeforeDrag.current)
-        else drop(event.operation)
+        if (canceled) changeAnswer(() => answerBeforeDrag.current)
+        else added = drop(event.operation)
       }
       markDropIndex(null)
-      const sourceId = event.operation.source?.id
-      if (sourceId !== undefined) {
-        requestAnimationFrame(() => focusDroppedBlock(zoneRef.current, blockOf(String(sourceId))))
-      }
+      if (source?.id === undefined) return
+      const block = blockOf(source.id)
+      blockAwaitingFocus.current = block
+      setAnnouncement(
+        dropAnnouncement({
+          block,
+          canceled,
+          fromGlossary: isFromGlossary(source.id),
+          added,
+          position: answer.indexOf(block) + 1,
+          total: answer.length,
+        }),
+      )
     },
   }
-
-  const activeIdText = activeId === null ? null : String(activeId)
 
   return {
     zoneRef,
     activeId,
-    activeBlock: activeIdText === null ? null : blockOf(activeIdText),
-    isActiveFromGlossary: isFromGlossary(activeIdText),
+    activeBlock: activeId === null ? null : blockOf(activeId),
+    isActiveFromGlossary: isFromGlossary(activeId),
     overSolution,
     insertIndex: dropIndex,
+    announcement,
     dragProviderProps,
   }
 }

@@ -1,40 +1,34 @@
 import { useDraggable } from '@dnd-kit/react'
 import { FOCUS_RING } from '@/components/ui/focusRing'
+import { glossaryDragId } from '@/components/lesson/block-exercise/model/blockDragId'
 import { messages } from '@/messages/en'
 import { blockShell } from './blockShell'
 
+const FACE = 'bg-bg-card border-border text-text-primary cursor-grab active:cursor-grabbing transition-colors hover:border-text-muted'
+const LIFTED = 'bg-border border-border'
+
 interface GlossaryBlockProps {
   block: string
-  isUsed: boolean
   onAdd: (tile: HTMLButtonElement) => void
   disabled: boolean
+  describedBy: string
 }
 
-export function GlossaryBlock({ block, isUsed, onAdd, disabled }: GlossaryBlockProps) {
-  const { ref } = useDraggable({
-    id: `avail-${block}`,
-    disabled: isUsed || disabled,
-  })
-
-  if (isUsed) {
-    return (
-      <div className={`${blockShell} bg-border border border-border`}>
-        <span className="invisible">{block}</span>
-      </div>
-    )
-  }
+export function GlossaryBlock({ block, onAdd, disabled, describedBy }: GlossaryBlockProps) {
+  const { ref, isDragging } = useDraggable({ id: glossaryDragId(block), disabled })
 
   return (
     <button
       ref={ref}
       type="button"
+      tabIndex={0}
       onClick={(event) => onAdd(event.currentTarget)}
       aria-label={messages.blocks.add(block)}
-      className={`${blockShell} bg-bg-card border border-border text-text-primary cursor-grab active:cursor-grabbing transition-colors hover:border-text-muted
-        ${FOCUS_RING}`}
+      aria-describedby={describedBy}
+      className={`${blockShell} border ${isDragging ? LIFTED : FACE} ${FOCUS_RING}`}
       disabled={disabled}
     >
-      {block}
+      {isDragging ? <span className="invisible">{block}</span> : block}
     </button>
   )
 }

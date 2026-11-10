@@ -10,9 +10,10 @@ interface SolutionBlocksProps {
   activeBlock: string | null
   solved: boolean
   onRemove: (block: string, tile: HTMLButtonElement) => void
+  describedBy: string
 }
 
-export function SolutionBlocks({ answer, insertIndex, isActiveFromGlossary, overSolution, activeBlock, solved, onRemove }: SolutionBlocksProps) {
+export function SolutionBlocks({ answer, insertIndex, isActiveFromGlossary, overSolution, activeBlock, solved, onRemove, describedBy }: SolutionBlocksProps) {
   const blocks: ReactNode[] = answer.map((block, i) => (
     <SortableBlock
       key={block}
@@ -20,6 +21,7 @@ export function SolutionBlocks({ answer, insertIndex, isActiveFromGlossary, over
       index={i}
       onRemove={(tile) => onRemove(block, tile)}
       disabled={solved}
+      describedBy={solved ? undefined : describedBy}
     >
       {block}
     </SortableBlock>
