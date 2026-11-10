@@ -25,7 +25,7 @@ export function LessonPage() {
     <ContentColumn className="flex-1 flex flex-col">
       <h1 className="sr-only">{lesson.title}</h1>
       <StepSpacer ref={spacerRef} grow="flex-2" />
-      <div key={currentStepIndex} ref={contentRef} tabIndex={-1} className="shrink-0 outline-none">
+      <div key={currentStepIndex} ref={contentRef} tabIndex={-1} className="shrink-0 outline-none [&_h2]:outline-none">
         <StepRenderer
           step={step}
           lessonId={parsedId}

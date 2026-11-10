@@ -28,4 +28,15 @@ describe('useStepFocus', () => {
     expect(document.activeElement).toBe(content.current)
     expect(scrollTo).toHaveBeenCalledTimes(2)
   })
+
+  it('moves focus to the step heading when the step has one', () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    const content = stepContent()
+    const heading = document.createElement('h2')
+    content.current.append(heading)
+
+    renderHook(() => useStepFocus(content, 0))
+
+    expect(document.activeElement).toBe(heading)
+  })
 })
