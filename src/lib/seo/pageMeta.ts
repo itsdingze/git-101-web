@@ -28,7 +28,7 @@ function lessonResource(lesson: LessonSummary) {
     url: SITE_URL + lessonPath(lesson.id),
     position: lesson.id + 1,
     learningResourceType: 'Lesson',
-    inLanguage: 'en',
+    inLanguage: 'en-GB',
     isAccessibleForFree: true,
   }
 }
@@ -44,7 +44,7 @@ export function homeMeta(lessons: readonly LessonSummary[]): PageMeta {
       '@context': 'https://schema.org',
       ...COURSE_REFERENCE,
       description: messages.home.description,
-      inLanguage: 'en',
+      inLanguage: 'en-GB',
       isAccessibleForFree: true,
       educationalLevel: 'Beginner',
       provider: PROVIDER,
