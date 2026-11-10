@@ -34,7 +34,7 @@ const variants: Record<ButtonVariant, string> = {
     'disabled:bg-btn-filled disabled:text-text-on-accent',
   waiting:
     'bg-bg-secondary text-text-secondary border border-border ' +
-    'disabled:cursor-default disabled:bg-bg-secondary disabled:text-text-secondary',
+    'aria-disabled:cursor-default disabled:cursor-default disabled:bg-bg-secondary disabled:text-text-secondary',
 }
 
 type ButtonProps<T extends ElementType> = {

@@ -7,7 +7,7 @@ import { useLessonFooterAction } from './hooks/useLessonFooterAction'
 
 export function LessonFooter() {
   const { showLessonNav, onPrev, canGoPrev } = useLessonNav()
-  const { variant, label, showContinue, disabled, onClick } = useLessonFooterAction()
+  const { variant, label, showContinue, disabled, keepsFocus, onClick } = useLessonFooterAction()
 
   if (!showLessonNav) return null
 
@@ -28,7 +28,8 @@ export function LessonFooter() {
           <Button
             variant={variant}
             onClick={onClick}
-            disabled={disabled}
+            disabled={disabled && !keepsFocus}
+            aria-disabled={keepsFocus || undefined}
             className="grow basis-32 whitespace-nowrap"
           >
             {label}

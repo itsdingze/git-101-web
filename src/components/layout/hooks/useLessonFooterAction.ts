@@ -12,6 +12,6 @@ export function useLessonFooterAction(): LessonFooterAction {
 
   return {
     ...action,
-    onClick: action.showContinue ? nav.onNext ?? undefined : nav.triggerCheck,
+    onClick: action.disabled ? undefined : action.showContinue ? nav.onNext ?? undefined : nav.triggerCheck,
   }
 }

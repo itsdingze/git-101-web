@@ -10,6 +10,7 @@ export type FooterAction = {
   label: string
   showContinue: boolean
   disabled: boolean
+  keepsFocus: boolean
 }
 
 export function footerAction(
@@ -35,5 +36,6 @@ export function footerAction(
     label,
     showContinue,
     disabled: !debugMode && (isIncorrect || (!solved && (continueLocked || checkDisabled))),
+    keepsFocus: !debugMode && isIncorrect,
   }
 }

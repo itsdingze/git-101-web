@@ -30,6 +30,14 @@ describe('footerAction', () => {
     })
   })
 
+  it('keeps a wrong answer button focusable so keyboard focus is not lost', () => {
+    expect(footerAction({ ...unsolved, checkResult: 'incorrect' })).toMatchObject({ disabled: true, keepsFocus: true })
+  })
+
+  it('uses a plain disabled button when the step is not ready', () => {
+    expect(footerAction({ ...unsolved, continueLocked: true })).toMatchObject({ disabled: true, keepsFocus: false })
+  })
+
   it('shows a disabled Continue while the step locks it', () => {
     expect(footerAction({ ...unsolved, continueLocked: true })).toMatchObject({
       label: 'Continue',
