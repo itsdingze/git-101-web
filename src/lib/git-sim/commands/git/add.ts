@@ -1,9 +1,9 @@
 import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
 import { refuseOutsideRepository, repoPrefix, specMatcher } from '@/lib/git-sim/fs/pathspec'
-import { hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
+import type { CommandLine } from '@/lib/git-sim/input/commandLine'
 import { SandboxError } from '@/lib/git-sim/errors'
-import { fail, silent } from '@/lib/git-sim/output'
+import { fail, say, silent } from '@/lib/git-sim/output'
 import { readIgnoredFiles } from '@/lib/git-sim/fs/ignoredPaths'
 import { readWorkingTree } from '@/lib/git-sim/working-tree/workingTree'
 import { readUnmergedEntries } from '@/lib/git-sim/working-tree/indexStages'
@@ -16,6 +16,7 @@ type Candidate = { path: string; deleted: boolean }
 const UPDATE_FLAGS = ['-u', '--update']
 const EVERYTHING_FLAGS = ['-A', '--all', ...UPDATE_FLAGS]
 const FORCE_FLAGS = ['-f', '--force']
+const DRY_RUN_FLAGS = ['-n', '--dry-run']
 
 async function candidatesFor(
   ctx: CommandContext,
@@ -54,6 +55,14 @@ function ignoredPathsReport(specs: readonly string[]): CommandOutput[] {
   )
 }
 
+function dryRunReport(candidates: readonly Candidate[], ignoredSpecs: readonly string[]): CommandOutput[] {
+  const lines = [...candidates]
+    .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
+    .map(({ path, deleted }) => `${deleted ? 'remove' : 'add'} '${path}'`)
+  const report = lines.length > 0 ? say(lines.join('\n')) : silent
+  return ignoredSpecs.length > 0 ? [...report, ...ignoredPathsReport(ignoredSpecs)] : report
+}
+
 async function unknownToGitError(ctx: CommandContext, spec: string): Promise<SandboxError> {
   if (await pathExists(ctx.fs, resolvePath(spec, ctx.cwd, ctx.root))) {
     return new SandboxError(`error: pathspec '${spec}' did not match any file(s) known to git`)
@@ -64,12 +73,12 @@ async function unknownToGitError(ctx: CommandContext, spec: string): Promise<San
 async function selectCandidates(
   ctx: CommandContext,
   dir: string,
-  args: readonly string[],
+  line: CommandLine,
 ): Promise<Selection> {
-  const forced = hasFlag(args, ...FORCE_FLAGS)
-  const trackedOnly = hasFlag(args, ...UPDATE_FLAGS)
+  const forced = line.has(...FORCE_FLAGS)
+  const trackedOnly = line.has(...UPDATE_FLAGS)
   const candidates = await candidatesFor(ctx, dir, forced, trackedOnly)
-  const specs = operandsOf(args)
+  const specs = line.operands
 
   if (specs.length === 0) return { candidates, ignoredSpecs: [] }
 
@@ -95,14 +104,17 @@ async function selectCandidates(
 
 export const add: GitSubcommand = {
   requiresRepo: true,
-  run: async (args, ctx, dir) => {
-    if (operandsOf(args).length === 0 && !hasFlag(args, ...EVERYTHING_FLAGS)) {
+  options: { flags: [...EVERYTHING_FLAGS, ...FORCE_FLAGS, ...DRY_RUN_FLAGS] },
+  run: async (line, ctx, dir) => {
+    if (line.operands.length === 0 && !line.has(...EVERYTHING_FLAGS)) {
       throw new SandboxError(
         "Nothing specified, nothing added.\nhint: Maybe you wanted to say 'git add .'?",
       )
     }
 
-    const { candidates, ignoredSpecs } = await selectCandidates(ctx, dir, args)
+    const { candidates, ignoredSpecs } = await selectCandidates(ctx, dir, line)
+    if (line.has(...DRY_RUN_FLAGS)) return dryRunReport(candidates, ignoredSpecs)
+
     for (const { path, deleted } of candidates) {
       if (deleted) {
         await git.remove({ fs: gitFs(ctx.fs), dir, filepath: path })

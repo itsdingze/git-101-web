@@ -4,10 +4,10 @@ import { isDirectory, readText } from '@/lib/git-sim/fs/fileOperations'
 import { joinPath } from '@/lib/git-sim/fs/paths'
 import type { CommandContext } from '@/lib/git-sim/types'
 
-const MARKER_LINE = /^(<{7} .*|={7}|>{7} .*)$/m
+const CONFLICT_MARKER = /^<{7} .*$|(?<!<)<{7} \S+$|(?<!=)={7}$|^>{7} .*$|(?<!>)>{7} \S+$/m
 
 function hasConflictMarkers(text: string): boolean {
-  return MARKER_LINE.test(text)
+  return CONFLICT_MARKER.test(text)
 }
 
 export async function filesWithMarkers(

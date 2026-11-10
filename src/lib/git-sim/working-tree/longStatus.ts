@@ -2,12 +2,16 @@ import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
 import { collapseUntrackedFolders } from '@/lib/git-sim/fs/untrackedFolders'
 import { currentBranch, headOid, shortOid } from '@/lib/git-sim/history/repository'
-import { describeTracking, readTracking } from '@/lib/git-sim/remote/branchTracking'
+import { describeUpstreamState } from '@/lib/git-sim/remote/branchTracking'
 import { readMergeInProgress } from '@/lib/git-sim/merge/mergeInProgress'
 import { readUnmergedEntries, type UnmergedEntry } from './indexStages'
 import { readWorkingTree, type FileChange, type WorkingTree } from './workingTree'
+import { readCommitFilesOrEmpty, readIndexFiles } from './treeContents'
+import { WHOLE_TREE_VIEW, type StatusView, type UntrackedFilesMode } from './statusView'
 import { joinPath, pathFrom } from '@/lib/git-sim/fs/paths'
 import type { CommandContext } from '@/lib/git-sim/types'
+
+type CommitPreview = { amending: boolean }
 
 const LABELS: Record<FileChange['kind'], string> = {
   new: 'new file:',
@@ -47,11 +51,10 @@ function mergeHints(merging: boolean, unresolved: readonly UnmergedEntry[]): str
   return unresolved.length > 0 ? PAUSED_HINTS : RESOLVED_HINTS
 }
 
-function stagedSection(tree: WorkingTree, hasCommits: boolean, merging: boolean): string[] {
+function stagedSection(tree: WorkingTree, hasCommits: boolean, merging: boolean, amending: boolean): string[] {
   if (tree.staged.length === 0) return []
-  const unstageHint = hasCommits
-    ? '  (use "git restore --staged <file>..." to unstage)'
-    : '  (use "git rm --cached <file>..." to unstage)'
+  const restoreHint = amending ? '  (use "git restore --source=HEAD^1 --staged <file>..." to unstage)' : '  (use "git restore --staged <file>..." to unstage)'
+  const unstageHint = hasCommits ? restoreHint : '  (use "git rm --cached <file>..." to unstage)'
   return ['Changes to be committed:', ...(merging ? [] : [unstageHint]), ...changeLines(tree.staged), '']
 }
 
@@ -82,6 +85,11 @@ function unstagedSection(tree: WorkingTree): string[] {
   ]
 }
 
+function untrackedNotListed(tree: WorkingTree, merging: boolean, unresolved: readonly UnmergedEntry[]): string[] {
+  const committable = tree.staged.length > 0 || (merging && unresolved.length === 0)
+  return committable ? ['Untracked files not listed (use -u option to show untracked files)'] : []
+}
+
 function untrackedSection(tree: WorkingTree): string[] {
   if (tree.untracked.length === 0) return []
   return [
@@ -102,7 +110,13 @@ function ignoredSection(entries: readonly string[]): string[] {
   ]
 }
 
-function footer(tree: WorkingTree, hasCommits: boolean, unresolved: readonly UnmergedEntry[], merging: boolean): string[] {
+function footer(
+  tree: WorkingTree,
+  hasCommits: boolean,
+  unresolved: readonly UnmergedEntry[],
+  merging: boolean,
+  untrackedFiles: UntrackedFilesMode,
+): string[] {
   if (tree.staged.length > 0) return []
   if (merging && unresolved.length === 0) return []
   if (tree.unstaged.length > 0 || unresolved.length > 0) {
@@ -112,60 +126,87 @@ function footer(tree: WorkingTree, hasCommits: boolean, unresolved: readonly Unm
     return ['nothing added to commit but untracked files present (use "git add" to track)']
   }
   if (!hasCommits) return ['nothing to commit (create/copy files and use "git add" to track)']
+  if (untrackedFiles === 'no') return ['nothing to commit (use -u to show untracked files)']
   return ['nothing to commit, working tree clean']
 }
 
-async function headerLines(ctx: CommandContext, dir: string): Promise<string[]> {
+async function headerLines(ctx: CommandContext, dir: string, preview: CommitPreview | null, rootAmend: boolean): Promise<string[]> {
   const head = await headOid(ctx, dir)
   const branch = await currentBranch(ctx, dir)
 
   if (!branch) return [`HEAD detached at ${head ? shortOid(head) : 'unknown'}`]
-  if (!head) return [`On branch ${branch}`, '', 'No commits yet', '']
+  if (!head || rootAmend) return [`On branch ${branch}`, '', preview ? 'Initial commit' : 'No commits yet', '']
 
-  const tracking = await readTracking(ctx, dir, branch)
-  return tracking ? [`On branch ${branch}`, describeTracking(tracking), ''] : [`On branch ${branch}`]
+  const upstreamState = await describeUpstreamState(ctx, dir, branch)
+  return upstreamState ? [`On branch ${branch}`, upstreamState, ''] : [`On branch ${branch}`]
 }
 
 function seenFrom(ctx: CommandContext, dir: string): (path: string) => string {
   return (path) => pathFrom(ctx.cwd, joinPath(dir, path))
 }
 
+function visibleUntracked(paths: readonly string[], tracked: readonly string[], view: StatusView): string[] {
+  if (view.untrackedFiles === 'no') return []
+  const inScope = paths.filter(view.inScope)
+  return view.untrackedFiles === 'all' ? inScope : collapseUntrackedFolders(inScope, tracked, view.collapseBoundary)
+}
+
 function treeSeenFrom(
   tree: WorkingTree,
   tracked: readonly string[],
   show: (path: string) => string,
+  view: StatusView,
 ): WorkingTree {
-  const shown = (changes: readonly FileChange[]) => changes.map((change) => ({ ...change, path: show(change.path) }))
+  const visible = (changes: readonly FileChange[]) =>
+    changes.filter(({ path }) => view.inScope(path)).map((change) => ({ ...change, path: show(change.path) }))
   return {
-    staged: shown(tree.staged),
-    unstaged: shown(tree.unstaged),
-    untracked: collapseUntrackedFolders(tree.untracked, tracked).map(show),
+    staged: visible(tree.staged),
+    unstaged: visible(tree.unstaged),
+    untracked: visibleUntracked(tree.untracked, tracked, view).map(show),
   }
+}
+
+async function changesSinceParent(ctx: CommandContext, dir: string): Promise<{ staged: FileChange[]; hasParent: boolean }> {
+  const head = await headOid(ctx, dir)
+  const parent = head ? (await git.readCommit({ fs: gitFs(ctx.fs), dir, oid: head })).commit.parent[0] : undefined
+  const base = await readCommitFilesOrEmpty(ctx, dir, parent ?? null)
+  const index = await readIndexFiles(ctx, dir)
+
+  const staged = [...new Set([...base.keys(), ...index.keys()])]
+    .filter((path) => base.get(path) !== index.get(path))
+    .sort()
+    .map((path): FileChange => ({ path, kind: !base.has(path) ? 'new' : !index.has(path) ? 'deleted' : 'modified' }))
+  return { staged, hasParent: parent !== undefined }
 }
 
 export async function formatStatus(
   ctx: CommandContext,
   dir: string,
-  ignoredEntries: readonly string[] = [],
+  view: StatusView = WHOLE_TREE_VIEW,
+  preview: CommitPreview | null = null,
 ): Promise<string> {
   const merging = (await readMergeInProgress(ctx, dir)) !== null
   const full = await readWorkingTree(ctx, dir)
   const tracked = await git.listFiles({ fs: gitFs(ctx.fs), dir })
   const show = seenFrom(ctx, dir)
   const unmerged = await readUnmergedEntries(ctx, dir)
-  const unresolved = unmerged.map((entry) => ({ ...entry, path: show(entry.path) }))
-  const tree = treeSeenFrom(withoutPaths(full, unmerged.map(({ path }) => path)), tracked, show)
-  const ignored = ignoredEntries.map(show)
-  const hasCommits = (await headOid(ctx, dir)) !== null
+  const unresolved = unmerged.filter(({ path }) => view.inScope(path)).map((entry) => ({ ...entry, path: show(entry.path) }))
+
+  const amendBase = preview?.amending ? await changesSinceParent(ctx, dir) : null
+  const adjusted = amendBase ? { ...full, staged: amendBase.staged } : full
+  const tree = treeSeenFrom(withoutPaths(adjusted, unmerged.map(({ path }) => path)), tracked, show, view)
+  const ignored = view.ignoredEntries.filter(view.inScope).map(show)
+  const hasCommits = amendBase ? amendBase.hasParent : (await headOid(ctx, dir)) !== null
+  const rootAmend = amendBase !== null && !amendBase.hasParent
 
   return [
-    ...(await headerLines(ctx, dir)),
+    ...(await headerLines(ctx, dir, preview, rootAmend)),
     ...mergeHints(merging, unresolved),
-    ...stagedSection(tree, hasCommits, merging),
+    ...stagedSection(tree, hasCommits, merging, amendBase !== null),
     ...unmergedSection(unresolved, merging),
     ...unstagedSection(tree),
-    ...untrackedSection(tree),
+    ...(view.untrackedFiles === 'no' ? untrackedNotListed(tree, merging, unresolved) : untrackedSection(tree)),
     ...ignoredSection(ignored),
-    ...footer(tree, hasCommits, unresolved, merging),
+    ...footer(tree, hasCommits, unresolved, merging, view.untrackedFiles),
   ].join('\n')
 }

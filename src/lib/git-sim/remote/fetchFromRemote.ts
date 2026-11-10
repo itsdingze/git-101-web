@@ -25,6 +25,10 @@ export async function resolveRemoteName(ctx: CommandContext, dir: string): Promi
   return name
 }
 
+export function fetchHeadLine(branch: string): string {
+  return ` * branch            ${branch.padEnd(10)} -> FETCH_HEAD`
+}
+
 function fetchLines(
   names: { remoteName: string; branch: string },
   refs: { previous: string | null; fetched: string },
@@ -35,7 +39,7 @@ function fetchLines(
   if (!refs.previous) return [` * [new branch]      ${tracking}`]
 
   return [
-    ...(branchNamed ? [` * branch            ${branch.padEnd(10)} -> FETCH_HEAD`] : []),
+    ...(branchNamed ? [fetchHeadLine(branch)] : []),
     ...(refs.previous === refs.fetched
       ? []
       : [`   ${shortOid(refs.previous)}..${shortOid(refs.fetched)}  ${tracking}`]),

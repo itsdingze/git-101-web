@@ -1,6 +1,6 @@
 import { createSandbox, type Sandbox, type SandboxSeed } from '@/lib/git-sim/createSandbox'
 
-export const REMOTE_URL = 'https://github.com/your-username/todo-app.git'
+const REMOTE_URL ='https://github.com/your-username/todo-app.git'
 
 export const PULL_URL = 'https://github.com/your-username/todo-app/pull/1'
 

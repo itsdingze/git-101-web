@@ -132,6 +132,51 @@ describe('a conflicted pop of a stash with untracked files', () => {
   })
 })
 
+describe('stashing untracked files', () => {
+  it('removes a folder that held only untracked files', async () => {
+    const sandbox = await project()
+    await sandbox.writeFile('drafts/deep/note.txt', 'n\n')
+
+    await sandbox.run('git stash -u')
+
+    expect(await textOf(sandbox, 'ls')).toBe('a.txt  notes.md')
+  })
+
+  it('removes an ignored folder with --all', async () => {
+    const sandbox = await project()
+    await sandbox.writeFile('.gitignore', 'build/\n')
+    await sandbox.run('git add .gitignore')
+    await sandbox.run('git commit -q -m ignore')
+    await sandbox.writeFile('build/out.js', 'o\n')
+
+    await sandbox.run('git stash -a')
+
+    expect(await textOf(sandbox, 'ls')).toBe('a.txt  notes.md')
+  })
+
+  it('keeps a folder that still holds a tracked file', async () => {
+    const sandbox = await project()
+    await sandbox.writeFile('src/kept.txt', 'k\n')
+    await sandbox.run('git add src/kept.txt')
+    await sandbox.run('git commit -q -m kept')
+    await sandbox.writeFile('src/new.txt', 'n\n')
+
+    await sandbox.run('git stash -u')
+
+    expect(await textOf(sandbox, 'ls src')).toBe('kept.txt')
+  })
+
+  it('brings the folder back on pop', async () => {
+    const sandbox = await project()
+    await sandbox.writeFile('drafts/note.txt', 'n\n')
+    await sandbox.run('git stash -u')
+
+    await sandbox.run('git stash pop')
+
+    expect(await sandbox.readFile('drafts/note.txt')).toBe('n\n')
+  })
+})
+
 describe('git stash with pathspecs', () => {
   it('does not know an untracked file unless -u is given', async () => {
     const sandbox = await project()

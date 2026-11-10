@@ -3,6 +3,7 @@ import { suggestCommand } from './input/suggestCommand'
 import { isOwnKey } from '@/lib/isOwnKey'
 import { findRepoDir, requireRepoDir } from './history/repository'
 import { fail, refuse, say } from './output'
+import { parseCommandLine } from './input/commandLine'
 import { lockedCommand, type CommandLocks } from './input/commandLocks'
 import { usageFor } from './input/gitUsage'
 import type { CommandContext, CommandOutput } from './types'
@@ -16,6 +17,18 @@ const UNSIMULATED_NEXT_STEPS: Readonly<Record<string, string>> = {
 function unsimulatedCommand(name: string): CommandOutput[] {
   const nextStep = isOwnKey(UNSIMULATED_NEXT_STEPS, name) ? ` ${UNSIMULATED_NEXT_STEPS[name]}` : ''
   return refuse(`git ${name} is a real Git command, but this practice sandbox doesn't simulate it.${nextStep}`)
+}
+
+function unsimulatedOption(option: string, name: string): CommandOutput[] {
+  return refuse(`This practice terminal doesn't simulate ${option} for git ${name}. Check the spelling, or run the command without it.`)
+}
+
+function missingOptionValue(option: string): CommandOutput[] {
+  return fail(
+    option.startsWith('--')
+      ? `error: option \`${option.slice(2)}' requires a value`
+      : `error: switch \`${option.slice(1)}' requires a value`,
+  )
 }
 
 function unknownCommand(name: string): CommandOutput[] {
@@ -51,9 +64,14 @@ export async function runGit(
     return unknownCommand(name)
   }
 
+  const { line, unknownOption, missingValue, helpRequested } = parseCommandLine(rest, command.options)
+  if (helpRequested) return refuse(`This practice terminal doesn't show manual pages for git ${name}. Run git help to see the commands it simulates.`)
+  if (unknownOption) return unsimulatedOption(unknownOption, name)
+  if (missingValue) return missingOptionValue(missingValue)
+
   const dir = command.requiresRepo
     ? await requireRepoDir(ctx)
     : ((await findRepoDir(ctx)) ?? ctx.cwd)
 
-  return command.run(rest, ctx, dir)
+  return command.run(line, ctx, dir)
 }

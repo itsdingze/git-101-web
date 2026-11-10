@@ -11,7 +11,7 @@ describe('gh pr view', () => {
       [
         'feat: add export your-username/todo-app#1',
         'Open • your-username wants to merge 1 commit into main from add-export • less than a minute ago',
-        '+2 -0',
+        '+2 -0 • No checks',
         '',
         '  Saves the task list to a file.',
         '',

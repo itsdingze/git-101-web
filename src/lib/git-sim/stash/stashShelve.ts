@@ -8,7 +8,9 @@ import { changedPaths } from '@/lib/git-sim/working-tree/dirtyWork'
 import { readCommitFilesOrEmpty, readIndexFiles } from '@/lib/git-sim/working-tree/treeContents'
 import { writeFilesTree } from '@/lib/git-sim/working-tree/treeWriter'
 import { forceCheckout } from '@/lib/git-sim/working-tree/forceCheckout'
+import { stageTreeChanges } from '@/lib/git-sim/working-tree/stageTreeChanges'
 import { placeFile } from '@/lib/git-sim/fs/pathBlockers'
+import { pruneEmptyFolders } from '@/lib/git-sim/fs/pruneEmptyFolders'
 import { SandboxError } from '@/lib/git-sim/errors'
 import type { PathLimit } from './stashPaths'
 import type { CommandContext } from '@/lib/git-sim/types'
@@ -20,6 +22,7 @@ type Shelving = {
   message: string
   untracked: readonly string[]
   limit: PathLimit | null
+  keepIndex: boolean
 }
 
 type Files = Map<string, string>
@@ -94,7 +97,9 @@ async function resetPaths(ctx: CommandContext, dir: string, state: SavedState, i
 
 async function resetShelved(ctx: CommandContext, dir: string, shelving: Shelving, state: SavedState): Promise<void> {
   for (const path of state.untracked.keys()) {
-    if (!state.committed.has(path)) await placeFile(ctx, dir, path, undefined)
+    if (state.committed.has(path)) continue
+    await placeFile(ctx, dir, path, undefined)
+    await pruneEmptyFolders(ctx, dir, path)
   }
 
   if (shelving.limit === null) await forceCheckout(ctx, dir, shelving.branch)
@@ -151,6 +156,7 @@ export async function shelveWork(ctx: CommandContext, dir: string, shelving: She
 
   try {
     await resetShelved(ctx, dir, shelving, state)
+    if (shelving.keepIndex) await stageTreeChanges(ctx, dir, state.committed, state.indexed, inScope)
   } catch {
     await putBack(ctx, dir, state)
     throw new SandboxError("error: couldn't save your local changes, so nothing was stashed. Your files are as you left them.")

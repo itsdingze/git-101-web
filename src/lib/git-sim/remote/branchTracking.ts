@@ -21,13 +21,9 @@ async function oidsFor(ctx: CommandContext, dir: string, ref: string): Promise<s
   }
 }
 
-export async function readTracking(
-  ctx: CommandContext,
-  dir: string,
-  branch: string,
-): Promise<TrackingSummary | null> {
-  const upstream = await readUpstream(ctx, dir, branch)
-  return upstream ? compareWithRemote(ctx, dir, branch, remoteRefOf(upstream)) : null
+async function trackedRefFor(ctx: CommandContext, dir: string, remoteRef: string): Promise<string | null> {
+  if (await refOid(ctx, dir, `refs/remotes/${remoteRef}`)) return `refs/remotes/${remoteRef}`
+  return (await refOid(ctx, dir, `refs/heads/${remoteRef}`)) ? `refs/heads/${remoteRef}` : null
 }
 
 export async function compareWithRemote(
@@ -36,10 +32,11 @@ export async function compareWithRemote(
   branch: string,
   remoteRef: string,
 ): Promise<TrackingSummary | null> {
-  if (!(await refOid(ctx, dir, `refs/remotes/${remoteRef}`))) return null
+  const trackedRef = await trackedRefFor(ctx, dir, remoteRef)
+  if (!trackedRef) return null
 
   const local = await oidsFor(ctx, dir, branch)
-  const tracked = await oidsFor(ctx, dir, `refs/remotes/${remoteRef}`)
+  const tracked = await oidsFor(ctx, dir, trackedRef)
   const localSet = new Set(local)
   const trackedSet = new Set(tracked)
 
@@ -50,7 +47,17 @@ export async function compareWithRemote(
   }
 }
 
-export function describeTracking(summary: TrackingSummary): string {
+export async function describeUpstreamState(ctx: CommandContext, dir: string, branch: string): Promise<string | null> {
+  const upstream = await readUpstream(ctx, dir, branch)
+  if (!upstream) return null
+
+  const remoteRef = remoteRefOf(upstream)
+  const tracking = await compareWithRemote(ctx, dir, branch, remoteRef)
+  if (tracking) return describeTracking(tracking)
+  return [`Your branch is based on '${remoteRef}', but the upstream is gone.`, '  (use "git branch --unset-upstream" to fixup)'].join('\n')
+}
+
+function describeTracking(summary: TrackingSummary): string {
   const { remoteRef, ahead, behind } = summary
 
   if (ahead === 0 && behind === 0) return `Your branch is up to date with '${remoteRef}'.`

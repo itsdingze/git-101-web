@@ -1,7 +1,7 @@
 import type { FolderContents } from '@/lib/git-sim/fs/folderContents'
 import { commandWords } from '@/lib/git-sim/input/tokenize'
 import type { Output, TipContext, TipRule } from './command-tip/tipRule'
-import { copiedFullPromptTip, copiedNoteTip, copiedPromptTip, curlyQuoteTip } from './command-tip/pasteTips'
+import { copiedFullPromptTip, copiedPromptTip, curlyQuoteTip } from './command-tip/pasteTips'
 import { missingConfigScopeTip, unquotedMessageTip, unquotedNameTip } from './command-tip/quotingTips'
 import {
   mergeCurrentBranchTip,
@@ -27,7 +27,6 @@ const EMPTY_FOLDER: FolderContents = { files: [], repositories: [] }
 const TIP_RULES: readonly TipRule[] = [
   copiedPromptTip,
   copiedFullPromptTip,
-  copiedNoteTip,
   curlyQuoteTip,
   unquotedMessageTip,
   unquotedNameTip,

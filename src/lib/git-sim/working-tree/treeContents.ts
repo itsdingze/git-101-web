@@ -8,7 +8,7 @@ type IndexEntry = { path: string; oid: string }
 
 const decoder = new TextDecoder()
 
-async function blobText(ctx: CommandContext, dir: string, oid: string): Promise<string> {
+export async function blobText(ctx: CommandContext, dir: string, oid: string): Promise<string> {
   const { blob } = await git.readBlob({ fs: gitFs(ctx.fs), dir, oid })
   return decoder.decode(blob)
 }

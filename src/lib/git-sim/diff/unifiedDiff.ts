@@ -1,11 +1,12 @@
-import { structuredPatch } from 'diff'
 import git from 'isomorphic-git'
+import { fileHunks } from './boundedDiff'
 
 const NULL_OID = '0000000'
 const FUNCTION_LINE = /^[A-Za-z_$]/
 const FUNCTION_CONTEXT_WIDTH = 80
+const DEFAULT_CONTEXT = 3
 
-async function shortHash(text: string | undefined): Promise<string> {
+export async function blobHash(text: string | undefined): Promise<string> {
   if (text === undefined) return NULL_OID
   const { oid } = await git.hashBlob({ object: new TextEncoder().encode(text) })
   return oid.slice(0, 7)
@@ -24,10 +25,9 @@ function functionContext(oldLines: readonly string[], oldStart: number): string 
   return ''
 }
 
-function hunkLines(before: string, after: string, path: string): string[] {
-  const patch = structuredPatch(path, path, before, after, '', '', { context: 3 })
+function hunkLines(before: string, after: string, path: string, context: number): string[] {
   const oldLines = before.split('\n')
-  return patch.hunks.flatMap((hunk) => [
+  return fileHunks(path, before, after, context).flatMap((hunk) => [
     `@@ -${hunkRange(hunk.oldStart, hunk.oldLines)} +${hunkRange(hunk.newStart, hunk.newLines)} @@${functionContext(oldLines, hunk.oldStart)}`,
     ...hunk.lines,
   ])
@@ -37,6 +37,7 @@ export async function formatFileDiff(
   path: string,
   before: string | undefined,
   after: string | undefined,
+  context = DEFAULT_CONTEXT,
 ): Promise<string> {
   if (before === after) return ''
 
@@ -44,12 +45,12 @@ export async function formatFileDiff(
   if (before === undefined) header.push('new file mode 100644')
   if (after === undefined) header.push('deleted file mode 100644')
 
-  const oldHash = await shortHash(before)
-  const newHash = await shortHash(after)
+  const oldHash = await blobHash(before)
+  const newHash = await blobHash(after)
   const mode = before === undefined || after === undefined ? '' : ' 100644'
   header.push(`index ${oldHash}..${newHash}${mode}`)
   header.push(before === undefined ? '--- /dev/null' : `--- a/${path}`)
   header.push(after === undefined ? '+++ /dev/null' : `+++ b/${path}`)
 
-  return [...header, ...hunkLines(before ?? '', after ?? '', path)].join('\n')
+  return [...header, ...hunkLines(before ?? '', after ?? '', path, context)].join('\n')
 }

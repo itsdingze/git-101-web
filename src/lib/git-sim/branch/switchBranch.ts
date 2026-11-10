@@ -3,6 +3,8 @@ import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
 import { forceCheckout } from '@/lib/git-sim/working-tree/forceCheckout'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { assertNoBranchNameClash } from './branchNameClash'
+import { assertValidNewBranchName } from './branchNameRules'
+import { remoteBranchNamed, remoteRefOf, setUpstream } from '@/lib/git-sim/remote/upstream'
 import { say } from '@/lib/git-sim/output'
 import { recordHeadMove } from '@/lib/git-sim/history/headHistory'
 import { currentBranch, headOid, refOid, shortOid } from '@/lib/git-sim/history/repository'
@@ -115,12 +117,14 @@ export async function createAndSwitch(
   name: string,
   startPoint?: string,
 ): Promise<CommandOutput[]> {
+  assertValidNewBranchName(name)
   if (await branchExists(ctx, dir, name)) {
     throw new SandboxError(`fatal: a branch named '${name}' already exists`)
   }
   await assertNoBranchNameClash(ctx, dir, name)
 
   const previous = await currentBranch(ctx, dir)
+  const tracked = startPoint ? await remoteBranchNamed(ctx, dir, startPoint) : null
   let carried: string[] = []
   if (startPoint) {
     await refuseWhileUnmerged(ctx, dir)
@@ -129,11 +133,13 @@ export async function createAndSwitch(
     await git.branch({ fs: gitFs(ctx.fs), dir, ref: name, checkout: true })
   }
   await endMerge(ctx, dir)
+  if (tracked) await setUpstream(ctx, dir, name, tracked)
 
   ctx.rememberBranch(previous)
   await recordHeadMove(ctx, dir)
 
-  return say([...carried, `Switched to a new branch '${name}'`].join('\n'))
+  const trackingNote = tracked ? [`branch '${name}' set up to track '${remoteRefOf(tracked)}'.`] : []
+  return say([...trackingNote, ...carried, `Switched to a new branch '${name}'`].join('\n'))
 }
 
 export async function switchTo(

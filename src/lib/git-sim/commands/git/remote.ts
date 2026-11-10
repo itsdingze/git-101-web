@@ -1,6 +1,5 @@
 import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
-import { operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say, silent } from '@/lib/git-sim/output'
 import { createRemoteRepo } from '@/lib/git-sim/remote/remoteTransfer'
@@ -36,10 +35,11 @@ async function remoteExists(ctx: CommandContext, dir: string, name: string): Pro
 
 export const remote: GitSubcommand = {
   requiresRepo: true,
-  run: async (args, ctx, dir) => {
-    const [action, name, url] = operandsOf(args)
+  options: { flags: ['-v', '--verbose'] },
+  run: async (line, ctx, dir) => {
+    const [action, name, url] = line.operands
 
-    if (!action) return listRemotes(ctx, dir, args.includes('-v') || args.includes('--verbose'))
+    if (!action) return listRemotes(ctx, dir, line.has('-v', '--verbose'))
 
     if (action === 'add') {
       if (!name || !url) throw new SandboxError('usage: git remote add <name> <url>')

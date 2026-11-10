@@ -18,10 +18,11 @@ type ConflictNaming = {
 
 const EMPTY_TREES: MergeTrees = { base: new Map(), ours: new Map(), theirs: new Map() }
 
-function conflictOutput(trees: MergeTrees, conflicts: MergeConflicts, label: string): string {
+function conflictOutput(trees: MergeTrees, conflicts: MergeConflicts, label: string, squash: boolean): string {
   const report = mergeReportLines(trees, conflicts, { ours: 'HEAD', theirs: label })
   return [
     ...(report.length === 0 ? [`Could not merge ${label}.`] : report),
+    ...(squash ? ['Squash commit -- not updating HEAD'] : []),
     'Automatic merge failed; fix conflicts and then commit the result.',
   ].join('\n')
 }
@@ -52,6 +53,7 @@ export async function pauseAtConflicts(
   naming: ConflictNaming,
   conflicts: MergeConflicts,
   message: string,
+  squash = false,
 ): Promise<never> {
   const { sides, label, theirMarker } = naming
   const conflicted = allConflictedPaths(conflicts)
@@ -65,9 +67,10 @@ export async function pauseAtConflicts(
     conflicts.content,
     { ours: sides.ours, theirs: theirMarker },
     { ours: 'HEAD', theirs: label },
+    trees ?? EMPTY_TREES,
   )
   if (trees) await stageIncoming(ctx, dir, trees, new Set(conflicted))
-  await beginMerge(ctx, dir, { theirs: theirOid, conflicted, message })
+  if (!squash) await beginMerge(ctx, dir, { theirs: theirOid, conflicted, message })
 
-  throw new SandboxError(conflictOutput(trees ?? EMPTY_TREES, conflicts, label))
+  throw new SandboxError(conflictOutput(trees ?? EMPTY_TREES, conflicts, label, squash))
 }

@@ -3,20 +3,20 @@ import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { refOid } from './repository'
 import { readHeadHistory } from './headHistory'
+import { readShallowBoundary } from './shallowBoundary'
 import type { CommandContext } from '@/lib/git-sim/types'
 
 const SUFFIX = /^(.*?)((?:[~^]\d*)*)$/
 const ABBREVIATED_OID = /^[0-9a-f]{4,40}$/
 const REFLOG_POSITION = /^HEAD@\{(\d+)\}$/
 
-function parentPicksFrom(suffix: string): number[] {
-  const picks: number[] = []
-  for (const [, symbol, digits] of suffix.matchAll(/([~^])(\d*)/g)) {
+type AncestorStep = { parent: number; times: number }
+
+function ancestorStepsFrom(suffix: string): AncestorStep[] {
+  return [...suffix.matchAll(/([~^])(\d*)/g)].map(([, symbol, digits]) => {
     const count = Number(digits || '1')
-    if (symbol === '~') picks.push(...Array<number>(count).fill(1))
-    else picks.push(count)
-  }
-  return picks
+    return symbol === '~' ? { parent: 1, times: count } : { parent: count, times: 1 }
+  })
 }
 
 async function expandedOid(ctx: CommandContext, dir: string, spec: string): Promise<string | null> {
@@ -41,6 +41,7 @@ async function reflogOid(ctx: CommandContext, dir: string, position: number): Pr
 async function baseOid(ctx: CommandContext, dir: string, spec: string): Promise<string | null> {
   const position = REFLOG_POSITION.exec(spec)?.[1]
   if (position !== undefined) return reflogOid(ctx, dir, Number(position))
+  if (spec === '@') return refOid(ctx, dir, 'HEAD')
   return (await refOid(ctx, dir, spec)) ?? (await expandedOid(ctx, dir, spec))
 }
 
@@ -48,15 +49,21 @@ async function ancestorOid(
   ctx: CommandContext,
   dir: string,
   oid: string,
-  parentPicks: readonly number[],
+  steps: readonly AncestorStep[],
 ): Promise<string | null> {
+  if (steps.length === 0) return oid
+
+  const hidden = await readShallowBoundary(ctx, dir)
   let current = oid
-  for (const pick of parentPicks) {
-    if (pick === 0) continue
-    const { commit } = await git.readCommit({ fs: gitFs(ctx.fs), dir, oid: current })
-    const parent = commit.parent[pick - 1]
-    if (!parent) return null
-    current = parent
+  for (const { parent, times } of steps) {
+    if (parent === 0) continue
+    for (let step = 0; step < times; step += 1) {
+      if (hidden.has(current)) return null
+      const { commit } = await git.readCommit({ fs: gitFs(ctx.fs), dir, oid: current })
+      const next = commit.parent[parent - 1]
+      if (!next) return null
+      current = next
+    }
   }
   return current
 }
@@ -70,5 +77,5 @@ export async function resolveCommitish(
   const oid = await baseOid(ctx, dir, match?.[1] || spec)
   if (!oid) return null
 
-  return ancestorOid(ctx, dir, oid, parentPicksFrom(match?.[2] ?? ''))
+  return ancestorOid(ctx, dir, oid, ancestorStepsFrom(match?.[2] ?? ''))
 }

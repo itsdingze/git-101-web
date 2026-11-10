@@ -188,7 +188,7 @@ describe('the transfer lines of a push', () => {
 
     expect(output).toContain('Enumerating objects: 7, done.')
     expect(output).toContain('Counting objects: 100% (7/7), done.')
-    expect(output).toContain('Writing objects: 100% (7/7), done.')
+    expect(output).toMatch(/Writing objects: 100% \(7\/7\), [\d.]+ (bytes|KiB) \| [\d.]+ KiB\/s, done\./)
   })
 
   it('count only the new objects when the remote already has the rest', async () => {
@@ -200,6 +200,6 @@ describe('the transfer lines of a push', () => {
     const output = await textOf(sandbox, 'git push')
 
     expect(output).toContain('Enumerating objects: 5, done.')
-    expect(output).toContain('Writing objects: 100% (3/3), done.')
+    expect(output).toMatch(/Writing objects: 100% \(3\/3\), [\d.]+ (bytes|KiB) \| [\d.]+ KiB\/s, done\./)
   })
 })

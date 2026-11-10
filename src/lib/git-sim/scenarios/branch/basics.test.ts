@@ -134,9 +134,12 @@ describe('the merge loop', () => {
     expect(result.outputs).toEqual([{ stream: 'stderr', text: 'fatal: branch name required' }])
   })
 
-  it('says renaming a branch is outside the course', async () => {
+  it('renames a branch', async () => {
     const sandbox = await createSandbox(MERGE_SEED)
-    expect(await textOf(sandbox, 'git branch -m main trunk')).toBe("fatal: this course doesn't simulate git branch -m.")
+
+    expect(await textOf(sandbox, 'git branch -m main trunk')).toBe('')
+
+    expect(await textOf(sandbox, 'git status')).toContain('On branch trunk')
   })
 })
 

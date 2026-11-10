@@ -11,3 +11,36 @@ export const GH_COMMANDS: Readonly<Record<string, Readonly<Record<string, GhComm
   repo: { clone: repoClone },
   pr: { create: prCreate, view: prView, merge: prMerge },
 }
+
+export const UNSIMULATED_GH_COMMANDS: Readonly<Record<string, readonly string[]>> = {
+  auth: ['logout', 'refresh', 'setup-git', 'switch', 'token'],
+  pr: ['checkout', 'checks', 'close', 'comment', 'diff', 'edit', 'list', 'lock', 'ready', 'reopen', 'review', 'status', 'unlock'],
+  repo: ['archive', 'create', 'delete', 'deploy-key', 'edit', 'fork', 'list', 'rename', 'set-default', 'sync', 'unarchive', 'view'],
+}
+
+export const UNSIMULATED_GH_GROUPS: readonly string[] = [
+  'agent-task',
+  'alias',
+  'api',
+  'attestation',
+  'browse',
+  'cache',
+  'codespace',
+  'config',
+  'extension',
+  'gist',
+  'gpg-key',
+  'issue',
+  'label',
+  'org',
+  'project',
+  'release',
+  'ruleset',
+  'run',
+  'search',
+  'secret',
+  'ssh-key',
+  'status',
+  'variable',
+  'workflow',
+]

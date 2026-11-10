@@ -1,5 +1,6 @@
 import { joinPath } from '@/lib/git-sim/fs/paths'
 import { pathExists, readText, removeTree, writeText } from '@/lib/git-sim/fs/fileOperations'
+import { CONFLICT_TEXT_RECORD } from './conflictText'
 import type { CommandContext } from '@/lib/git-sim/types'
 
 type MergeInProgress = {
@@ -46,7 +47,7 @@ export async function readMergeInProgress(
 }
 
 export async function endMerge(ctx: CommandContext, dir: string): Promise<void> {
-  for (const name of [MERGE_HEAD, MERGE_CONFLICTS, MERGE_MSG]) {
+  for (const name of [MERGE_HEAD, MERGE_CONFLICTS, MERGE_MSG, CONFLICT_TEXT_RECORD]) {
     const path = joinPath(dir, name)
     if (await pathExists(ctx.fs, path)) await removeTree(ctx.fs, path)
   }

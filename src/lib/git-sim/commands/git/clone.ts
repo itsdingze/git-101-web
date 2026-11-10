@@ -1,12 +1,11 @@
-import git from 'isomorphic-git'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { isDirectory, listEntries, pathExists } from '@/lib/git-sim/fs/fileOperations'
 import { say } from '@/lib/git-sim/output'
-import { operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { basename, resolvePath } from '@/lib/git-sim/fs/paths'
-import { cloneInto, countObjects } from '@/lib/git-sim/remote/remoteTransfer'
+import { cloneInto, hasRemoteBranch } from '@/lib/git-sim/remote/remoteTransfer'
+import { cloneProgressLines, listHistoryObjects, listStoredObjects, summarizePack } from '@/lib/git-sim/remote/packReport'
+import type { CommandLine } from '@/lib/git-sim/input/commandLine'
 import { hostedRemoteAt, unreachableRepository } from '@/lib/git-sim/remote/remoteConnection'
-import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
 import type { CommandContext, GitSubcommand, RemoteLink } from '@/lib/git-sim/types'
 
 const MISSING_REPOSITORY = [
@@ -41,37 +40,38 @@ async function requireEmptyDestination(
   )
 }
 
-function transferReport(name: string, objects: number, blobs: number): string {
-  return [
-    `Cloning into '${name}'...`,
-    `remote: Enumerating objects: ${objects}, done.`,
-    `remote: Counting objects: 100% (${objects}/${objects}), done.`,
-    `remote: Compressing objects: 100% (${blobs}/${blobs}), done.`,
-    `remote: Total ${objects} (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)`,
-    `Receiving objects: 100% (${objects}/${objects}), done.`,
-  ].join('\n')
-}
-
-async function countBlobs(ctx: CommandContext, dir: string): Promise<number> {
-  return (await git.listFiles({ fs: gitFs(ctx.fs), dir })).length
+function depthOf(line: CommandLine): number | undefined {
+  const value = line.value('--depth')
+  if (value === undefined) return undefined
+  if (!/^\d+$/.test(value) || Number(value) <= 0) throw new SandboxError(`fatal: depth ${value} is not a positive number`)
+  return Number(value)
 }
 
 export const clone: GitSubcommand = {
   requiresRepo: false,
-  run: async (args, ctx) => {
-    const [url, target] = operandsOf(args)
+  options: { flags: [], valueFlags: ['--depth', '-b', '--branch'] },
+  run: async (line, ctx) => {
+    const [url, target] = line.operands
     if (!url) throw new SandboxError(MISSING_REPOSITORY)
 
+    const depth = depthOf(line)
     const name = target ?? directoryNameFor(url)
     const destination = resolvePath(name, ctx.cwd, ctx.root)
     await requireEmptyDestination(ctx, destination, name)
 
-    const outcome = await cloneInto(ctx, remoteFor(ctx, url, name), destination)
+    const remote = remoteFor(ctx, url, name)
+    const branch = line.value('-b', '--branch')
+    if (branch !== undefined && !(await hasRemoteBranch(ctx, remote, branch))) {
+      throw new SandboxError([`Cloning into '${name}'...`, `fatal: Remote branch ${branch} not found in upstream ${remote.name}`].join('\n'))
+    }
+
+    const outcome = await cloneInto(ctx, remote, destination, { branch, depth })
     if (outcome === 'empty') {
       return say([`Cloning into '${name}'...`, 'warning: You appear to have cloned an empty repository.'].join('\n'))
     }
 
-    const objects = await countObjects(ctx, destination)
-    return say(transferReport(name, objects, await countBlobs(ctx, destination)))
+    const received = depth === undefined ? await listStoredObjects(ctx, destination) : await listHistoryObjects(ctx, destination)
+    const summary = await summarizePack(ctx, destination, received, [])
+    return say([`Cloning into '${name}'...`, ...cloneProgressLines(summary)].join('\n'))
   },
 }

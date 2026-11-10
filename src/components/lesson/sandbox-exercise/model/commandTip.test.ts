@@ -90,16 +90,6 @@ describe('commandTip for copied text', () => {
     )
   })
 
-  it('points out a copied note when the command failed', () => {
-    expect(commandTip('git init    # turn the folder into a repository', failure)).toBe(
-      'Leave out the note after `#`. Copy only the command itself: `git init`',
-    )
-    expect(commandTip('git status #note', failure)).toBe(
-      'Leave out the note after `#`. Copy only the command itself: `git status`',
-    )
-    expect(commandTip('git init    # note', [{ stream: 'stdout', text: 'Initialized' }])).toBeNull()
-  })
-
   it('does not mistake a # inside quotes for a note', () => {
     expect(commandTip('echo "# My project" > README.md', failure)).toBeNull()
   })

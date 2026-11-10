@@ -1,6 +1,6 @@
 import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
-import { flagValue, hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
+import type { CommandLine } from '@/lib/git-sim/input/commandLine'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say, silent, stderr, stdout } from '@/lib/git-sim/output'
 import { recordHeadMove } from '@/lib/git-sim/history/headHistory'
@@ -17,6 +17,7 @@ import {
   writeStashLog,
 } from '@/lib/git-sim/stash/stashLog'
 import { restoreStash } from '@/lib/git-sim/stash/stashRestore'
+import { readIgnoredFiles } from '@/lib/git-sim/fs/ignoredPaths'
 import { readUnmergedEntries } from '@/lib/git-sim/working-tree/indexStages'
 import { endMerge } from '@/lib/git-sim/merge/mergeInProgress'
 import { stashPathLimit } from '@/lib/git-sim/stash/stashPaths'
@@ -25,6 +26,8 @@ import { formatStatus } from '@/lib/git-sim/working-tree/longStatus'
 import type { CommandContext, CommandOutput, GitCommandHandler, GitSubcommand } from '@/lib/git-sim/types'
 
 const MESSAGE_FLAGS = ['-m', '--message']
+const ALL_FLAGS = ['-a', '--all']
+const KEEP_INDEX_FLAGS = ['-k', '--keep-index']
 const NO_ENTRIES = 'No stash entries found.'
 const KEPT = 'The stash entry is kept in case you need it again.'
 
@@ -33,9 +36,9 @@ async function headLine(ctx: CommandContext, dir: string, head: string): Promise
   return `${shortOid(head)} ${commitSubject(commit.message)}`
 }
 
-function describeShelving(args: readonly string[], branch: string, line: string): string {
-  const note = flagValue(args, ...MESSAGE_FLAGS)?.trim()
-  return note ? `On ${branch}: ${note}` : `WIP on ${branch}: ${line}`
+function describeShelving(line: CommandLine, branch: string, headSummary: string): string {
+  const note = line.value(...MESSAGE_FLAGS)?.trim()
+  return note ? `On ${branch}: ${note}` : `WIP on ${branch}: ${headSummary}`
 }
 
 async function refuseUnmergedIndex(ctx: CommandContext, dir: string): Promise<void> {
@@ -47,15 +50,12 @@ async function refuseUnmergedIndex(ctx: CommandContext, dir: string): Promise<vo
 
 type StashLine = { subcommand: string; pathspecs: string[] }
 
-function readStashLine(args: readonly string[]): StashLine {
-  const dashes = args.indexOf('--')
-  const before = dashes === -1 ? args : args.slice(0, dashes)
-  const after = dashes === -1 ? [] : args.slice(dashes + 1)
-  const [subcommand = 'push', ...rest] = operandsOf(before, MESSAGE_FLAGS)
-  return { subcommand, pathspecs: subcommand === 'push' ? [...rest, ...after] : [] }
+function readStashLine(line: CommandLine): StashLine {
+  const [subcommand = 'push', ...rest] = line.beforeDashes
+  return { subcommand, pathspecs: subcommand === 'push' ? [...rest, ...line.afterDashes] : [] }
 }
 
-const push: GitCommandHandler = async (args, ctx, dir) => {
+const push: GitCommandHandler = async (line, ctx, dir) => {
   const head = await headOid(ctx, dir)
   if (!head) throw new SandboxError('You do not have the initial commit yet')
 
@@ -65,18 +65,20 @@ const push: GitCommandHandler = async (args, ctx, dir) => {
   await refuseUnmergedIndex(ctx, dir)
 
   const tree = await readWorkingTree(ctx, dir)
-  const includeUntracked = hasFlag(args, '-u', '--include-untracked')
-  const limit = await stashPathLimit(ctx, dir, readStashLine(args).pathspecs, includeUntracked ? tree.untracked : [])
+  const includeIgnored = line.has(...ALL_FLAGS)
+  const includeUntracked = includeIgnored || line.has('-u', '--include-untracked')
+  const stashable = [...(includeUntracked ? tree.untracked : []), ...(includeIgnored ? await readIgnoredFiles(ctx, dir) : [])]
+  const limit = await stashPathLimit(ctx, dir, readStashLine(line).pathspecs, stashable)
   const inScope = (path: string) => limit === null || limit(path)
-  const untracked = (includeUntracked ? tree.untracked : []).filter(inScope)
+  const untracked = stashable.filter(inScope)
   const changes = [...tree.staged, ...tree.unstaged].filter((change) => inScope(change.path))
   if (changes.length + untracked.length === 0) {
     return say('No local changes to save')
   }
 
-  const line = await headLine(ctx, dir, head)
-  const message = describeShelving(args, branch, line)
-  const oid = await shelveWork(ctx, dir, { branch, head, headLine: line, message, untracked, limit })
+  const headSummary = await headLine(ctx, dir, head)
+  const message = describeShelving(line, branch, headSummary)
+  const oid = await shelveWork(ctx, dir, { branch, head, headLine: headSummary, message, untracked, limit, keepIndex: line.has(...KEEP_INDEX_FLAGS) })
   if (limit === null) await endMerge(ctx, dir)
   await recordStashEntry(ctx, dir, oid, message)
   await recordHeadMove(ctx, dir)
@@ -88,8 +90,8 @@ type EntryName = { label: string; position: number }
 
 const NAMED_ENTRY = /^((?:refs\/)?stash)@\{(\d+)\}$/
 
-function entryNameOf(args: readonly string[]): EntryName {
-  const named = operandsOf(args, MESSAGE_FLAGS)[1]
+function entryNameOf(line: CommandLine): EntryName {
+  const named = line.operands[1]
   if (named === undefined) return { label: `${STASH_REF}@{0}`, position: 0 }
   if (/^\d+$/.test(named)) return { label: `${STASH_REF}@{${named}}`, position: Number(named) }
 
@@ -124,12 +126,12 @@ async function dropEntry(ctx: CommandContext, dir: string, name: EntryName): Pro
 async function bringBack(
   ctx: CommandContext,
   dir: string,
-  args: readonly string[],
+  line: CommandLine,
   dropAfterwards: boolean,
 ): Promise<CommandOutput[]> {
-  const name = entryNameOf(args)
+  const name = entryNameOf(line)
   await refuseUnmergedIndex(ctx, dir)
-  const restored = await restoreStash(ctx, dir, await namedEntryOid(ctx, dir, name), hasFlag(args, '--index'))
+  const restored = await restoreStash(ctx, dir, await namedEntryOid(ctx, dir, name), line.has('--index'))
   const status = await formatStatus(ctx, dir)
   const kept = dropAfterwards ? [stderr(KEPT)] : []
 
@@ -147,13 +149,13 @@ async function bringBack(
   return say(`${report}\n${await dropEntry(ctx, dir, name)}`)
 }
 
-const pop: GitCommandHandler = (args, ctx, dir) => bringBack(ctx, dir, args, true)
+const pop: GitCommandHandler = (line, ctx, dir) => bringBack(ctx, dir, line, true)
 
-const apply: GitCommandHandler = (args, ctx, dir) => bringBack(ctx, dir, args, false)
+const apply: GitCommandHandler = (line, ctx, dir) => bringBack(ctx, dir, line, false)
 
-const drop: GitCommandHandler = async (args, ctx, dir) => say(await dropEntry(ctx, dir, entryNameOf(args)))
+const drop: GitCommandHandler = async (line, ctx, dir) => say(await dropEntry(ctx, dir, entryNameOf(line)))
 
-const list: GitCommandHandler = async (_args, ctx, dir) => {
+const list: GitCommandHandler = async (_line, ctx, dir) => {
   const lines = await readStashLog(ctx, dir)
   if (lines.length === 0) return silent
 
@@ -161,7 +163,7 @@ const list: GitCommandHandler = async (_args, ctx, dir) => {
   return say(entries.join('\n'))
 }
 
-const clear: GitCommandHandler = async (_args, ctx, dir) => {
+const clear: GitCommandHandler = async (_line, ctx, dir) => {
   if ((await readStashLog(ctx, dir)).length > 0) await writeStashLog(ctx, dir, [])
   return silent
 }
@@ -172,8 +174,9 @@ const UNSIMULATED_OPERATIONS = ['show', 'branch', 'save', 'create', 'store']
 
 export const stash: GitSubcommand = {
   requiresRepo: true,
-  run: async (args, ctx, dir) => {
-    const name = readStashLine(args).subcommand
+  options: { flags: ['-u', '--include-untracked', ...ALL_FLAGS, ...KEEP_INDEX_FLAGS, '--index'], valueFlags: MESSAGE_FLAGS },
+  run: async (line, ctx, dir) => {
+    const name = readStashLine(line).subcommand
     const operation = isOwnKey(OPERATIONS, name) ? OPERATIONS[name] : undefined
     if (UNSIMULATED_OPERATIONS.includes(name)) {
       throw new SandboxError(`fatal: this course doesn't simulate git stash ${name}.`)
@@ -184,6 +187,6 @@ export const stash: GitSubcommand = {
       )
     }
 
-    return operation(args, ctx, dir)
+    return operation(line, ctx, dir)
   },
 }

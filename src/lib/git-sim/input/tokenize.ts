@@ -166,6 +166,7 @@ function splitPieces(line: string): Split {
       index += list.length - 1
       continue
     }
+    if (char === '#' && current === '' && !quoted) break
     appendUnquoted(char)
   }
 

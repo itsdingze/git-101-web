@@ -1,15 +1,19 @@
 import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
-import { flagValue, hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { matchAny, repoPrefix } from '@/lib/git-sim/fs/pathspec'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { silent } from '@/lib/git-sim/output'
 import { placeFile } from '@/lib/git-sim/fs/pathBlockers'
-import { readCommitFiles, readIndexFiles } from '@/lib/git-sim/working-tree/treeContents'
+import { genericConflictMarkers, remainingConflictText } from '@/lib/git-sim/merge/conflictText'
+import { blobText, readCommitFiles, readIndexFiles } from '@/lib/git-sim/working-tree/treeContents'
 import { resolveCommitish } from '@/lib/git-sim/history/resolveCommitish'
-import { readUnmergedEntries } from '@/lib/git-sim/working-tree/indexStages'
+import { readUnmergedEntries, readUnmergedStages } from '@/lib/git-sim/working-tree/indexStages'
 import { headOid } from '@/lib/git-sim/history/repository'
-import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
+import type { CommandLine } from '@/lib/git-sim/input/commandLine'
+import type { CommandContext, CommandOutput, GitSubcommand } from '@/lib/git-sim/types'
+
+const OURS_STAGE = 2
+const THEIRS_STAGE = 3
 
 async function restoreIndexEntries(
   ctx: CommandContext,
@@ -99,31 +103,86 @@ async function restoreFromSource(
   }
 }
 
+async function restoreSide(ctx: CommandContext, dir: string, paths: readonly string[], stage: number): Promise<void> {
+  const unmerged = await readUnmergedStages(ctx, dir)
+  const settled = paths.filter((path) => !unmerged.has(path))
+  await restoreWorkdirEntries(ctx, dir, settled)
+
+  for (const path of paths.filter((candidate) => unmerged.has(candidate))) {
+    const oid = unmerged.get(path)?.get(stage)
+    await placeFile(ctx, dir, path, oid === undefined ? undefined : await blobText(ctx, dir, oid))
+  }
+}
+
+async function recreateConflict(ctx: CommandContext, dir: string, paths: readonly string[]): Promise<void> {
+  const unmerged = await readUnmergedStages(ctx, dir)
+  const settled = paths.filter((path) => !unmerged.has(path))
+  await restoreWorkdirEntries(ctx, dir, settled)
+
+  for (const path of paths.filter((candidate) => unmerged.has(candidate))) {
+    const stages = unmerged.get(path)
+    const marked = await remainingConflictText(ctx, dir, path)
+    if (!stages?.has(OURS_STAGE) || !stages.has(THEIRS_STAGE) || marked === undefined) {
+      throw new SandboxError(`error: path '${path}' does not have all necessary versions`)
+    }
+    await placeFile(ctx, dir, path, genericConflictMarkers(marked))
+  }
+}
+
+function refuseConflictOptions(line: CommandLine): void {
+  const side = line.has('--ours', '--theirs')
+  const merging = line.has('-m', '--merge')
+  if (!side && !merging) return
+
+  if (side && merging) {
+    throw new SandboxError('fatal: git checkout: --ours/--theirs, --force and --merge are incompatible when\nchecking out of the index.')
+  }
+  if (line.has(...STAGED_FLAGS)) {
+    throw new SandboxError(side ? "fatal: '--ours' or '--theirs' cannot be used with --staged" : "fatal: '--merge' or '--conflict' cannot be used with --staged")
+  }
+  if (line.value(...SOURCE_FLAGS)) {
+    throw new SandboxError("fatal: '--merge', '--ours', or '--theirs' cannot be used when checking out of a tree")
+  }
+}
+
+async function restoreConflictSide(line: CommandLine, ctx: CommandContext, dir: string, paths: readonly string[]): Promise<CommandOutput[]> {
+  if (line.has('--ours', '--theirs')) await restoreSide(ctx, dir, paths, line.lastOf('--ours', '--theirs') === '--ours' ? OURS_STAGE : THEIRS_STAGE)
+  else await recreateConflict(ctx, dir, paths)
+  return silent
+}
+
 const SOURCE_FLAGS = ['--source', '-s']
+const STAGED_FLAGS = ['--staged', '-S']
 
 export const restore: GitSubcommand = {
   requiresRepo: true,
-  run: async (args, ctx, dir) => {
-    const specs = operandsOf(args, SOURCE_FLAGS)
+  options: {
+    flags: ['--staged', '-S', '--worktree', '-W', '--ours', '--theirs', '-m', '--merge'],
+    valueFlags: SOURCE_FLAGS,
+  },
+  run: async (line, ctx, dir) => {
+    const specs = line.operands
     if (specs.length === 0) {
       throw new SandboxError('fatal: you must specify path(s) to restore')
     }
+    refuseConflictOptions(line)
 
-    const staged = hasFlag(args, '--staged', '--cached')
-    const worktree = !staged || hasFlag(args, '--worktree', '-W')
-    const sourceSpec = flagValue(args, ...SOURCE_FLAGS)
+    const staged = line.has(...STAGED_FLAGS)
+    const worktree = !staged || line.has('--worktree', '-W')
+    const sourceSpec = line.value(...SOURCE_FLAGS)
 
     if (sourceSpec) {
       const source = await readSource(ctx, dir, sourceSpec)
       const indexed = await git.listFiles({ fs: gitFs(ctx.fs), dir })
       const paths = matchPaths(ctx, dir, [...new Set([...source.keys(), ...indexed])], specs)
-      if (worktree) await refuseUnmergedPaths(ctx, dir, paths)
       await restoreFromSource(ctx, dir, source, paths, { index: staged, worktree })
       return silent
     }
 
     const paths = await resolveTrackedPaths(ctx, dir, specs, staged)
-    if (worktree) await refuseUnmergedPaths(ctx, dir, paths)
+    if (line.has('--ours', '--theirs', '-m', '--merge')) return restoreConflictSide(line, ctx, dir, paths)
+
+    if (!staged) await refuseUnmergedPaths(ctx, dir, paths)
     if (staged) await restoreIndexEntries(ctx, dir, paths)
     if (worktree) await restoreWorkdirEntries(ctx, dir, paths)
 

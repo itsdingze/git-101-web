@@ -1,7 +1,6 @@
 import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
 import { globalScope, lastValueIn, projectScope, type ConfigScope } from '@/lib/git-sim/config/configScope'
-import { hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say, silent } from '@/lib/git-sim/output'
 import { findRepoDir } from '@/lib/git-sim/history/repository'
@@ -106,9 +105,15 @@ async function scopeFor(ctx: CommandContext, global: boolean): Promise<ConfigSco
 type ConfigWrite =
   | { kind: 'unset' }
   | { kind: 'replace-all'; value: string }
+  | { kind: 'add'; value: string }
   | { kind: 'set'; value: string; pattern: string | undefined }
 
 async function writeValue(scope: ConfigScope, key: string, write: ConfigWrite): Promise<void> {
+  if (write.kind === 'add') {
+    await scope.add(key, write.value)
+    return
+  }
+
   const existing = await scope.values(key)
   if (write.kind === 'unset' && existing.length > 1) throw new SandboxError(`warning: ${key} has multiple values`)
   if (write.kind !== 'set') {
@@ -138,16 +143,17 @@ async function recordWrite(
 
 export const config: GitSubcommand = {
   requiresRepo: false,
-  run: async (args, ctx) => {
-    const global = hasFlag(args, '--global', '--system')
-    const operands = operandsOf(args)
+  options: { flags: ['--global', '--system', '--local', '--list', '-l', '--get', '--add', '--unset', '--replace-all'] },
+  run: async (line, ctx) => {
+    const global = line.has('--global', '--system')
+    const operands = line.operands
     const [typed, value, pattern] = operands
     if (operands.length > MOST_OPERANDS) throw new SandboxError('error: no action specified')
 
-    if (hasFlag(args, '--list', '-l')) {
-      return listAll(ctx, global ? 'global' : hasFlag(args, '--local') ? 'local' : 'all')
+    if (line.has('--list', '-l')) {
+      return listAll(ctx, global ? 'global' : line.has('--local') ? 'local' : 'all')
     }
-    if (hasFlag(args, '--unset')) {
+    if (line.has('--unset')) {
       if (!typed) throw new SandboxError('error: wrong number of arguments, should be from 1 to 2')
       return recordWrite(ctx, canonicalKey(typed), global, { kind: 'unset' })
     }
@@ -155,7 +161,8 @@ export const config: GitSubcommand = {
 
     const key = canonicalKey(typed)
     if (value === undefined) return readValue(ctx, key, global)
-    if (hasFlag(args, '--replace-all')) return recordWrite(ctx, key, global, { kind: 'replace-all', value })
+    if (line.has('--add')) return recordWrite(ctx, key, global, { kind: 'add', value })
+    if (line.has('--replace-all')) return recordWrite(ctx, key, global, { kind: 'replace-all', value })
     return recordWrite(ctx, key, global, { kind: 'set', value, pattern })
   },
 }

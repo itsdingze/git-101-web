@@ -54,6 +54,30 @@ export function specMatcher(spec: string, prefix: string): (path: string) => boo
   return (path) => literal(path) || pattern.test(path)
 }
 
+function boundaryForSpec(spec: string, prefix: string, path: string): string | null | undefined {
+  const target = specTarget(spec, prefix)
+  if (target === null) return undefined
+
+  if (WILDCARD.test(spec)) {
+    if (!specMatcher(spec, prefix)(path)) return undefined
+    const slash = target.lastIndexOf('/', target.search(WILDCARD))
+    return slash === -1 ? null : target.slice(0, slash)
+  }
+
+  if (path === target) return null
+  return target === '' || path.startsWith(`${target}/`) ? target : undefined
+}
+
+export function collapseBoundaryFor(specs: readonly string[], prefix: string): (path: string) => string | null {
+  return (path) => {
+    for (const spec of specs) {
+      const boundary = boundaryForSpec(spec, prefix, path)
+      if (boundary !== undefined) return boundary
+    }
+    return ''
+  }
+}
+
 export function matchAny(
   specs: readonly string[],
   prefix: string,

@@ -1,7 +1,7 @@
-import { GH_COMMANDS } from './commands/gh/registry'
+import { GH_COMMANDS, UNSIMULATED_GH_COMMANDS, UNSIMULATED_GH_GROUPS } from './commands/gh/registry'
 import { isOwnKey } from '@/lib/isOwnKey'
 import { lockedCommand, type CommandLocks } from './input/commandLocks'
-import { fail, say } from './output'
+import { fail, refuse, say } from './output'
 import type { CommandContext, CommandOutput } from './types'
 
 const SIGN_IN_FIRST = [
@@ -14,6 +14,14 @@ function usage(): string {
     Object.keys(commands).map((name) => `  gh ${group} ${name}`),
   )
   return ['Work seamlessly with GitHub from the command line.', '', 'USAGE', '  gh <command> <subcommand> [flags]', '', 'COMMANDS IN THIS PRACTICE TERMINAL', ...lines].join('\n')
+}
+
+function unsimulated(name: string): CommandOutput[] {
+  return refuse(`gh ${name} is a real GitHub CLI command, but this practice sandbox doesn't simulate it.`)
+}
+
+function isUnsimulatedSubcommand(group: string, name: string): boolean {
+  return isOwnKey(UNSIMULATED_GH_COMMANDS, group) && (UNSIMULATED_GH_COMMANDS[group]?.includes(name) ?? false)
 }
 
 export async function runGh(
@@ -29,10 +37,16 @@ export async function runGh(
   if (!group) return say(usage())
 
   const commands = isOwnKey(GH_COMMANDS, group) ? GH_COMMANDS[group] : undefined
-  if (!commands) return fail(`unknown command "${group}" for "gh"`)
+  if (!commands) {
+    if (UNSIMULATED_GH_GROUPS.includes(group)) return unsimulated(name ? `${group} ${name}` : group)
+    return fail(`unknown command "${group}" for "gh"`)
+  }
 
   const command = name && isOwnKey(commands, name) ? commands[name] : undefined
-  if (!command) return name ? fail(`unknown command "${name}" for "gh ${group}"`) : say(usage())
+  if (!command) {
+    if (name && isUnsimulatedSubcommand(group, name)) return unsimulated(`${group} ${name}`)
+    return name ? fail(`unknown command "${name}" for "gh ${group}"`) : say(usage())
+  }
 
   if (group !== 'auth' && !ctx.github.account) return fail(SIGN_IN_FIRST)
   return command(rest, ctx, stdin)

@@ -1,10 +1,10 @@
 import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
-import { hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say, silent } from '@/lib/git-sim/output'
 import { joinPath } from '@/lib/git-sim/fs/paths'
-import { isDirectory, pathExists, removeTree } from '@/lib/git-sim/fs/fileOperations'
+import { pathExists, removeTree } from '@/lib/git-sim/fs/fileOperations'
+import { pruneEmptyFolders } from '@/lib/git-sim/fs/pruneEmptyFolders'
 import { repoPrefix, specMatcher, specTarget } from '@/lib/git-sim/fs/pathspec'
 import { readStatusRows } from '@/lib/git-sim/working-tree/workingTree'
 import { readUnmergedEntries } from '@/lib/git-sim/working-tree/indexStages'
@@ -57,12 +57,13 @@ function isInsideFolder(path: string, folder: string): boolean {
 
 export const rm: GitSubcommand = {
   requiresRepo: true,
-  run: async (args, ctx, dir) => {
-    const specs = operandsOf(args)
+  options: { flags: ['-r', '-R', '--recursive', '--cached', '-f', '--force', '-q', '--quiet', '-n', '--dry-run'] },
+  run: async (line, ctx, dir) => {
+    const specs = line.operands
     if (specs.length === 0) throw new SandboxError('fatal: No pathspec was given. Which files should I remove?')
 
-    const recursive = hasFlag(args, '-r', '-R', '--recursive')
-    const cachedOnly = hasFlag(args, '--cached')
+    const recursive = line.has('-r', '-R', '--recursive')
+    const cachedOnly = line.has('--cached')
     const prefix = repoPrefix(ctx, dir)
     const tracked = await git.listFiles({ fs: gitFs(ctx.fs), dir })
     const removed: string[] = []
@@ -80,9 +81,9 @@ export const rm: GitSubcommand = {
       removed.push(...hits)
     }
 
-    if (!hasFlag(args, '-f', '--force')) await refuseChangedFiles(ctx, dir, new Set(removed), cachedOnly)
+    if (!line.has('-f', '--force')) await refuseChangedFiles(ctx, dir, new Set(removed), cachedOnly)
 
-    for (const path of new Set(removed)) {
+    for (const path of line.has('-n', '--dry-run') ? [] : new Set(removed)) {
       await git.remove({ fs: gitFs(ctx.fs), dir, filepath: path })
       if (cachedOnly) continue
 
@@ -91,18 +92,8 @@ export const rm: GitSubcommand = {
       await pruneEmptyFolders(ctx, dir, path)
     }
 
-    if (hasFlag(args, '-q', '--quiet')) return silent
+    if (line.has('-q', '--quiet')) return silent
     const cleanup = [...new Set(removed)].map((path) => `rm '${path}'`)
     return say(cleanup.join('\n'))
   },
-}
-
-async function pruneEmptyFolders(ctx: CommandContext, dir: string, path: string): Promise<void> {
-  const parts = path.split('/').slice(0, -1)
-  for (let depth = parts.length; depth > 0; depth -= 1) {
-    const folder = joinPath(dir, parts.slice(0, depth).join('/'))
-    if (!(await isDirectory(ctx.fs, folder))) return
-    if ((await ctx.fs.promises.readdir(folder)).length > 0) return
-    await ctx.fs.promises.rmdir(folder)
-  }
 }

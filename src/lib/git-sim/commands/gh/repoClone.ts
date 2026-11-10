@@ -1,5 +1,6 @@
 import { clone } from '@/lib/git-sim/commands/git/clone'
 import { fail } from '@/lib/git-sim/output'
+import { parseCommandLine } from '@/lib/git-sim/input/commandLine'
 import { operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { hostedRemoteAt } from '@/lib/git-sim/remote/remoteConnection'
 import { repositoryAddress } from '@/lib/git-sim/github/hostedRepository'
@@ -19,5 +20,5 @@ export const repoClone: GhCommandHandler = async (args, ctx) => {
     return fail(`GraphQL: Could not resolve to a Repository with the name '${fullName}'. (repository)`)
   }
 
-  return clone.run(directory ? [address, directory] : [address], ctx, ctx.cwd)
+  return clone.run(parseCommandLine(directory ? [address, directory] : [address], clone.options).line, ctx, ctx.cwd)
 }

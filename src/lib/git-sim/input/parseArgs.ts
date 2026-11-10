@@ -83,16 +83,11 @@ export function hasFlag(args: readonly string[], ...names: readonly string[]): b
   return parseOptions(args, undeclared).options.some((option) => names.includes(option.name))
 }
 
-export function flagValues(args: readonly string[], ...names: readonly string[]): string[] {
+function flagValues(args: readonly string[], ...names: readonly string[]): string[] {
   const { options } = parseOptions(args, (name) => names.includes(name))
   return options.flatMap((option) =>
     names.includes(option.name) && option.value !== undefined ? [option.value] : [],
   )
-}
-
-export function flagMissingValue(args: readonly string[], ...names: readonly string[]): string | undefined {
-  const { options } = parseOptions(args, (name) => names.includes(name))
-  return options.find((option) => names.includes(option.name) && option.value === undefined)?.name
 }
 
 export function flagValue(args: readonly string[], ...names: readonly string[]): string | undefined {

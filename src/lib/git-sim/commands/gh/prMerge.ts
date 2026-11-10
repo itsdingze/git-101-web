@@ -4,6 +4,7 @@ import { branch as gitBranch } from '@/lib/git-sim/commands/git/branch'
 import { pull as gitPull } from '@/lib/git-sim/commands/git/pull'
 import { switchTo } from '@/lib/git-sim/branch/switchBranch'
 import { fail, refuse, say, stdout } from '@/lib/git-sim/output'
+import { parseCommandLine } from '@/lib/git-sim/input/commandLine'
 import { hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
 import { currentBranch, refOid, requireRepoDir, resolveIdentity } from '@/lib/git-sim/history/repository'
 import { hostedBaseFor, type HostedBase } from '@/lib/git-sim/github/hostedBase'
@@ -30,13 +31,16 @@ async function deleteLocalBranch(
 
   const onHead = (await currentBranch(ctx, dir)) === pull.head
   const moved = onHead
-    ? [...(await switchTo(ctx, dir, pull.base)), ...(await gitPull.run(['--ff-only', hosted.remoteName, pull.base], ctx, dir))]
+    ? [
+        ...(await switchTo(ctx, dir, pull.base)),
+        ...(await gitPull.run(parseCommandLine(['--ff-only', hosted.remoteName, pull.base], gitPull.options).line, ctx, dir)),
+      ]
     : []
   const switched = onHead ? ` and switched to branch ${pull.base}` : ''
 
   return [
     ...moved,
-    ...(await gitBranch.run(['-D', pull.head], ctx, dir)),
+    ...(await gitBranch.run(parseCommandLine(['-D', pull.head], gitBranch.options).line, ctx, dir)),
     stdout(`✓ Deleted local branch ${pull.head}${switched}`),
   ]
 }

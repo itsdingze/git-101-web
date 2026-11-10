@@ -29,24 +29,23 @@ export async function readIgnoredFiles(ctx: CommandContext, dir: string): Promis
   return ignored
 }
 
-async function ignoredAncestorOf(
-  ctx: CommandContext,
-  dir: string,
-  path: string,
-): Promise<string | null> {
+function outermostFullyIgnoredFolder(path: string, notIgnored: readonly string[]): string {
   const segments = path.split('/')
   for (let depth = 1; depth < segments.length; depth += 1) {
-    const folder = segments.slice(0, depth).join('/')
-    if (await isIgnoredPath(ctx, dir, `${folder}/`)) return folder
+    const folder = `${segments.slice(0, depth).join('/')}/`
+    if (!notIgnored.some((other) => other.startsWith(folder))) return folder
   }
-  return null
+  return path
 }
 
-export async function readIgnoredEntries(ctx: CommandContext, dir: string): Promise<string[]> {
-  const entries = new Set<string>()
-  for (const path of await readIgnoredFiles(ctx, dir)) {
-    const folder = await ignoredAncestorOf(ctx, dir, path)
-    entries.add(folder === null ? path : `${folder}/`)
-  }
-  return [...entries].sort()
+export async function readIgnoredEntries(ctx: CommandContext, dir: string, expandFolders: boolean): Promise<string[]> {
+  const ignored = await readIgnoredFiles(ctx, dir)
+  if (expandFolders) return [...ignored].sort()
+
+  const ignoredSet = new Set(ignored)
+  const notIgnored = [
+    ...(await git.listFiles({ fs: gitFs(ctx.fs), dir })),
+    ...(await unstagedWorkdirPaths(ctx, dir)).filter((path) => !ignoredSet.has(path)),
+  ]
+  return [...new Set(ignored.map((path) => outermostFullyIgnoredFolder(path, notIgnored)))].sort()
 }

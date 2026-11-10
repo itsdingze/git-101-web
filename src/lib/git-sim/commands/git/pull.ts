@@ -1,15 +1,17 @@
 import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
-import { operandsOf } from '@/lib/git-sim/input/parseArgs'
+import type { CommandLine } from '@/lib/git-sim/input/commandLine'
 import { SandboxError } from '@/lib/git-sim/errors'
 import { say, stderr, stdout } from '@/lib/git-sim/output'
-import { currentBranch, headOid } from '@/lib/git-sim/history/repository'
-import { readUpstream, type Upstream } from '@/lib/git-sim/remote/upstream'
-import { fetchFromRemote, resolveRemoteName } from '@/lib/git-sim/remote/fetchFromRemote'
+import { currentBranch, headOid, refOid } from '@/lib/git-sim/history/repository'
+import { isLocalUpstream, readUpstream, trackingRefOf, type Upstream } from '@/lib/git-sim/remote/upstream'
+import { fetchFromRemote, fetchHeadLine, resolveRemoteName } from '@/lib/git-sim/remote/fetchFromRemote'
 import { refuseMergeWhileMerging } from '@/lib/git-sim/merge/mergeGuards'
 import { mergeInto } from '@/lib/git-sim/merge/mergeInto'
-import { divergedRefusal, pullStrategyOf } from '@/lib/git-sim/remote/pullStrategy'
+import { divergedRefusal, PULL_STRATEGY_FLAGS, pullStrategyOf } from '@/lib/git-sim/remote/pullStrategy'
 import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
+
+type Fetched = { header: string; oid: string | null; ref: string; title: string }
 
 async function onlyRemoteName(ctx: CommandContext, dir: string): Promise<string> {
   const remotes = await git.listRemotes({ fs: gitFs(ctx.fs), dir })
@@ -51,10 +53,10 @@ async function hasDiverged(ctx: CommandContext, dir: string, fetched: string): P
 async function pullSource(
   ctx: CommandContext,
   dir: string,
-  args: readonly string[],
+  line: CommandLine,
   current: string,
 ): Promise<Upstream> {
-  const [named, branch] = operandsOf(args)
+  const [named, branch] = line.operands
   if (named && branch) return { remote: named, branch }
 
   const upstream = await readUpstream(ctx, dir, current)
@@ -66,34 +68,44 @@ async function pullSource(
   return upstream
 }
 
+async function fetchSource(ctx: CommandContext, dir: string, source: Upstream, branchNamed: boolean): Promise<Fetched> {
+  const ref = trackingRefOf(source)
+  if (isLocalUpstream(source)) {
+    return {
+      header: ['From .', fetchHeadLine(source.branch)].join('\n'),
+      oid: await refOid(ctx, dir, ref),
+      ref,
+      title: `Merge branch '${source.branch}'`,
+    }
+  }
+
+  const result = await fetchFromRemote(ctx, dir, source.remote, source.branch, branchNamed)
+  return { header: result.header, oid: result.fetchedOid, ref, title: `Merge branch '${source.branch}' of ${result.url}` }
+}
+
 export const pull: GitSubcommand = {
   requiresRepo: true,
-  run: async (args, ctx, dir) => {
+  options: { flags: PULL_STRATEGY_FLAGS },
+  run: async (line, ctx, dir) => {
     const branchName = await currentBranch(ctx, dir)
     if (!branchName) throw new SandboxError("fatal: this course can't pull onto a detached HEAD.")
     await refuseMergeWhileMerging(ctx, dir, 'Pulling')
 
-    const { remote: remoteName, branch } = await pullSource(ctx, dir, args, branchName)
+    const source = await pullSource(ctx, dir, line, branchName)
+    const fetched = await fetchSource(ctx, dir, source, line.operands.length > 1)
+    if (!fetched.oid) throw new SandboxError(`fatal: couldn't find remote ref ${source.branch}`)
 
-    const result = await fetchFromRemote(ctx, dir, remoteName, branch, operandsOf(args).length > 1)
-    if (!result.fetchedOid) throw new SandboxError(`fatal: couldn't find remote ref ${branch}`)
-
-    if (await hasDiverged(ctx, dir, result.fetchedOid)) {
-      const refusal = divergedRefusal(await pullStrategyOf(ctx, dir, args))
-      if (refusal) return [...(result.header ? [stdout(result.header)] : []), stderr(refusal)]
+    if (await hasDiverged(ctx, dir, fetched.oid)) {
+      const refusal = divergedRefusal(await pullStrategyOf(ctx, dir, line))
+      if (refusal) return [...(fetched.header ? [stdout(fetched.header)] : []), stderr(refusal)]
     }
 
     try {
-      const merged = await mergeInto(
-        ctx,
-        dir,
-        { ref: `refs/remotes/${remoteName}/${branch}`, label: result.fetchedOid },
-        `Merge branch '${branch}' of ${result.url}`,
-      )
-      return say([result.header, merged].filter(Boolean).join('\n'))
+      const merged = await mergeInto(ctx, dir, { ref: fetched.ref, label: fetched.oid }, fetched.title)
+      return say([fetched.header, merged].filter(Boolean).join('\n'))
     } catch (error) {
-      if (!(error instanceof SandboxError) || !result.header) throw error
-      return [stdout(result.header), stderr(error.message)]
+      if (!(error instanceof SandboxError) || !fetched.header) throw error
+      return [stdout(fetched.header), stderr(error.message)]
     }
   },
 }

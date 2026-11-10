@@ -248,7 +248,6 @@ export const messages = {
       copiedPrompt: "Leave out the `$` at the start. It's the prompt, not part of the command.",
       copiedFullPrompt: (command: string) =>
         `Leave out the prompt, everything up to and including the \`$\`. Type only the command: \`${command}\``,
-      copiedNote: (command: string) => `Leave out the note after \`#\`. Copy only the command itself: \`${command}\``,
       curlyQuotes: (straightened: string) =>
         `Those are curly quotes, which the terminal doesn't treat as quotes. Type straight quotes instead: \`${straightened}\``,
       unquotedMessage: (suggestion: string) =>

@@ -1,4 +1,4 @@
-import { hasFlag } from '@/lib/git-sim/input/parseArgs'
+import type { CommandLine } from '@/lib/git-sim/input/commandLine'
 import { readSetting } from '@/lib/git-sim/history/repository'
 import type { CommandContext } from '@/lib/git-sim/types'
 
@@ -20,7 +20,7 @@ const UNSPECIFIED = [
   'fatal: Need to specify how to reconcile divergent branches.',
 ].join('\n')
 
-const FAST_FORWARD_ONLY = [
+export const FAST_FORWARD_ONLY = [
   "hint: Diverging branches can't be fast-forwarded, you need to either:",
   'hint:',
   'hint: \tgit merge --no-ff',
@@ -38,10 +38,12 @@ const REBASE = [
   "hint: merge instead with 'git pull --no-rebase', or set 'git config pull.rebase false'.",
 ].join('\n')
 
-function strategyFromFlags(args: readonly string[]): PullStrategy | null {
-  if (hasFlag(args, '--ff-only')) return 'ff-only'
-  if (hasFlag(args, '--no-rebase')) return 'merge'
-  if (hasFlag(args, '--rebase', '-r')) return 'rebase'
+export const PULL_STRATEGY_FLAGS = ['--ff-only', '--no-rebase', '--rebase', '-r']
+
+function strategyFromFlags(line: CommandLine): PullStrategy | null {
+  if (line.has('--ff-only')) return 'ff-only'
+  if (line.has('--no-rebase')) return 'merge'
+  if (line.has('--rebase', '-r')) return 'rebase'
   return null
 }
 
@@ -56,9 +58,9 @@ async function strategyFromConfig(ctx: CommandContext, dir: string): Promise<Pul
 export async function pullStrategyOf(
   ctx: CommandContext,
   dir: string,
-  args: readonly string[],
+  line: CommandLine,
 ): Promise<PullStrategy> {
-  return strategyFromFlags(args) ?? (await strategyFromConfig(ctx, dir))
+  return strategyFromFlags(line) ?? (await strategyFromConfig(ctx, dir))
 }
 
 export function divergedRefusal(strategy: PullStrategy): string | null {

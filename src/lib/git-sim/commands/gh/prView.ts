@@ -22,7 +22,7 @@ function preview(pull: PullRequest, fullName: string): string {
   return [
     `${pull.title} ${fullName}#${pull.number}`,
     `${STATE_LABELS[pull.state]} • ${pull.author} wants to merge ${commitCount(pull.commits)} into ${pull.base} from ${pull.head} • less than a minute ago`,
-    `+${pull.additions} -${pull.deletions}`,
+    `+${pull.additions} -${pull.deletions} • No checks`,
     ...(pull.approvedBy ? [`Reviewers: ${pull.approvedBy} (Approved)`] : []),
     '',
     ...bodyLines(pull.body),

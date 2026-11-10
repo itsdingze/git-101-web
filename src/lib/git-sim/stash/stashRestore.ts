@@ -166,7 +166,7 @@ async function mergeIntoWorkTree(
     const conflicts = conflictsOf(error)
     if (!conflicts) throw error
 
-    await relabelConflictMarkers(ctx, dir, conflicts.content, { ours: OURS_REF, theirs }, SIDES)
+    await relabelConflictMarkers(ctx, dir, conflicts.content, { ours: OURS_REF, theirs }, SIDES, trees)
     const touched = changedPaths(entry.base, entry.tracked)
     await restoreDirtyWork(ctx, dir, { ...work, entries: work.entries.filter((dirty) => !touched.has(dirty.path)) })
     await stageCleanChanges(ctx, dir, entry, conflicts)

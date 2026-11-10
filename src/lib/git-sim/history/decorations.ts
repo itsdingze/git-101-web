@@ -1,6 +1,7 @@
 import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
 import { currentBranch, headOid, refOid } from './repository'
+import { readShallowBoundary } from './shallowBoundary'
 import { STASH_REF } from '@/lib/git-sim/stash/stashLog'
 import type { CommandContext } from '@/lib/git-sim/types'
 
@@ -45,6 +46,7 @@ export async function readDecorations(
     attach(head, 'HEAD', true)
   }
 
+  for (const oid of await readShallowBoundary(ctx, dir)) attach(oid, 'grafted', true)
   return decorations
 }
 

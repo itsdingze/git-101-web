@@ -9,10 +9,19 @@ type Row = {
   resultLine: number | null
 }
 
+const NO_FINAL_NEWLINE = '\0'
+
 function linesOf(text: string): string[] {
   const lines = text.split('\n')
-  if (lines[lines.length - 1] === '') lines.pop()
-  return lines
+  if (lines[lines.length - 1] === '') {
+    lines.pop()
+    return lines
+  }
+  return lines.map((line, index) => (index === lines.length - 1 ? `${line}${NO_FINAL_NEWLINE}` : line))
+}
+
+function shownText(line: string): string {
+  return line.endsWith(NO_FINAL_NEWLINE) ? line.slice(0, -1) : line
 }
 
 type ParentMatch = {
@@ -101,7 +110,7 @@ function range(numbers: readonly (number | null)[]): string {
   const count = present.length
   const start = present[0] ?? 0
   if (count === 0) return `${Math.max(start - 1, 0)},0`
-  return count === 1 ? `${start}` : `${start},${count}`
+  return `${start},${count}`
 }
 
 function hunkHeader(hunk: readonly Row[], parents: number): string {
@@ -119,5 +128,5 @@ export function combinedDiffLines(ours: string, theirs: string, result: string):
   return hunkRanges(rows)
     .map(([start, end]) => rows.slice(start, end))
     .filter((hunk) => !takesOneSide(hunk, parents.length))
-    .flatMap((hunk) => [hunkHeader(hunk, parents.length), ...hunk.map((row) => `${row.columns}${row.text}`)])
+    .flatMap((hunk) => [hunkHeader(hunk, parents.length), ...hunk.map((row) => `${row.columns}${shownText(row.text)}`)])
 }

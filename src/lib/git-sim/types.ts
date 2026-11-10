@@ -1,6 +1,7 @@
 import type { ConfigEntry } from './config/configScope'
 import type { SandboxFs } from './fs/sandboxFs'
 import type { GitHubState } from './github/githubState'
+import type { CommandLine, KnownOptions } from './input/commandLine'
 import type { CommandLocks } from './input/commandLocks'
 
 type CommandStream = 'stdout' | 'stderr'
@@ -44,7 +45,7 @@ export type CommandHandler = (
 ) => Promise<CommandOutput[]>
 
 export type GitCommandHandler = (
-  args: readonly string[],
+  line: CommandLine,
   ctx: CommandContext,
   dir: string,
 ) => Promise<CommandOutput[]>
@@ -57,5 +58,6 @@ export type GhCommandHandler = (
 
 export type GitSubcommand = {
   requiresRepo: boolean
+  options: KnownOptions
   run: GitCommandHandler
 }

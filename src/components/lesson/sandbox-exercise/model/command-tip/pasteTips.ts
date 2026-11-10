@@ -1,6 +1,5 @@
 import { messages } from '@/messages/en'
-import { failed, type TipRule } from './tipRule'
-import { joinRaw } from './commandShape'
+import type { TipRule } from './tipRule'
 
 const COPIED_PROMPT = /^\$\s/
 const COPIED_FULL_PROMPT = /^~\S*(?: \([^)]*\))? \$\s+(.+)$/
@@ -16,13 +15,6 @@ export const copiedFullPromptTip: TipRule = ({ line }) => {
   const pastedCommand = COPIED_FULL_PROMPT.exec(line)?.[1]
   if (!pastedCommand) return null
   return tips.copiedFullPrompt(pastedCommand)
-}
-
-export const copiedNoteTip: TipRule = ({ tokens, outputs }) => {
-  if (!failed(outputs)) return null
-  const note = tokens.findIndex((token) => !token.quoted && token.raw.startsWith('#'))
-  if (note <= 0) return null
-  return tips.copiedNote(joinRaw(tokens.slice(0, note)))
 }
 
 export const curlyQuoteTip: TipRule = ({ line }) => {

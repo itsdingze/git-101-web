@@ -1,16 +1,18 @@
 import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
-import { hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
-import { SandboxError } from '@/lib/git-sim/errors'
+import type { CommandLine } from '@/lib/git-sim/input/commandLine'
+import { CourseExplanationError, SandboxError } from '@/lib/git-sim/errors'
 import { say } from '@/lib/git-sim/output'
+import { isAncestor } from '@/lib/git-sim/history/ancestry'
 import { currentBranch, refOid, shortOid } from '@/lib/git-sim/history/repository'
-import { copyObjects, countObjects } from '@/lib/git-sim/remote/remoteTransfer'
+import { copyObjects } from '@/lib/git-sim/remote/remoteTransfer'
+import { listBranchTipObjectIds, listObjectIds, measureObjects, pushProgressLines, summarizePack } from '@/lib/git-sim/remote/packReport'
 import { connectToRemote } from '@/lib/git-sim/remote/remoteConnection'
 import { readUpstream, setUpstream } from '@/lib/git-sim/remote/upstream'
 import { firstRemoteName } from '@/lib/git-sim/remote/fetchFromRemote'
 import { describeRejection, type RejectionReason } from '@/lib/git-sim/remote/pushRejection'
 import { repositoryNameAt } from '@/lib/git-sim/github/hostedRepository'
-import type { CommandContext, GitSubcommand } from '@/lib/git-sim/types'
+import type { CommandContext, CommandOutput, GitSubcommand, RemoteLink } from '@/lib/git-sim/types'
 
 const NO_PUSH_DESTINATION = [
   'fatal: No configured push destination.',
@@ -24,15 +26,8 @@ const NO_PUSH_DESTINATION = [
 ].join('\n')
 
 const BASE_OBJECTS_REVISITED = 2
-
-function transferReport(written: number, remoteHadHistory: boolean): string[] {
-  const enumerated = written + (remoteHadHistory ? BASE_OBJECTS_REVISITED : 0)
-  return [
-    `Enumerating objects: ${enumerated}, done.`,
-    `Counting objects: 100% (${enumerated}/${enumerated}), done.`,
-    `Writing objects: 100% (${written}/${written}), done.`,
-  ]
-}
+const DELETE_FLAGS = ['-d', '--delete']
+const ONE_BRANCH_AT_A_TIME = 'This practice terminal pushes one branch at a time. Run git push once for each branch.'
 
 function pullRequestOffer(url: string, branch: string): string[] {
   const repository = repositoryNameAt(url)
@@ -47,9 +42,13 @@ function pullRequestOffer(url: string, branch: string): string[] {
 
 type PushTarget = {
   remoteName: string
-  branch: string
+  branch: string | null
+  label: string
   remoteBranch: string
+  forced: boolean
 }
+
+type Refspec = Pick<PushTarget, 'branch' | 'label' | 'remoteBranch' | 'forced'>
 
 type ForceMode = 'none' | 'force' | 'lease'
 
@@ -71,27 +70,105 @@ function noUpstream(branch: string, remoteName: string): string {
   ].join('\n')
 }
 
+function upstreamNameMismatch(remoteName: string, upstreamBranch: string): string {
+  return [
+    'fatal: The upstream branch of your current branch does not match',
+    'the name of your current branch.  To push to the upstream branch',
+    'on the remote, use',
+    '',
+    `    git push ${remoteName} HEAD:${upstreamBranch}`,
+    '',
+    'To push to the branch of the same name on the remote, use',
+    '',
+    `    git push ${remoteName} HEAD`,
+    '',
+    "To choose either option permanently, see push.default in 'git help config'.",
+    '',
+    'To avoid automatically configuring an upstream branch when its name',
+    "won't match the local branch, see option 'simple' of branch.autoSetupMerge",
+    "in 'git help config'.",
+    '',
+  ].join('\n')
+}
+
+function refName(name: string): string {
+  return name.replace(/^refs\/heads\//, '')
+}
+
+function parseRefspec(typed: string, current: string): Refspec {
+  const forced = typed.startsWith('+')
+  const body = forced ? typed.slice(1) : typed
+  const colon = body.indexOf(':')
+  const source = refName(colon === -1 ? body : body.slice(0, colon))
+  const destination = refName(colon === -1 ? body : body.slice(colon + 1))
+
+  if (source === '') return { branch: null, label: destination, remoteBranch: destination, forced }
+  const branch = source === 'HEAD' ? current : source
+  return { branch, label: source, remoteBranch: destination === 'HEAD' ? current : destination, forced }
+}
+
+function deletion(name: string): Refspec {
+  const remoteBranch = refName(name)
+  return { branch: null, label: remoteBranch, remoteBranch, forced: false }
+}
+
 async function pushTarget(
   ctx: CommandContext,
   dir: string,
-  args: readonly string[],
+  line: CommandLine,
   current: string,
 ): Promise<PushTarget> {
-  const [named, refspec] = operandsOf(args)
+  const [named, ...refspecs] = line.operands
   const remoteName = named ?? (await firstRemoteName(ctx, dir))
   if (!remoteName) throw new SandboxError(NO_PUSH_DESTINATION)
-  if (refspec) return { remoteName, branch: refspec, remoteBranch: refspec }
+  if (refspecs.length > 1) throw new CourseExplanationError(ONE_BRANCH_AT_A_TIME)
+
+  const [refspec] = refspecs
+  if (line.has(...DELETE_FLAGS)) {
+    if (!refspec) throw new SandboxError("fatal: --delete doesn't make sense without any refs")
+    return { remoteName, ...deletion(refspec) }
+  }
+  if (refspec) return { remoteName, ...parseRefspec(refspec, current) }
 
   const upstream = await readUpstream(ctx, dir, current)
   if (!upstream) throw new SandboxError(noUpstream(current, remoteName))
-  if (upstream.remote !== remoteName) return { remoteName, branch: current, remoteBranch: current }
-  return { remoteName: upstream.remote, branch: current, remoteBranch: upstream.branch }
+  const unforced = { branch: current, label: current, forced: false }
+  if (upstream.remote !== remoteName) return { remoteName, remoteBranch: current, ...unforced }
+  if (upstream.branch !== current) throw new SandboxError(upstreamNameMismatch(remoteName, upstream.branch))
+  return { remoteName: upstream.remote, remoteBranch: upstream.branch, ...unforced }
 }
 
-function forceModeOf(args: readonly string[]): ForceMode {
-  if (hasFlag(args, '--force-with-lease')) return 'lease'
-  if (hasFlag(args, '--force', '-f')) return 'force'
+function forceModeOf(line: CommandLine, target: PushTarget): ForceMode {
+  if (line.has('--force-with-lease')) return 'lease'
+  if (line.has('--force', '-f') || target.forced) return 'force'
   return 'none'
+}
+
+function failedPush(url: string, reason: string): SandboxError {
+  return new SandboxError([reason, `error: failed to push some refs to '${url}'`].join('\n'))
+}
+
+async function deleteRemoteBranch(
+  ctx: CommandContext,
+  dir: string,
+  link: RemoteLink,
+  target: PushTarget,
+): Promise<CommandOutput[]> {
+  const { remoteBranch, remoteName } = target
+  if (!(await refOid(ctx, link.dir, `refs/heads/${remoteBranch}`))) {
+    throw failedPush(link.url, `error: unable to delete '${remoteBranch}': remote ref does not exist`)
+  }
+  if (remoteBranch === (await currentBranch(ctx, link.dir))) {
+    throw failedPush(
+      link.url,
+      [`To ${link.url}`, ` ! [remote rejected] ${remoteBranch} (refusing to delete the current branch: refs/heads/${remoteBranch})`].join('\n'),
+    )
+  }
+
+  await git.deleteRef({ fs: gitFs(ctx.fs), dir: link.dir, ref: `refs/heads/${remoteBranch}` })
+  const trackingRef = `refs/remotes/${remoteName}/${remoteBranch}`
+  if (await refOid(ctx, dir, trackingRef)) await git.deleteRef({ fs: gitFs(ctx.fs), dir, ref: trackingRef })
+  return say([`To ${link.url}`, ` - [deleted]         ${remoteBranch}`].join('\n'))
 }
 
 async function canFastForward(
@@ -100,8 +177,7 @@ async function canFastForward(
   localOid: string,
   remoteOid: string,
 ): Promise<boolean> {
-  if (localOid === remoteOid) return true
-  return git.isDescendent({ fs: gitFs(ctx.fs), dir, oid: localOid, ancestor: remoteOid, depth: -1 })
+  return isAncestor(ctx, dir, remoteOid, localOid)
 }
 
 async function hasObject(ctx: CommandContext, dir: string, oid: string): Promise<boolean> {
@@ -140,53 +216,59 @@ async function refLine(
 
 export const push: GitSubcommand = {
   requiresRepo: true,
-  run: async (args, ctx, dir) => {
-    const branchName = await currentBranch(ctx, dir)
-    if (!branchName) throw new SandboxError("fatal: this course can't push a detached HEAD.")
-
-    const { remoteName, branch, remoteBranch } = await pushTarget(ctx, dir, args, branchName)
-    const { url, dir: remoteDir } = await connectToRemote(ctx, dir, remoteName)
-    const localOid = await refOid(ctx, dir, `refs/heads/${branch}`)
-    if (!localOid) throw new SandboxError(`error: src refspec ${branch} does not match any`)
-
-    const tips: RefTips = {
-      local: localOid,
-      remote: await refOid(ctx, remoteDir, `refs/heads/${remoteBranch}`),
-      lastFetched: await refOid(ctx, dir, `refs/remotes/${remoteName}/${remoteBranch}`),
-    }
-    const reason = await rejectionReason(ctx, dir, tips, forceModeOf(args))
-    if (reason) throw new SandboxError(describeRejection(url, branch, remoteBranch, reason))
-
-    const tracked = hasFlag(args, '-u', '--set-upstream')
-    const upstream = tracked
-      ? [`branch '${branch}' set up to track '${remoteName}/${remoteBranch}'.`]
-      : []
-    if (tracked) await setUpstream(ctx, dir, branch, { remote: remoteName, branch: remoteBranch })
-
-    if (tips.remote === localOid) return say([...upstream, 'Everything up-to-date'].join('\n'))
-
-    const updated = await refLine(ctx, dir, tips, `${branch} -> ${remoteBranch}`)
-    const objectsBefore = await countObjects(ctx, remoteDir)
-    await copyObjects(ctx, dir, remoteDir)
-    const written = (await countObjects(ctx, remoteDir)) - objectsBefore
-    await git.writeRef({
-      fs: gitFs(ctx.fs),
-      dir: remoteDir,
-      ref: `refs/heads/${remoteBranch}`,
-      value: localOid,
-      force: true,
-    })
-    await git.writeRef({
-      fs: gitFs(ctx.fs),
-      dir,
-      ref: `refs/remotes/${remoteName}/${remoteBranch}`,
-      value: localOid,
-      force: true,
-    })
-
-    const pullRequestLink = tips.remote === null ? pullRequestOffer(url, remoteBranch) : []
-    return say(
-      [...transferReport(written, objectsBefore > 0), ...pullRequestLink, `To ${url}`, updated, ...upstream].join('\n'),
-    )
+  options: { flags: ['-u', '--set-upstream', '-f', '--force', '--force-with-lease', '-q', '--quiet', ...DELETE_FLAGS] },
+  run: async (line, ctx, dir) => {
+    const outputs = await pushBranch(line, ctx, dir)
+    return line.has('-q', '--quiet') ? outputs.filter((output) => output.stream === 'stderr') : outputs
   },
+}
+
+async function sendObjects(ctx: CommandContext, dir: string, remoteDir: string): Promise<string[]> {
+  const alreadyThere = new Set(await listObjectIds(ctx, remoteDir))
+  const deltaBases = await listBranchTipObjectIds(ctx, remoteDir)
+  const sent = await measureObjects(ctx, dir, (await listObjectIds(ctx, dir)).filter((oid) => !alreadyThere.has(oid)))
+  await copyObjects(ctx, dir, remoteDir)
+
+  const enumerated = sent.length + (alreadyThere.size > 0 ? BASE_OBJECTS_REVISITED : 0)
+  return pushProgressLines(await summarizePack(ctx, remoteDir, sent, deltaBases), enumerated)
+}
+
+async function moveRefs(ctx: CommandContext, dir: string, remoteDir: string, target: PushTarget, value: string): Promise<void> {
+  const fs = gitFs(ctx.fs)
+  await git.writeRef({ fs, dir: remoteDir, ref: `refs/heads/${target.remoteBranch}`, value, force: true })
+  await git.writeRef({ fs, dir, ref: `refs/remotes/${target.remoteName}/${target.remoteBranch}`, value, force: true })
+}
+
+async function pushBranch(line: CommandLine, ctx: CommandContext, dir: string): Promise<CommandOutput[]> {
+  const branchName = await currentBranch(ctx, dir)
+  if (!branchName) throw new SandboxError("fatal: this course can't push a detached HEAD.")
+
+  const target = await pushTarget(ctx, dir, line, branchName)
+  const { remoteName, branch, label, remoteBranch } = target
+  const link = await connectToRemote(ctx, dir, remoteName)
+  const { url, dir: remoteDir } = link
+  if (branch === null) return deleteRemoteBranch(ctx, dir, link, target)
+
+  const localOid = await refOid(ctx, dir, `refs/heads/${branch}`)
+  if (!localOid) throw failedPush(url, `error: src refspec ${label} does not match any`)
+
+  const tips: RefTips = {
+    local: localOid,
+    remote: await refOid(ctx, remoteDir, `refs/heads/${remoteBranch}`),
+    lastFetched: await refOid(ctx, dir, `refs/remotes/${remoteName}/${remoteBranch}`),
+  }
+  const reason = await rejectionReason(ctx, dir, tips, forceModeOf(line, target))
+  if (reason) throw new SandboxError(describeRejection(url, label, remoteBranch, reason))
+
+  const tracked = line.has('-u', '--set-upstream')
+  const upstream = tracked ? [`branch '${branch}' set up to track '${remoteName}/${remoteBranch}'.`] : []
+  if (tracked) await setUpstream(ctx, dir, branch, { remote: remoteName, branch: remoteBranch })
+  if (tips.remote === localOid) return say([...upstream, 'Everything up-to-date'].join('\n'))
+
+  const updated = await refLine(ctx, dir, tips, `${label} -> ${remoteBranch}`)
+  const progress = await sendObjects(ctx, dir, remoteDir)
+  await moveRefs(ctx, dir, remoteDir, target, localOid)
+
+  const pullRequestLink = tips.remote === null ? pullRequestOffer(url, remoteBranch) : []
+  return say([...progress, ...pullRequestLink, `To ${url}`, updated, ...upstream].join('\n'))
 }

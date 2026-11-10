@@ -12,7 +12,7 @@ export type TipContext = {
   newOnGitHubMain?: boolean
 }
 
-export type TipInput = {
+type TipInput = {
   line: string
   tokens: readonly CommandWord[]
   outputs: readonly Output[]

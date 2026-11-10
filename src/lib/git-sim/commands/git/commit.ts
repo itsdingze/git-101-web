@@ -1,8 +1,9 @@
 import git from 'isomorphic-git'
 import { gitFs } from '@/lib/git-sim/fs/sandboxFs'
-import { flagMissingValue, flagValues, hasFlag, operandsOf } from '@/lib/git-sim/input/parseArgs'
+import { parseCommandLine, type CommandLine, type KnownOptions } from '@/lib/git-sim/input/commandLine'
 import { CourseExplanationError, SandboxError } from '@/lib/git-sim/errors'
-import { say } from '@/lib/git-sim/output'
+import { fail, say } from '@/lib/git-sim/output'
+import { readUnmergedEntries } from '@/lib/git-sim/working-tree/indexStages'
 import { recordHeadMove } from '@/lib/git-sim/history/headHistory'
 import { commitSignature, headOid } from '@/lib/git-sim/history/repository'
 import { formatCommitSummary } from '@/lib/git-sim/history/commitSummary'
@@ -13,6 +14,7 @@ import { refuseOutsideRepository, repoPrefix, specMatcher } from '@/lib/git-sim/
 import { joinPath } from '@/lib/git-sim/fs/paths'
 import { pathExists } from '@/lib/git-sim/fs/fileOperations'
 import { formatStatus } from '@/lib/git-sim/working-tree/longStatus'
+import { WHOLE_TREE_VIEW } from '@/lib/git-sim/working-tree/statusView'
 import { stageTrackedChanges } from '@/lib/git-sim/working-tree/stageTracked'
 import type { CommandContext, CommandOutput, GitSubcommand } from '@/lib/git-sim/types'
 
@@ -34,8 +36,13 @@ const NOTHING_TO_AMEND = 'fatal: You have nothing to amend.'
 
 const MESSAGE_FLAGS = ['-m', '--message']
 
-function messageOf(args: readonly string[]): string | undefined {
-  const paragraphs = flagValues(args, ...MESSAGE_FLAGS)
+const COMMIT_OPTIONS: KnownOptions = {
+  flags: ['-a', '--all', '--amend', '--no-edit', '--allow-empty', '-q', '--quiet', '--dry-run'],
+  valueFlags: MESSAGE_FLAGS,
+}
+
+function messageOf(line: CommandLine): string | undefined {
+  const paragraphs = line.values(...MESSAGE_FLAGS)
   return paragraphs.length > 0 ? paragraphs.join('\n\n') : undefined
 }
 
@@ -70,29 +77,29 @@ async function writeCommit(
 }
 
 async function recordCommit(
-  args: readonly string[],
+  line: CommandLine,
   ctx: CommandContext,
   dir: string,
 ): Promise<CommandOutput[]> {
   const merge = await readMergeInProgress(ctx, dir)
-  const paths = await namedPaths(args, ctx, dir)
+  const paths = await namedPaths(line, ctx, dir)
   if (paths.length > 0 && merge) throw new SandboxError('fatal: cannot do a partial commit during a merge.')
 
-  const reused = merge && hasFlag(args, '--no-edit') ? merge.message : undefined
-  const message = requireMessage(messageOf(args) ?? reused, merge ? NO_EDITOR_MID_MERGE : NO_EDITOR)
+  const reused = line.has('--no-edit') ? merge?.message : undefined
+  const message = requireMessage(messageOf(line) ?? reused, merge ? NO_EDITOR_MID_MERGE : NO_EDITOR)
 
-  if (hasFlag(args, '-a', '--all')) await stageTrackedChanges(ctx, dir)
+  if (line.has('-a', '--all')) await stageTrackedChanges(ctx, dir)
   const restoreOthers = paths.length > 0 ? await stageOnly(ctx, dir, paths) : null
 
   try {
     const tree = await readWorkingTree(ctx, dir)
-    const allowEmpty = hasFlag(args, '--allow-empty')
+    const allowEmpty = line.has('--allow-empty')
     if (!merge && !allowEmpty && tree.staged.length === 0) throw new SandboxError(await formatStatus(ctx, dir))
 
     const base = await headOid(ctx, dir)
     const joined = merge && base ? [base, merge.theirs] : undefined
     const oid = await writeCommit(ctx, dir, message, joined)
-    if (merge) await endMerge(ctx, dir)
+    await endMerge(ctx, dir)
     await recordHeadMove(ctx, dir)
 
     const summary = await summarize(ctx, dir, {
@@ -108,11 +115,11 @@ async function recordCommit(
 }
 
 export function concludeMerge(ctx: CommandContext, dir: string): Promise<CommandOutput[]> {
-  return recordCommit(['--no-edit'], ctx, dir)
+  return recordCommit(parseCommandLine(['--no-edit'], COMMIT_OPTIONS).line, ctx, dir)
 }
 
 async function amendCommit(
-  args: readonly string[],
+  line: CommandLine,
   ctx: CommandContext,
   dir: string,
 ): Promise<CommandOutput[]> {
@@ -120,10 +127,10 @@ async function amendCommit(
   if (!head) throw new SandboxError(NOTHING_TO_AMEND)
 
   const { commit: replaced } = await git.readCommit({ fs: gitFs(ctx.fs), dir, oid: head })
-  const reused = hasFlag(args, '--no-edit') ? replaced.message.trimEnd() : undefined
-  const message = requireMessage(messageOf(args) ?? reused, NO_EDITOR_AMEND)
+  const reused = line.has('--no-edit') ? replaced.message.trimEnd() : undefined
+  const message = requireMessage(messageOf(line) ?? reused, NO_EDITOR_AMEND)
 
-  if (hasFlag(args, '-a', '--all')) await stageTrackedChanges(ctx, dir)
+  if (line.has('-a', '--all')) await stageTrackedChanges(ctx, dir)
 
   const committer = await commitSignature(ctx, dir)
   const oid = await git.commit({ fs: gitFs(ctx.fs), dir, message, committer, amend: true })
@@ -139,10 +146,10 @@ async function amendCommit(
   )
 }
 
-async function namedPaths(args: readonly string[], ctx: CommandContext, dir: string): Promise<string[]> {
-  const specs = operandsOf(args, MESSAGE_FLAGS)
+async function namedPaths(line: CommandLine, ctx: CommandContext, dir: string): Promise<string[]> {
+  const specs = line.operands
   if (specs.length === 0) return []
-  if (hasFlag(args, '-a', '--all')) {
+  if (line.has('-a', '--all')) {
     throw new SandboxError(`fatal: paths '${specs[0] ?? ''} ...' with -a does not make sense`)
   }
 
@@ -195,33 +202,51 @@ async function stageOnly(ctx: CommandContext, dir: string, paths: readonly strin
   }
 }
 
-function refuseEmptyMessageFlag(args: readonly string[]): void {
-  const flag = flagMissingValue(args, ...MESSAGE_FLAGS)
-  if (flag === undefined) return
-  throw new SandboxError(
-    flag.startsWith('--')
-      ? `error: option \`${flag.slice(2)}' requires a value`
-      : `error: switch \`${flag.slice(1)}' requires a value`,
-  )
-}
-
 export const commit: GitSubcommand = {
   requiresRepo: true,
-  run: async (args, ctx, dir) => {
-    refuseEmptyMessageFlag(args)
-    const outputs = await commitOrAmend(args, ctx, dir)
-    return hasFlag(args, '-q', '--quiet') ? outputs.filter((output) => output.stream === 'stderr') : outputs
+  options: COMMIT_OPTIONS,
+  run: async (line, ctx, dir) => {
+    const outputs = await commitOrAmend(line, ctx, dir)
+    if (line.has('--dry-run')) return outputs
+    return line.has('-q', '--quiet') ? outputs.filter((output) => output.stream === 'stderr') : outputs
   },
 }
 
-async function commitOrAmend(args: readonly string[], ctx: CommandContext, dir: string): Promise<CommandOutput[]> {
-  if (!hasFlag(args, '--amend')) return recordCommit(args, ctx, dir)
+async function withIndexRestored<T>(ctx: CommandContext, dir: string, action: () => Promise<T>): Promise<T> {
+  const indexPath = joinPath(dir, '.git/index')
+  const saved = (await pathExists(ctx.fs, indexPath)) ? await ctx.fs.promises.readFile(indexPath) : null
+  try {
+    return await action()
+  } finally {
+    if (saved !== null) await ctx.fs.promises.writeFile(indexPath, saved)
+    else if (await pathExists(ctx.fs, indexPath)) await ctx.fs.promises.unlink(indexPath)
+  }
+}
+
+async function previewCommit(line: CommandLine, ctx: CommandContext, dir: string): Promise<CommandOutput[]> {
+  const paths = await namedPaths(line, ctx, dir)
+
+  return withIndexRestored(ctx, dir, async () => {
+    if (line.has('-a', '--all')) await stageTrackedChanges(ctx, dir)
+    if (paths.length > 0) await stageOnly(ctx, dir, paths)
+
+    const amending = line.has('--amend')
+    const status = await formatStatus(ctx, dir, WHOLE_TREE_VIEW, { amending })
+    const merging = (await readMergeInProgress(ctx, dir)) !== null
+    const committable = amending || (await readWorkingTree(ctx, dir)).staged.length > 0 || merging
+    return committable && (await readUnmergedEntries(ctx, dir)).length === 0 ? say(status) : fail(status)
+  })
+}
+
+async function commitOrAmend(line: CommandLine, ctx: CommandContext, dir: string): Promise<CommandOutput[]> {
+  if (line.has('--dry-run')) return previewCommit(line, ctx, dir)
+  if (!line.has('--amend')) return recordCommit(line, ctx, dir)
   if (await readMergeInProgress(ctx, dir)) {
     throw new SandboxError('fatal: You are in the middle of a merge -- cannot amend.')
   }
 
-  for (const path of await namedPaths(args, ctx, dir)) {
+  for (const path of await namedPaths(line, ctx, dir)) {
     await git.add({ fs: gitFs(ctx.fs), dir, filepath: path, force: true })
   }
-  return amendCommit(args, ctx, dir)
+  return amendCommit(line, ctx, dir)
 }
