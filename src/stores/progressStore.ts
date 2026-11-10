@@ -1,18 +1,27 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import type { ProgressState, ProgressStore } from './progress'
+import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
+import type { ProgressStore } from './progress'
+import { EMPTY_PROGRESS, mergeProgress, parseProgress } from './progressStoreState'
 
-const initialState: ProgressState = {
-  completedLessons: [],
-  completedSteps: {},
-  currentStep: {},
-  identity: null,
+const STORAGE_KEY = 'git-101-progress'
+const OLDEST_MIGRATABLE_VERSION = 6
+
+const tolerantLocalStorage: StateStorage = {
+  getItem: (name) => localStorage.getItem(name),
+  setItem: (name, value) => {
+    try {
+      localStorage.setItem(name, value)
+    } catch {
+      return
+    }
+  },
+  removeItem: (name) => localStorage.removeItem(name),
 }
 
 export const useProgressStore = create<ProgressStore>()(
   persist(
     (set, get) => ({
-      ...initialState,
+      ...EMPTY_PROGRESS,
 
       completeStep: (lessonId, stepId) => {
         const state = get()
@@ -56,9 +65,17 @@ export const useProgressStore = create<ProgressStore>()(
       },
     }),
     {
-      name: 'git-101-progress',
+      name: STORAGE_KEY,
+      storage: createJSONStorage(() => tolerantLocalStorage),
       version: 6,
-      migrate: (): ProgressState => ({ ...initialState }),
+      migrate: (saved, version) => (version < OLDEST_MIGRATABLE_VERSION ? EMPTY_PROGRESS : parseProgress(saved)),
+      merge: mergeProgress,
     }
   )
 )
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === STORAGE_KEY) void useProgressStore.persist.rehydrate()
+  })
+}
