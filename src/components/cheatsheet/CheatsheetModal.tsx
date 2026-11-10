@@ -28,9 +28,9 @@ export function CheatsheetModal({ onClose }: CheatsheetModalProps) {
         className="flex w-full max-w-content max-h-full flex-col overflow-hidden
           rounded-2xl border border-border bg-bg-primary shadow-xl"
       >
-        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border p-1.5">
-          <Button variant="text" size="icon" onClick={onClose} aria-label={messages.cheatsheet.close} className="shrink-0">
-            <X size={18} />
+        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-6 sm:px-8">
+          <Button variant="text" size="icon" onClick={onClose} aria-label={messages.cheatsheet.close} className="-ml-4 shrink-0">
+            <X className="size-4.5" />
           </Button>
           <h2 id="cheatsheet-title" className="text-base font-semibold text-text-primary">
             {messages.cheatsheet.title}

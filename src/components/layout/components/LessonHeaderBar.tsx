@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/Button'
 import { messages } from '@/messages/en'
 import { ProgressBar } from './ProgressBar'
 
-const slot = 'w-11 lg:w-32 shrink-0 flex justify-center'
+const slot = 'w-7 lg:w-32 shrink-0 flex'
 
-const labelledIcon = 'gap-1.5 lg:w-auto lg:px-2'
+const labelledIcon = 'shrink-0 gap-1.5 lg:w-auto lg:px-2'
 
 interface LessonHeaderBarProps {
   current: number
@@ -16,19 +16,19 @@ interface LessonHeaderBarProps {
 
 export function LessonHeaderBar({ current, total }: LessonHeaderBarProps) {
   return (
-    <div className="w-full h-14 flex items-center justify-center gap-2 px-6 sm:px-8 lg:gap-3 lg:px-0">
+    <div className="mx-auto w-full max-w-content h-14 flex items-center justify-center gap-2 px-6 sm:px-8 lg:max-w-none lg:gap-3 lg:px-0">
       <div className={`${slot} lg:justify-end`}>
-        <Button as={Link} to="/" variant="text" size="icon" aria-label={messages.header.backToLessons} className={labelledIcon}>
-          <ArrowLeft size={16} />
+        <Button as={Link} to="/" variant="text" size="icon" aria-label={messages.header.backToLessons} className={`-ml-4 lg:ml-0 ${labelledIcon}`}>
+          <ArrowLeft className="size-4" />
           <span className="hidden lg:inline text-sm whitespace-nowrap">{messages.header.allLessons}</span>
         </Button>
       </div>
 
-      <div className="w-full max-w-content min-w-0 min-[840px]:px-8">
+      <div className="w-full max-w-content min-w-0 lg:px-8">
         <ProgressBar current={current} total={total} />
       </div>
 
-      <div className={`${slot} lg:justify-start`}>
+      <div className={`${slot} justify-end lg:justify-start`}>
         <CheatsheetTrigger>
           {(open) => (
             <Button
@@ -38,9 +38,9 @@ export function LessonHeaderBar({ current, total }: LessonHeaderBarProps) {
               aria-haspopup="dialog"
               aria-label={messages.header.openCheatsheet}
               title={messages.header.cheatsheet}
-              className={labelledIcon}
+              className={`-mr-3.5 lg:mr-0 ${labelledIcon}`}
             >
-              <ScrollText size={16} />
+              <ScrollText className="size-4" />
               <span className="hidden lg:inline text-sm whitespace-nowrap">{messages.header.cheatsheet}</span>
             </Button>
           )}
