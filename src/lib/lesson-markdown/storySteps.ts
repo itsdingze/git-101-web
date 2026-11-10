@@ -1,4 +1,4 @@
-import { isRecord } from './isRecord'
+import { isRecord } from '../isRecord'
 
 export type Story = Readonly<Record<string, readonly unknown[]>>
 

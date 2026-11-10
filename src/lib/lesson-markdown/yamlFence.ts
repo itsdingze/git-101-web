@@ -1,7 +1,7 @@
 import { parse as parseYaml, YAMLParseError } from 'yaml'
 import type { LineReader } from './LineReader'
 import { readFence } from './contentBlocks'
-import { isRecord } from './isRecord'
+import { isRecord } from '../isRecord'
 
 export function parseYamlFrom(reader: LineReader, text: string, firstLine: number): unknown {
   try {

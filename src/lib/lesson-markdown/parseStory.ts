@@ -1,5 +1,5 @@
 import { parse as parseYaml } from 'yaml'
-import { isRecord } from './isRecord'
+import { isRecord } from '../isRecord'
 import { expandStorySteps, type Story } from './storySteps'
 
 export function parseStory(source: string): Story {
