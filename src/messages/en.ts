@@ -153,11 +153,13 @@ export const messages = {
   reading: {
     codeSample: 'Code sample',
     showDiagram: 'Show the diagram',
+    diagram: 'Diagram',
     path: 'Path',
     openFiles: 'Open files',
     finder: {
       back: 'Back',
       forward: 'Forward',
+      rootFolder: 'root',
       filesIn: (location: string) => `Files in /${location}`,
       emptyFolder: (label: string) => `${label}, an empty folder`,
       hiddenEntry: (name: string, kind: string) => `${name} (hidden ${kind})`,

@@ -1,7 +1,9 @@
 import { Suspense, useRef } from 'react'
 import type { ReadingStep as ReadingStepType } from '@/types'
 import { useExerciseNav } from '@/components/lesson/hooks/useExerciseNav'
+import { FOCUS_RING } from '@/components/ui/focusRing'
 import { InlineMarkdown } from '@/components/ui/inline-markdown/InlineMarkdown'
+import { messages } from '@/messages/en'
 import { ContentBlockList } from './components/ContentBlockList'
 import { DiagramErrorBoundary } from './components/DiagramErrorBoundary'
 import { DiagramJumpLink } from './components/DiagramJumpLink'
@@ -29,12 +31,22 @@ export function ReadingStep({ step }: ReadingStepProps) {
 
       <ContentBlockList blocks={step.content} />
 
-      <div ref={diagramRef} className="scroll-mt-8">
-        <DiagramErrorBoundary>
-          <Suspense fallback={<div className="min-h-48 bg-bg-card rounded-xl motion-safe:animate-pulse" />}>
-            {step.visualization && <StepDiagram visualization={step.visualization} />}
-          </Suspense>
-        </DiagramErrorBoundary>
+      <div>
+        {step.visualization && (
+          <div
+            ref={diagramRef}
+            role="group"
+            aria-label={messages.reading.diagram}
+            tabIndex={-1}
+            className={`scroll-mt-8 rounded-lg ${FOCUS_RING}`}
+          >
+            <DiagramErrorBoundary>
+              <Suspense fallback={<div className="min-h-48 bg-bg-card rounded-xl motion-safe:animate-pulse" />}>
+                <StepDiagram visualization={step.visualization} />
+              </Suspense>
+            </DiagramErrorBoundary>
+          </div>
+        )}
       </div>
     </div>
   )

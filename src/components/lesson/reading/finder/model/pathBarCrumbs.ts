@@ -1,4 +1,5 @@
 import type { FolderLocation } from '@/lib/file-tree/fileTree'
+import { messages } from '@/messages/en'
 
 export interface PathCrumb {
   key: string
@@ -7,7 +8,7 @@ export interface PathCrumb {
   location: FolderLocation
 }
 
-const ROOT: PathCrumb = { key: '/', kind: 'disk', name: 'root', location: [] }
+const ROOT: PathCrumb = { key: '/', kind: 'disk', name: messages.reading.finder.rootFolder, location: [] }
 
 export function pathBarCrumbs(location: FolderLocation): PathCrumb[] {
   return [

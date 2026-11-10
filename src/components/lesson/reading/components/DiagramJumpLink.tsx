@@ -13,6 +13,7 @@ export function DiagramJumpLink({ target }: DiagramJumpLinkProps) {
 
   function handleClick() {
     target.current?.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' })
+    target.current?.focus({ preventScroll: true })
   }
 
   return (

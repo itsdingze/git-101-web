@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { createElement } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type { ReadingStep as ReadingStepType } from '@/types'
 import { LessonNavProvider } from '@/contexts/lesson-nav/LessonNavProvider'
 import { messages } from '@/messages/en'
@@ -40,5 +40,16 @@ describe('ReadingStep', () => {
 
     expect(await screen.findByText(messages.reading.diagramFailed)).toBeTruthy()
     expect(screen.getByText('Git keeps your work in three places.')).toBeTruthy()
+  })
+
+  it('moves focus to the diagram when the learner jumps to it', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    Element.prototype.scrollIntoView = () => {}
+    render(createElement(LessonNavProvider, null, createElement(ReadingStep, { step: STEP })))
+    await screen.findByText(messages.reading.diagramFailed)
+
+    fireEvent.click(screen.getByRole('button', { name: messages.reading.showDiagram }))
+
+    expect(document.activeElement).toBe(screen.getByRole('group', { name: messages.reading.diagram }))
   })
 })
