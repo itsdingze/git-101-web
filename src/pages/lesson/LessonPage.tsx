@@ -11,6 +11,10 @@ import { useStepFocus } from './hooks/useStepFocus'
 
 export function LessonPage() {
   const { lessonId } = useParams()
+  return <LessonSteps key={lessonId} lessonId={lessonId} />
+}
+
+function LessonSteps({ lessonId }: { lessonId: string | undefined }) {
   const { lesson, step, currentStepIndex, parsedId } = useLessonPage(lessonId)
   const { spacerRef, contentRef } = useStepSpacer(currentStepIndex)
 

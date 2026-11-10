@@ -1,10 +1,12 @@
-import { useState, useCallback, useLayoutEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useCallback, useEffect, useLayoutEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { Lesson, Step } from '@/types'
 import { useProgressStore } from '@/stores/progressStore'
 import { lessonById } from '@/data/lessons/index'
 import { useLessonNav } from '@/contexts/lesson-nav/useLessonNav'
 import { initialStepIndex } from '@/pages/lesson/initialStepIndex'
+import { furthestReachableStep, resolveStepIndex, STEP_PARAM, stepParamValue } from '@/pages/lesson/stepParam'
+import { useFooterActivationGate } from './useFooterActivationGate'
 
 interface UseLessonPageResult {
   lesson: Lesson | undefined
@@ -15,6 +17,7 @@ interface UseLessonPageResult {
 
 export function useLessonPage(lessonId: string | undefined): UseLessonPageResult {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const parsedId = parseInt(lessonId ?? '', 10)
 
   const getCurrentStep = useProgressStore((s) => s.getCurrentStep)
@@ -25,14 +28,42 @@ export function useLessonPage(lessonId: string | undefined): UseLessonPageResult
 
   const lesson = lessonById(parsedId)
 
-  const [currentStepIndex, setCurrentStepIndex] = useState(() =>
+  const furthestStep = useProgressStore((s) =>
+    furthestReachableStep(lesson, {
+      lessonCompleted: s.isLessonCompleted(parsedId),
+      savedStep: s.getCurrentStep(parsedId),
+      isStepCompleted: (stepId) => s.isStepCompleted(parsedId, stepId),
+    }),
+  )
+  const [entryStep] = useState(() =>
     initialStepIndex(lesson, { lessonCompleted: isLessonCompleted(parsedId), savedStep: getCurrentStep(parsedId) }),
   )
+  const stepInAddress = searchParams.get(STEP_PARAM)
+  const currentStepIndex = resolveStepIndex(stepInAddress, entryStep, furthestStep)
 
-  const { setLessonNav, clearLessonNav, clearCheckResult } = useLessonNav()
+  const { setLessonNav, clearLessonNav, clearCheckResult, checkResult } = useLessonNav()
+  const allowFooterActivation = useFooterActivationGate(`${currentStepIndex}:${checkResult}`)
+
+  const writeStepToAddress = useCallback(
+    (stepIndex: number, options?: { replace: boolean }) => {
+      setSearchParams((params) => {
+        params.set(STEP_PARAM, stepParamValue(stepIndex))
+        return params
+      }, options)
+    },
+    [setSearchParams],
+  )
+
+  const goToStep = useCallback(
+    (stepIndex: number) => {
+      setCurrentStep(parsedId, stepIndex)
+      writeStepToAddress(stepIndex)
+    },
+    [parsedId, setCurrentStep, writeStepToAddress],
+  )
 
   const handleStepComplete = useCallback(() => {
-    if (!lesson) return
+    if (!lesson || !allowFooterActivation()) return
 
     const step = lesson.steps[currentStepIndex]
     if (!step) return
@@ -42,18 +73,22 @@ export function useLessonPage(lessonId: string | undefined): UseLessonPageResult
     if (nextIndex >= lesson.steps.length) {
       void navigate(`/lesson/${parsedId}/summary`)
     } else {
-      setCurrentStepIndex(nextIndex)
-      setCurrentStep(parsedId, nextIndex)
+      goToStep(nextIndex)
     }
-  }, [lesson, currentStepIndex, parsedId, completeStep, navigate, setCurrentStep])
+  }, [lesson, currentStepIndex, parsedId, completeStep, navigate, goToStep, allowFooterActivation])
 
   const handlePrev = useCallback(() => {
-    if (currentStepIndex > 0) {
-      const prevIndex = currentStepIndex - 1
-      setCurrentStepIndex(prevIndex)
-      setCurrentStep(parsedId, prevIndex)
-    }
-  }, [currentStepIndex, parsedId, setCurrentStep])
+    if (currentStepIndex > 0 && allowFooterActivation()) goToStep(currentStepIndex - 1)
+  }, [currentStepIndex, goToStep, allowFooterActivation])
+
+  useEffect(() => {
+    if (!lesson || stepInAddress === stepParamValue(currentStepIndex)) return
+    writeStepToAddress(currentStepIndex, { replace: true })
+  }, [lesson, stepInAddress, currentStepIndex, writeStepToAddress])
+
+  useEffect(() => {
+    if (lesson && getCurrentStep(parsedId) !== currentStepIndex) setCurrentStep(parsedId, currentStepIndex)
+  }, [lesson, parsedId, currentStepIndex, getCurrentStep, setCurrentStep])
 
   useLayoutEffect(() => {
     if (!lesson) {
@@ -70,14 +105,16 @@ export function useLessonPage(lessonId: string | undefined): UseLessonPageResult
     setLessonNav({
       current: currentStepIndex,
       total: lesson.steps.length,
-      onPrev: handlePrev,
-      onNext: handleStepComplete,
       canGoPrev: currentStepIndex > 0,
       isLastStep: currentStepIndex >= lesson.steps.length - 1,
       stepCompleted: alreadySolved,
     })
     return clearLessonNav
-  }, [lesson, currentStepIndex, parsedId, isStepCompleted, handlePrev, handleStepComplete, setLessonNav, clearLessonNav, clearCheckResult])
+  }, [lesson, currentStepIndex, parsedId, isStepCompleted, setLessonNav, clearLessonNav, clearCheckResult])
+
+  useLayoutEffect(() => {
+    if (lesson?.steps[currentStepIndex]) setLessonNav({ onPrev: handlePrev, onNext: handleStepComplete })
+  }, [lesson, currentStepIndex, handlePrev, handleStepComplete, setLessonNav])
 
   const step = lesson?.steps[currentStepIndex]
 
