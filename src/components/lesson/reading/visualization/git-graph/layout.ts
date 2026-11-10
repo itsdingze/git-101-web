@@ -9,6 +9,9 @@ import {
 } from './constants'
 import { messages } from '@/messages/en'
 
+const LABEL_OFFSET_X = COMMIT_RADIUS + 10
+const LABEL_OFFSET_Y = 22
+
 export function computeLayout(stage: Stage, svgHeight: number): Record<string, Position> {
   const branchLaneMap: Record<string, number> = {}
   for (const b of stage.branches) {
@@ -35,7 +38,7 @@ export function branchColorOf(stage: Stage, branchName: string): string {
   return colorOf(branchName) ?? colorOf('main') ?? 'var(--color-text-muted)'
 }
 
-export function curvePath(from: Position, to: Position): string {
+function curvePath(from: Position, to: Position): string {
   if (from.x === to.x) return `M ${from.x} ${from.y} L ${to.x} ${to.y}`
   const midY = (from.y + to.y) / 2
   return `M ${from.x} ${from.y} C ${from.x} ${midY}, ${to.x} ${midY}, ${to.x} ${to.y}`
@@ -78,6 +81,16 @@ export function phantomCommits(stage: Stage, positions: Record<string, Position>
     const y = from.y - COMMIT_SPACING_Y
     return [{ branch, x, y, pathD: curvePath(from, { x, y }) }]
   })
+}
+
+export function branchLabelPosition(
+  branchName: string,
+  headId: string,
+  positions: Record<string, Position>,
+  phantoms: readonly PhantomCommit[],
+): Position {
+  const anchor = phantoms.find((phantom) => phantom.branch.name === branchName) ?? positions[headId] ?? { x: 0, y: 0 }
+  return { x: anchor.x + LABEL_OFFSET_X, y: anchor.y + LABEL_OFFSET_Y }
 }
 
 export function computeFixedDimensions(stages: Stage[]): { svgHeight: number; svgWidth: number } {

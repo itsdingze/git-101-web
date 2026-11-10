@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import type { Stage } from './types'
-import { branchColorOf, branchHeads, computeLayout, computeConnections, phantomCommits } from './layout'
+import { branchColorOf, branchHeads, branchLabelPosition, computeLayout, computeConnections, phantomCommits } from './layout'
 import { COMMIT_RADIUS, TRANSITION } from './constants'
 import { messages } from '@/messages/en'
 import { describeStage } from './describeStage'
@@ -135,14 +135,7 @@ export function GraphRenderer({ stage, svgHeight, svgWidth }: GraphRendererProps
           const headId = heads[branch.name]
           if (!headId) return null
           const isHead = stage.head === branch.name
-
-          const phantom = phantoms.find((p) => p.branch.name === branch.name)
-          const labelX = phantom
-            ? phantom.x + COMMIT_RADIUS + 10
-            : (positions[headId]?.x ?? 0) + COMMIT_RADIUS + 10
-          const labelY = phantom
-            ? phantom.y + 22
-            : (positions[headId]?.y ?? 0) + 22
+          const label = branchLabelPosition(branch.name, headId, positions, phantoms)
 
           return (
             <motion.g
@@ -152,7 +145,7 @@ export function GraphRenderer({ stage, svgHeight, svgWidth }: GraphRendererProps
               exit={{ opacity: 0, transition: transition.exit }}
               transition={transition.enter}
             >
-              <BranchLabel branch={branch} isHead={isHead} x={labelX} y={labelY} />
+              <BranchLabel branch={branch} isHead={isHead} x={label.x} y={label.y} />
             </motion.g>
           )
         })}

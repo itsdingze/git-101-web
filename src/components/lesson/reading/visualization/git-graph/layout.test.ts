@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { branchHeads, phantomCommits } from './layout'
+import { branchHeads, branchLabelPosition, phantomCommits } from './layout'
 import type { Branch, Stage } from './types'
 
 function branch(name: string, lane: number, startsAt?: string): Branch {
@@ -39,6 +39,24 @@ describe('branchHeads', () => {
     }
 
     expect(branchHeads(stage)).toEqual({ main: 'a' })
+  })
+})
+
+describe('branchLabelPosition', () => {
+  const positions = { a: { x: 20, y: 200 } }
+
+  it('places a label just right of and below its head commit', () => {
+    expect(branchLabelPosition('main', 'a', positions, [])).toEqual({ x: 38, y: 222 })
+  })
+
+  it('places a label by the phantom commit of an empty branch instead', () => {
+    const phantoms = [{ branch: branch('feature', 1, 'a'), x: 66, y: 148, pathD: '' }]
+
+    expect(branchLabelPosition('feature', 'a', positions, phantoms)).toEqual({ x: 84, y: 170 })
+  })
+
+  it('places a label at the origin side when the head commit has no position', () => {
+    expect(branchLabelPosition('main', 'missing', positions, [])).toEqual({ x: 18, y: 22 })
   })
 })
 
