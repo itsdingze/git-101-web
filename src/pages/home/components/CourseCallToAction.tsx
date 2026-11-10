@@ -16,7 +16,7 @@ export function CourseCallToAction({ nextLesson, hasStarted }: CourseCallToActio
 
   return (
     <Button as={Link} to={`/lesson/${nextLesson.id}`} variant="filled" className="max-w-full">
-      <span className="truncate">{hasStarted ? messages.home.hero.continue(nextLesson.title) : messages.home.hero.start}</span>
+      <span className="min-w-0 text-left">{hasStarted ? messages.home.hero.continue(nextLesson.title) : messages.home.hero.start}</span>
       <ArrowRight size={14} className="shrink-0" aria-hidden />
     </Button>
   )

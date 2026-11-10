@@ -13,8 +13,8 @@ export function LessonFooter() {
 
   return (
     <footer data-lesson-footer className="sticky bottom-0 z-50 w-full bg-bg-primary border-t border-border">
-      <ContentColumn className="h-20 flex items-center">
-        <div className="flex items-center gap-2 w-full">
+      <ContentColumn className="min-h-20 flex items-center py-3">
+        <div className="flex flex-wrap items-center gap-2 w-full">
           <Button
             variant="outlined"
             onClick={onPrev ?? undefined}
@@ -29,7 +29,7 @@ export function LessonFooter() {
             variant={variant}
             onClick={onClick}
             disabled={disabled}
-            className="flex-1 whitespace-nowrap"
+            className="grow basis-32 whitespace-nowrap"
           >
             {label}
             {showContinue && <ArrowRight size={14} />}
