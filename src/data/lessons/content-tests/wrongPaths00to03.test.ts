@@ -241,7 +241,7 @@ describe('lesson 3: first commit', () => {
     expect(result.detour).toBe('ignored-file-added')
   })
 
-  it.each(['git add -f tasks.txt', 'git add --force .'])('explains forcing the ignored file in with %s', async (line) => {
+  it.each(['git add -f tasks.txt', 'git add tasks.txt -f', 'git add --force .'])('explains forcing the ignored file in with %s', async (line) => {
     const result = await replaySandbox('first-commit', ['git status', line])
 
     expect(result.detour).toBe('ignored-file-forced')

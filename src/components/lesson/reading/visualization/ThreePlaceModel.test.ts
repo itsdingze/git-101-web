@@ -29,7 +29,7 @@ describe('ThreePlaceModel', () => {
     runCommand('$ git commit -m "Add app"')
 
     expect(document.activeElement?.textContent).toBe(
-      'This commit records the staged files. Your files are still in the working directory.',
+      'This commit records the staged files. Your files are still in the working tree.',
     )
   })
 

@@ -112,10 +112,11 @@ Untracked files:
   (use "git add <file>..." to include in what will be committed)
 	README.md
 	dates.py
+
 ~/projects/todo-app (main) $
 ```
 
-The file is still on your computer, but its removal from the next snapshot is staged. That's why `git status` lists it as `deleted` under `Changes to be committed`.
+The file is still on your computer, but its removal from the next commit is staged. That's why `git status` lists it as `deleted` under `Changes to be committed`.
 
 Once you commit that removal, new commits will leave `debug.log` out, and the `*.log` rule stops Git from staging it again. Earlier commits still hold their saved copy, so you can still see the old `debug.log` by looking back through the history.
 
@@ -189,6 +190,7 @@ Untracked files:
   (use "git add <file>..." to include in what will be committed)
 	README.md
 	dates.py
+
 ~/projects/todo-app (main) $ git commit -m "chore: stop tracking debug.log"
 [main 7eb0ee6] chore: stop tracking debug.log
  2 files changed, 1 insertion(+), 1 deletion(-)
@@ -214,6 +216,7 @@ Changes to be committed:
 Untracked files:
   (use "git add <file>..." to include in what will be committed)
 	README.md
+
 ~/projects/todo-app (main) $ git commit -m "feat: add due dates"
 [main 03657a4] feat: add due dates
  2 files changed, 7 insertions(+)
@@ -225,7 +228,7 @@ Only `README.md` remains untracked. It serves a different purpose, so it gets it
 
 ## Commit the README {#readme-commit}
 
-Finally, stage `README.md` on its own and check the staged list. After its `docs:` commit, run `git status` again to check that all three groups are recorded:
+Finally, stage `README.md` on its own and check the staged files. After its `docs:` commit, run `git status` again to check that all three groups are recorded:
 
 ```terminal
 ~/projects/todo-app (main) $ git add README.md
@@ -234,6 +237,7 @@ On branch main
 Changes to be committed:
   (use "git restore --staged <file>..." to unstage)
 	new file:   README.md
+
 ~/projects/todo-app (main) $ git commit -m "docs: add a README"
 [main 4f0f26c] docs: add a README
  1 file changed, 2 insertions(+)
@@ -303,7 +307,7 @@ goals:
       - Run `git rm --cached debug.log`, then `git status`.
   - id: chore-committed
     label: "The `*.log` rule is in a `chore:` commit"
-    narration: Stage `.gitignore` too, then run `git status` to check the rule and log removal are staged together. Commit them with a `chore:` message.
+    narration: Stage `.gitignore` too. You can run `git status` to check the rule and log removal are staged together. Commit them with a `chore:` message.
     check:
       kind: all-of
       checks:
@@ -313,46 +317,47 @@ goals:
         - kind: not
           check: { kind: commit-exists, modifies: [ .gitignore ], containing: [ debug.log ] }
         - kind: not
-          check: { kind: commit-exists, modifies: [ .gitignore, app.py ] }
+          check: { kind: commit-exists, changes: [ .gitignore, app.py ] }
         - kind: not
-          check: { kind: commit-exists, modifies: [ .gitignore ], containing: [ dates.py ] }
+          check: { kind: commit-exists, changes: [ .gitignore, dates.py ] }
         - kind: not
-          check: { kind: commit-exists, modifies: [ .gitignore ], containing: [ README.md ] }
+          check: { kind: commit-exists, changes: [ .gitignore, README.md ] }
     hints:
       - Run `git status`, and you'll see the removal is staged but `.gitignore` isn't yet.
       - >-
         Run `git add .gitignore`, then `git status`, then `git commit -m "chore: stop tracking debug.log"`.
   - id: feat-committed
     label: "Due dates are in a `feat:` commit of their own"
-    narration: Now stage `app.py` and `dates.py`, check the staged list with `git status`, and commit them with a `feat:` message.
+    narration: Now stage `app.py` and `dates.py`. You can check the staged files with `git status`. Commit them with a `feat:` message.
     check:
       kind: all-of
       checks:
         - kind: commit-exists
-          modifies: [ app.py ]
-          containing: [ dates.py ]
+          changes: [ app.py, dates.py ]
           messageIncludes: feat
         - kind: not
-          check: { kind: commit-exists, modifies: [ app.py ], containing: [ README.md ] }
+          check: { kind: commit-exists, changes: [ app.py, README.md ] }
         - kind: not
-          check: { kind: commit-exists, modifies: [ app.py, .gitignore ] }
+          check: { kind: commit-exists, changes: [ dates.py, README.md ] }
+        - kind: not
+          check: { kind: commit-exists, changes: [ app.py, .gitignore ] }
     hints:
       - "`git add` takes several file names, with spaces between them."
       - >-
         Run `git add app.py dates.py`, then `git status`, then `git commit -m "feat: add due dates"`.
   - id: docs-committed
     label: "The README is in a `docs:` commit, and nothing is left to commit"
-    narration: Stage `README.md` alone and check the staged list. Make a `docs:` commit, then run `git status` to check for remaining changes.
+    narration: Stage `README.md` alone. You can check the staged files with `git status`. Make a `docs:` commit, then run `git status` to check for remaining changes.
     check:
       kind: all-of
       checks:
         - kind: commit-exists
-          containing: [ README.md ]
+          changes: [ README.md ]
           messageIncludes: docs
         - kind: not
-          check: { kind: commit-exists, containing: [ README.md ], modifies: [ app.py ] }
+          check: { kind: commit-exists, changes: [ README.md, app.py ] }
         - kind: not
-          check: { kind: commit-exists, containing: [ README.md ], modifies: [ .gitignore ] }
+          check: { kind: commit-exists, changes: [ README.md, .gitignore ] }
         - kind: working-tree-clean
         - kind: last-command
           startsWith: git status
@@ -363,19 +368,33 @@ goals:
 detours:
   - id: debug-log-deleted
     check: { kind: file-absent, path: debug.log }
-    message: "`debug.log` is gone from your folder, because `git rm -f` deletes your copy. Press Start over, and run `git rm --cached debug.log`."
+    message: "`debug.log` is gone from your folder, because `git rm -f` deletes your copy. Press **Start over**, and run `git rm --cached debug.log`."
   - id: changes-mixed
     check:
       kind: any-of
       checks:
-        - { kind: commit-exists, modifies: [ app.py ], containing: [ README.md ] }
-        - { kind: commit-exists, modifies: [ .gitignore, app.py ] }
-        - { kind: commit-exists, modifies: [ .gitignore ], containing: [ dates.py ] }
-        - { kind: commit-exists, modifies: [ .gitignore ], containing: [ README.md ] }
-    message: That commit mixes changes with different purposes. Press Start over, and stage only the files for one change before each commit.
+        - { kind: commit-exists, changes: [ app.py, README.md ] }
+        - { kind: commit-exists, changes: [ dates.py, README.md ] }
+        - { kind: commit-exists, changes: [ .gitignore, app.py ] }
+        - { kind: commit-exists, changes: [ .gitignore, dates.py ] }
+        - { kind: commit-exists, changes: [ .gitignore, README.md ] }
+        - { kind: commit-exists, changes: [ app.py ], messageIncludes: "chore:" }
+        - { kind: commit-exists, changes: [ dates.py ], messageIncludes: "chore:" }
+    message: That commit mixes changes with different purposes. Press **Start over**, and stage only the files for one change before each commit.
+  - id: due-dates-split
+    check:
+      kind: all-of
+      checks:
+        - kind: any-of
+          checks:
+            - { kind: commit-exists, changes: [ app.py ] }
+            - { kind: commit-exists, changes: [ dates.py ] }
+        - kind: not
+          check: { kind: commit-exists, changes: [ app.py, dates.py ] }
+    message: "The due-dates feature needs `app.py` and `dates.py` in one commit. Press **Start over**, and stage both before you commit."
   - id: debug-log-still-tracked
     check: { kind: commit-exists, modifies: [ .gitignore ], containing: [ debug.log ] }
-    message: "That commit has the `*.log` rule, but Git still tracks `debug.log`. Press Start over, and run `git rm --cached debug.log` before you commit."
+    message: "That commit has the `*.log` rule, but Git still tracks `debug.log`. Press **Start over**, and run `git rm --cached debug.log` before you commit."
   - id: changes-mixed-staged
     check:
       kind: any-of
@@ -388,7 +407,7 @@ detours:
         - { kind: files-staged, paths: [ debug.log, README.md ] }
         - { kind: files-staged, paths: [ app.py, README.md ] }
         - { kind: files-staged, paths: [ dates.py, README.md ] }
-    message: Changes with different purposes are staged together, so your next commit would mix them. Press Start over, and stage only the files for one change.
+    message: Changes with different purposes are staged together, so your next commit would mix them. Press **Start over**, and stage only the files for one change.
   - id: rule-left-out
     check:
       kind: all-of

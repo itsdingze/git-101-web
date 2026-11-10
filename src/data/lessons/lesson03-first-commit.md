@@ -9,7 +9,7 @@ unlocks: [status, add, commit]
 
 You're ready for your first commit, the first save point in your project's history. Before you make it, you choose which files go in.
 
-We've added sample tasks to `tasks.txt`. In this example, we'll keep that list out of the project history.
+`tasks.txt` holds sample tasks. In this example, we'll keep that list out of the project history.
 
 ## Git's three places {#three-places}
 
@@ -17,7 +17,7 @@ You record a change in two steps: choose its contents with `git add`, then save 
 
 Three places help you keep track:
 
-1. The **working directory** contains the files you work on.
+1. The **working tree** contains the files you work on.
 2. The **staging area** holds the file versions selected for your next commit.
 3. Your **repository history** contains recorded commits, stored inside `.git`.
 
@@ -142,7 +142,7 @@ Git itself does not require these prefixes. This course uses [Conventional Commi
 
 ## Make the commit {#git-commit}
 
-`git commit` records the project's staged snapshot. Unchanged files remain in that snapshot too.
+`git commit` records a snapshot of the staged files. Unchanged files remain in that snapshot too.
 
 The `-m` flag (m for message) adds the commit message. Put the message in quotes because it has spaces:
 
@@ -160,7 +160,7 @@ The first line in the response starts with your branch, `main`. `root-commit` me
 
 `8c7821f` is the start of the commit's **hash**, a unique ID Git gives every commit. `create mode` lines mean each file is new to this repository.
 
-Here's the complete flow: choose file contents with `git add`, then record them with `git commit`. Step through the diagram to see the working directory, staging area, and repository at each point.
+Here's the complete flow: choose file contents with `git add`, then record them with `git commit`. Step through the diagram to see the working tree, staging area, and repository at each point.
 
 ```visualization three-place-model
 files: [ .gitignore, app.py, debug.log ]
@@ -180,7 +180,7 @@ nothing to commit, working tree clean  # matches your last commit
 ~/projects/todo-app (main) $
 ```
 
-Git also calls the working directory the **working tree**. A clean status means there are no staged changes, unstaged changes to tracked files, or untracked files to report.
+A clean status means there are no staged changes, unstaged changes to tracked files, or untracked files to report.
 
 ```sandbox-exercise
 id: first-commit
@@ -276,7 +276,7 @@ detours:
           check:
             kind: head-message
             includes: "feat:"
-    message: "Your commit was saved. This exercise asks for a `feat:` message. Press Start over, stage the files again, and use a message such as `feat: add task list`."
+    message: "Your commit was saved. This exercise asks for a `feat:` message. Press **Start over**, stage the files again, and use a message such as `feat: add task list`."
 completionMessage: You made your first commit, and `.gitignore` kept the sample tasks out of it. Every file Git tracks now matches that save point.
 ```
 

@@ -45,7 +45,7 @@ Git's own hint already names the command: `git restore`.
 
 ## Discard unstaged edits {#restore}
 
-To bring back the list comment, use `git restore app.py`. It replaces the file's working contents with its staged version. Here, that version matches the last commit because the grid edit hasn't been staged.
+To bring back the list comment, use `git restore app.py`. It replaces the file in the working tree with its staged version. Here, that version matches the last commit because the grid edit hasn't been staged.
 
 Read the changed comment above and check `git status` before discarding it. Status tells you which files have changes, but it doesn't show the changed lines.
 
@@ -84,11 +84,11 @@ To discard unstaged edits in every tracked file in this folder and its subfolder
 
 ## Unstage, then discard {#restore-other-files}
 
-What if the unwanted edit is already staged? First run `git restore --staged app.py`. This resets the staged version to the last commit and leaves the edit in your working file.
+What if the unwanted edit is already staged? First run `git restore --staged app.py`. This resets the staged version to the last commit and leaves the edit in the working tree.
 
 Stop there if you want to keep editing or commit it later. To discard it too, run `git restore app.py`.
 
-In this separate example, the grid edit starts staged. The first command leaves it in the working file, and the second restores the last committed contents:
+In this separate example, the grid edit starts staged. The first command leaves it in the working tree, and the second restores the last committed version:
 
 ```terminal
 ~/projects/todo-app (main) $ git restore --staged app.py
@@ -155,7 +155,7 @@ detours:
     check:
       kind: not
       check: { kind: commit-count, count: 7 }
-    message: The grid edit is now committed. This exercise is about discarding an uncommitted edit. Press Start over, then use `git restore app.py`.
+    message: The grid edit is now committed. This exercise is about discarding an uncommitted edit. Press **Start over**, then use `git restore app.py`.
   - id: grid-staged
     check: { kind: files-staged, paths: [ app.py ] }
     message: "The grid edit is staged, so plain restore would keep that version. Run `git restore --staged app.py`, then `git restore app.py` to discard it."
@@ -209,6 +209,7 @@ Changes to be committed:
 Untracked files:
   (use "git add <file>..." to include in what will be committed)
 	priority.py
+
 ~/projects/todo-app (main) $ git commit -m "feat: add priorites"
 [main e9d1ac6] feat: add priorites
  1 file changed, 4 insertions(+)
@@ -225,7 +226,7 @@ e9d1ac6 (HEAD -> main) feat: add priorites
 ~/projects/todo-app (main) $
 ```
 
-The status still lists `priority.py` as untracked, and the log shows `priorites` in the message. The next practice starts at this point, with that incomplete commit already made.
+The status still lists `priority.py` as untracked, and the log shows `priorites` in the message. The `-2` limits the log to the newest two commits. The next practice starts at this point, with that incomplete commit already made.
 
 ## Fix the last commit {#amend}
 
@@ -235,7 +236,7 @@ To include the missing file and correct the typo without adding a second priorit
 
 Only amend a commit that's still just on your computer. Later in the course, you'll share commits with others through GitHub. Once someone else has a copy of a commit, replacing it leaves you with different versions of the history.
 
-The priorities commit hasn't been shared, so you can amend it. Stage the missing file, check the staged list with `git status`, then use `-m` to replace the message too:
+The priorities commit hasn't been shared, so you can amend it. Stage the missing file, check the staged files with `git status`, then use `-m` to replace the message too:
 
 ```terminal
 ~/projects/todo-app (main) $ git add priority.py
@@ -244,6 +245,7 @@ On branch main
 Changes to be committed:
   (use "git restore --staged <file>..." to unstage)
 	new file:   priority.py
+
 ~/projects/todo-app (main) $ git commit --amend -m "feat: add priorities"
 [main a75a159] feat: add priorities
  Date: Tue Nov 14 22:21:20 2023 +0000  # the original's date
@@ -261,7 +263,7 @@ The corrected commit has a new hash, `a75a159` instead of `e9d1ac6`, because it'
 
 ```block-exercise
 id: build-amend
-prompt: Build the command that replaces your last commit with one that has the right message.
+prompt: "Build the command that replaces your last commit with one that has the right message:"
 availableBlocks: [ git, commit, --amend, -m, "\"feat: add priorities\"", add, restore ]
 correctAnswer: [ git, commit, --amend, -m, "\"feat: add priorities\"" ]
 acceptableAnswers:
@@ -282,7 +284,7 @@ hints:
 id: quiz-restore
 question: "An edit to `app.py` was never staged or committed. You run `git restore app.py`. What happens to that edit?"
 options:
-  - text: Discarded from the working file
+  - text: Discarded from the working tree
   - text: Saved in a commit you can go back to
     whyWrong: You never committed the change, so no commit holds it.
   - text: Staged, ready for your next commit
@@ -318,7 +320,7 @@ seed:
 goals:
   - id: priority-staged
     label: "`priority.py` is staged"
-    narration: Amend includes staged changes, so stage the missing file and check the staged list with `git status`.
+    narration: Amend includes staged changes, so stage the missing file. You can check the staged files with `git status`.
     check: { kind: files-staged, paths: [ priority.py ] }
     hints:
       - Run `git status` to find the file that was left out.
@@ -344,7 +346,7 @@ detours:
     check:
       kind: not
       check: { kind: commit-count, count: 8 }
-    message: That made a second priorities commit instead of replacing the first. Press Start over. After you stage the file, use `git commit --amend`.
+    message: That made a second priorities commit instead of replacing the first. Press **Start over**. After you stage the file, use `git commit --amend`.
   - id: amended-before-add
     check:
       kind: all-of
@@ -366,7 +368,7 @@ You can now:
 - Fix your last commit's message
 
 ```bash
-git restore <file>            # replace working contents with staged version
+git restore <file>            # replace the file with its staged version
 git restore .                 # same, for tracked files here
 git restore --staged <file>   # unstage, keep your edit
 git commit --amend -m "..."   # replace your latest unshared commit

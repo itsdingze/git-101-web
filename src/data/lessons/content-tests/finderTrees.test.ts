@@ -12,6 +12,7 @@ type FinderMoment = {
 
 const HOME = '/home/user'
 const INDENT = '  '
+const ONLY_IN_REAL_GIT = /^ +description$/
 
 function exerciseSeed(stepId: string): SandboxSeed {
   for (const lesson of lessons) {
@@ -88,8 +89,9 @@ describe('Finder windows', () => {
     'window %i shows the files the sandbox holds at that moment',
     async (index, moment) => {
       const shown = blocks[index - 1]?.block.home ?? []
+      const simulated = treeLines(shown).filter((line) => !ONLY_IN_REAL_GIT.test(line))
 
-      expect(treeLines(shown).join('\n')).toBe((await sandboxHomeAt(moment)).join('\n'))
+      expect(simulated.join('\n')).toBe((await sandboxHomeAt(moment)).join('\n'))
     },
   )
 })

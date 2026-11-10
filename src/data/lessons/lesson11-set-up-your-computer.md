@@ -18,7 +18,7 @@ Create a GitHub account at [github.com/signup](https://github.com/signup) and ve
 Git records an email address in each commit. To use GitHub's private `noreply` address instead of your personal email:
 
 1. Open your [GitHub email settings](https://github.com/settings/emails).
-2. Enable "Keep my email addresses private".
+2. Enable **Keep my email addresses private**.
 3. Copy the address ending in `@users.noreply.github.com`. You'll use it when configuring Git.
 
 ## Get a package manager {#package-manager}
@@ -35,7 +35,7 @@ winget --version
 
 If a version number appears, it's ready to use. If the command isn't recognised, install or update [App Installer from the Microsoft Store](https://apps.microsoft.com/detail/9nblggh4nns1), which includes `winget`.
 
-If you can't use the Store, download the `.msixbundle` file under Assets on the [latest WinGet release](https://github.com/microsoft/winget-cli/releases/latest) and open it to install.
+If you can't use the Store, download the `.msixbundle` file under **Assets** on the [latest WinGet release](https://github.com/microsoft/winget-cli/releases/latest) and open it to install.
 
 After installation, reopen PowerShell and run `winget --version` again. A version number starting with `v` confirms it's working.
 
@@ -49,7 +49,7 @@ Open Terminal and install Homebrew by running the command from [brew.sh](https:/
 > [!INFO] Typing your password
 > If the installer asks for your Mac login password, no characters or asterisks appear as you type. Type the password and press Enter.
 
-When installation finishes, run any commands listed under "Next steps" so Terminal can find Homebrew. Then check it works:
+When installation finishes, run any commands listed under **Next steps** so Terminal can find Homebrew. Then check it works:
 
 ```bash
 brew --version
@@ -226,7 +226,7 @@ explanation: Without `-m`, Git opens its configured editor so you can write the 
 
 Git is configured. Use `gh auth login` to connect GitHub CLI to your account through browser sign-in.
 
-Choose GitHub.com, HTTPS, and browser sign-in. Answer Yes when asked to authenticate Git too, so it can use the same sign-in. Enter the code printed in your terminal on the page that opens:
+Choose **GitHub.com**, **HTTPS**, and **Login with a web browser**. Answer **Yes** when asked to authenticate Git too, so it can use the same sign-in. Enter the code printed in your terminal on the page that opens:
 
 ```terminal
 ~ $ gh auth login

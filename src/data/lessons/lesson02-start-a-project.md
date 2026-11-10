@@ -85,6 +85,8 @@ app.py  debug.log  tasks.txt
 ~/projects/todo-app (main) $
 ```
 
+`.` means this folder, and `..` means the folder above it, as you saw with `cd ..`.
+
 The file explorer below shows the project after `git init`, including the hidden `.git` folder:
 
 ```files ~/projects/todo-app
@@ -96,6 +98,7 @@ projects/
   todo-app/
     .git/
       config
+      description
       HEAD
       hooks/
       info/
@@ -259,11 +262,11 @@ detours:
   - id: repo-above-project
     check:
       kind: repo-above-project
-    message: Git made the repository outside `todo-app`, in a folder above it. Press Start over, run `cd projects/todo-app`, then `git init`.
+    message: Git made the repository outside `todo-app`, in a folder above it. Press **Start over**, run `cd projects/todo-app`, then `git init`.
   - id: repo-inside-project
     check:
       kind: nested-repository
-    message: Typing a name after `git init` made a new folder with its own repository inside `todo-app`. Press Start over, then run plain `git init` inside `todo-app`.
+    message: Typing a name after `git init` made a new folder with its own repository inside `todo-app`. Press **Start over**, then run plain `git init` inside `todo-app`.
   - id: placeholder-name
     check:
       kind: config-equals

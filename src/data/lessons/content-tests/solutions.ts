@@ -1,5 +1,7 @@
 export const TEAM_URL = 'https://github.com/your-username/todo-app.git'
 
+export const COURSE_IDENTITY = { name: 'Ada Lovelace', email: 'ada@example.com' }
+
 export type EditorSave = { write: Readonly<Record<string, string>> }
 
 export type SolutionStep = string | EditorSave

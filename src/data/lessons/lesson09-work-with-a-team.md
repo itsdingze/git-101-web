@@ -19,7 +19,7 @@ Here is what the workflow usually looks like:
 
 1. Switch to `main` and bring in the latest commits from GitHub.
 2. Create a branch, then make your change.
-3. Stage the changed files, review their staged contents, and commit.
+3. Stage the changed files, review the staged files, and commit.
 4. Push the branch and open a pull request.
 5. Ask a teammate to review it and address their feedback.
 6. After approval, merge the pull request into `main`.
@@ -84,7 +84,7 @@ Already up to date.  # nobody has pushed anything new
 
 ## Commit on the branch {#commit-on-branch}
 
-Create `add-export` from the current `main`. The prepared edits stay in the working directory when you switch to this new branch.
+Create `add-export` from the current `main`. The prepared edits stay in the working tree when you switch to this new branch.
 
 Stage `app.py` and `export.py` together. Check the file list with `git status` and the contents with `git diff --staged`, then commit the feature:
 
@@ -98,6 +98,7 @@ Changes to be committed:
   (use "git restore --staged <file>..." to unstage)
 	modified:   app.py
 	new file:   export.py
+
 ~/projects/todo-app (add-export) $ git diff --staged
 diff --git a/app.py b/app.py
 index dbd30f3..667c702 100644
@@ -121,7 +122,7 @@ index 0000000..c999f38
 +    # Save the tasks to tasks.csv.
 +    pass
 ~/projects/todo-app (add-export) $ git commit -m "feat: add export"
-[add-export 8c8f4de] feat: add export
+[add-export c5efa14] feat: add export
  2 files changed, 7 insertions(+)
  create mode 100644 export.py
 ~/projects/todo-app (add-export) $
@@ -137,7 +138,10 @@ Run the first push with `-u` to pair local `add-export` with `add-export` on `or
 ~/projects/todo-app (add-export) $ git push -u origin add-export
 Enumerating objects: 6, done.
 Counting objects: 100% (6/6), done.
-Writing objects: 100% (4/4), done.
+Delta compression using up to 12 threads
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 438 bytes | 438.00 KiB/s, done.
+Total 4 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
 remote:
 remote: Create a pull request for 'add-export' on GitHub by visiting:
 remote:      https://github.com/your-username/todo-app/pull/new/add-export
@@ -148,7 +152,7 @@ branch 'add-export' set up to track 'origin/add-export'.
 ~/projects/todo-app (add-export) $
 ```
 
-GitHub now has the branch. The `remote:` lines offer a link to open a pull request on the website. You'll create the same request with `gh` next.
+GitHub now has the branch. The `remote:` lines offer a link to open a pull request on the website. You'll create the same pull request with `gh` next.
 
 ## Open a pull request {#pr-create}
 
@@ -156,7 +160,7 @@ The branch is ready for review. Use `gh pr create` to propose merging it into `m
 
 `--title` names the change, and `--body` describes it.
 
-Then run `gh pr view` to read the request and check Sam's review:
+Then run `gh pr view` to read the pull request and check Sam's review:
 
 ```terminal
 ~/projects/todo-app (add-export) $ gh pr create --title "feat: add export" --body "Adds a button that saves your tasks to a file."
@@ -166,7 +170,7 @@ https://github.com/your-username/todo-app/pull/1
 ~/projects/todo-app (add-export) $ gh pr view
 feat: add export your-username/todo-app#1
 Open • your-username wants to merge 1 commit into main from add-export • less than a minute ago
-+7 -0
++7 -0 • No checks
 Reviewers: sam-rivera (Approved)
 
   Adds a button that saves your tasks to a file.
@@ -175,7 +179,7 @@ View this pull request on GitHub: https://github.com/your-username/todo-app/pull
 ~/projects/todo-app (add-export) $
 ```
 
-The URL opens pull request `1`. `+7 -0` means the branch adds seven lines and removes none. Sam's `Approved` review means Sam has accepted the change. In this practice, you can now merge it.
+The address opens pull request `1`. `+7 -0` means the branch adds seven lines and removes none. Sam's `Approved` review means Sam has accepted the change. In this practice, you can now merge it.
 
 Sam approves automatically in this practice. A teammate may need time to review, so wait for approval and address any feedback before merging.
 
@@ -191,20 +195,20 @@ Here, `gh` also returns to `main` and brings in the merged commit. Check the res
 Switched to branch 'main'
 From https://github.com/your-username/todo-app
  * branch            main       -> FETCH_HEAD
-   40f6f13..6f7869c  main       -> origin/main
-Updating 40f6f13..6f7869c
+   71779aa..3daaf55  main       -> origin/main
+Updating 71779aa..3daaf55
 Fast-forward
  app.py    | 4 ++++
  export.py | 3 +++
  2 files changed, 7 insertions(+)
  create mode 100644 export.py
-Deleted branch add-export (was 8c8f4de).
+Deleted branch add-export (was c5efa14).
 ✓ Deleted local branch add-export and switched to branch main
 ✓ Deleted remote branch add-export
 ~/projects/todo-app (main) $ git log --oneline -3
-6f7869c (HEAD -> main, origin/main) Merge pull request #1 from your-username/add-export
-8c8f4de (origin/add-export) feat: add export
-40f6f13 feat: sort tasks by due date
+3daaf55 (HEAD -> main, origin/main) Merge pull request #1 from your-username/add-export
+c5efa14 (origin/add-export) feat: add export
+71779aa feat: sort tasks by due date
 ~/projects/todo-app (main) $
 ```
 
@@ -280,8 +284,8 @@ goals:
       - Run `git switch -c add-export`.
   - id: export-committed
     label: "Export is committed on `add-export`"
-    narration: Stage `export.py` and `app.py`. Check the file list with `git status` and the contents with `git diff --staged`, then make a `feat:` commit.
-    check: { kind: commit-exists, containing: [ export.py ], modifies: [ app.py ], onBranch: add-export }
+    narration: Stage `export.py` and `app.py`, then make a `feat:` commit. You can check the file list with `git status` and the contents with `git diff --staged` first.
+    check: { kind: commit-exists, containing: [ export.py ], modifies: [ app.py ], onBranch: add-export, messageIncludes: feat }
     hints:
       - Stage both files, then commit.
       - >-
@@ -335,7 +339,16 @@ detours:
         - { kind: commit-exists, containing: [ export.py ], onBranch: main }
         - kind: not
           check: { kind: pr-merged, branch: add-export }
-    message: Export was committed directly on `main`. This exercise uses a branch and pull request for review. Press Start over and create `add-export` before committing.
+    message: Export was committed directly on `main`. This exercise uses a branch and pull request for review. Press **Start over** and create `add-export` before committing.
+  - id: export-message-without-type
+    untilGoal: export-committed
+    check:
+      kind: all-of
+      checks:
+        - { kind: commit-exists, containing: [ export.py ], modifies: [ app.py ], onBranch: add-export }
+        - kind: not
+          check: { kind: commit-exists, containing: [ export.py ], modifies: [ app.py ], onBranch: add-export, messageIncludes: feat }
+    message: "Your commit was saved. This exercise asks for a `feat:` message. Press **Start over**, and use a message such as `feat: add export`."
   - id: pushed-without-upstream
     check:
       kind: all-of

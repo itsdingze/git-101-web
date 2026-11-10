@@ -40,7 +40,7 @@ Each entry starts with the commit's full hash. Your hashes and name will be diff
 
 `(HEAD -> main)` marks where you are, as it did in the graph: `HEAD` points at `main`, and `main` points at its newest commit.
 
-The fix's entry answers your first question: its date says when, and its message says what it fixed.
+The fix's entry shows when it happened and what it fixed.
 
 ## Find the fix {#oneline}
 
@@ -150,9 +150,9 @@ The `@@` line gives the line numbers of what's shown. After them, Git adds the n
 
 ## Check, then commit {#check-then-commit}
 
-For tracked files, `git diff` compares working contents with staged contents. When they match, it prints nothing.
+For tracked files, `git diff` compares the working tree with the staged files. When they match, it prints nothing.
 
-`git diff --staged` compares the staged snapshot with the last commit. Use it to review what your next commit will change:
+`git diff --staged` compares the staged files with the last commit. Use it to review what your next commit will change:
 
 ```terminal
 ~/projects/todo-app (main) $ git add app.py
@@ -198,8 +198,8 @@ id: quiz-staged-version
 question: You stage `app.py`, then its contents change again. Which version will the next commit record without another `git add`?
 options:
   - text: The version staged before the latest edit
-  - text: The newest version currently in the working file
-    whyWrong: The latest edit is only in the working file. Run `git add` again to update the staged copy.
+  - text: The newest version currently in the working tree
+    whyWrong: The latest edit is only in the working tree. Run `git add` again to update the staged version.
   - text: Both versions together in the same commit
     whyWrong: The commit uses the staged version, not both versions of the file.
 correctIndex: 0
@@ -285,7 +285,7 @@ goals:
       - Run `git diff`.
   - id: sorting-committed
     label: "Sorting is committed with a `feat:` message"
-    narration: Stage `app.py`, inspect it with `git diff --staged`, then commit it with a `feat:` message.
+    narration: Stage `app.py`, then commit it with a `feat:` message. You can inspect it first with `git diff --staged`.
     check:
       kind: all-of
       checks:
@@ -300,7 +300,7 @@ detours:
   - id: committed-before-diff
     untilGoal: diff-seen
     check: { kind: commit-count, count: 9 }
-    message: You committed before looking with `git diff`, so it has nothing left to show. Press Start over, and run `git diff` before `git add`.
+    message: This commit came before `git diff`, so it has nothing left to show. Press **Start over**, and run `git diff` before `git add`.
   - id: staged-before-diff
     untilGoal: diff-seen
     check: { kind: files-staged, paths: [ app.py ] }

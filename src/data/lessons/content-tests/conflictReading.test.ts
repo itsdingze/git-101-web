@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createSandbox } from '@/lib/git-sim/createSandbox'
 import { lessonById } from '@/data/lessons'
+import { COURSE_IDENTITY } from './solutions'
 
 describe('the conflict marker editor view', () => {
   it('shows the unresolved file produced by pulling main into the practice branch', async () => {
@@ -16,7 +17,7 @@ describe('the conflict marker editor view', () => {
     expect(reading.visualization).toBeUndefined()
     expect(editor.lines.every((line) => line.change === 'unchanged')).toBe(true)
 
-    const sandbox = await createSandbox(practice.seed)
+    const sandbox = await createSandbox({ ...practice.seed, identity: COURSE_IDENTITY })
     await sandbox.run('git pull origin main')
     const result = await sandbox.run('cat app.py')
     const contents = result.outputs.map((output) => output.text).join('\n')

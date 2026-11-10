@@ -46,6 +46,7 @@ export const cheatsheet: CheatsheetCategory[] = [
       { command: 'git switch -c <branch>', description: 'Create a branch and move onto it', lessonId: 5 },
       { command: 'git switch <branch>', description: 'Move to an existing branch', lessonId: 5 },
       { command: 'git merge <branch>', description: "Bring that branch's work into the one you're on", lessonId: 5 },
+      { command: 'git branch', description: 'List your branches, with * on the current one', lessonId: 5 },
       { command: 'git branch -d <branch>', description: 'Delete a branch you already merged', lessonId: 5 },
     ],
   },
@@ -77,6 +78,7 @@ export const cheatsheet: CheatsheetCategory[] = [
     commands: [
       { command: 'git log', description: "List commits in this branch's history, newest first", lessonId: 5 },
       { command: 'git log --oneline', description: 'One line per commit', lessonId: 5 },
+      { command: 'git log -<n>', description: 'Show only the newest n commits', lessonId: 7 },
       { command: 'git log --oneline --graph', description: "Draw connections between commits in this branch's history", lessonId: 5 },
       { command: 'git show <hash>', description: 'Show what one commit changed', lessonId: 7 },
       { command: 'git diff', description: 'Show unstaged changes to tracked files', lessonId: 7 },
@@ -94,7 +96,7 @@ export const cheatsheet: CheatsheetCategory[] = [
       { command: 'git push', description: 'Push new commits to the paired remote branch', lessonId: 8 },
       { command: 'gh repo clone <owner>/<repository>', description: 'Copy a repository onto this computer', lessonId: 8 },
       { command: 'git clone <url>', description: 'Copy a repository by its address', lessonId: 8 },
-      { command: 'git pull', description: 'In this course, fetch commits from the paired branch and merge them here', lessonId: 9 },
+      { command: 'git pull', description: 'In this course, download commits from the paired branch and merge them here', lessonId: 9 },
     ],
   },
   {
@@ -117,6 +119,12 @@ export const cheatsheet: CheatsheetCategory[] = [
       { command: 'git stash', description: 'Store changes to tracked files for later, leaving untracked files in place', lessonId: 10 },
       { command: 'git stash pop', description: 'Reapply the latest stash and remove it if this succeeds', lessonId: 10 },
       { command: 'git stash list', description: 'List stored stashes', lessonId: 10 },
+      {
+        command: 'git stash drop',
+        description: 'Delete the latest stash',
+        lessonId: 10,
+        danger: 'The stored changes are gone. Check them with git stash list first.',
+      },
     ],
   },
   {
@@ -133,6 +141,7 @@ export const cheatsheet: CheatsheetCategory[] = [
     name: 'Using Git on your computer',
     commands: [
       { command: 'gh repo create <name> --private', description: 'Create a private repository on GitHub', lessonId: 12 },
+      { command: 'gh pr create --base main', description: 'Open a pull request into main', lessonId: 12 },
       { command: 'gh pr view --web', description: 'Open the pull request for review and merging on GitHub', lessonId: 12 },
     ],
   },

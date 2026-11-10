@@ -43,13 +43,13 @@ So you commit at moments worth coming back to, like when a feature works or you'
 
 ```quiz
 id: quiz-saving-vs-committing
-question: A new file was saved five times today, but it was never staged or committed. How many of those versions did Git record?
+question: A new file was saved five times today, but it was never committed. How many of those versions did Git record?
 options:
   - text: None of those versions
   - text: Five, one for every time you saved
     whyWrong: Saving changes the file, but it doesn't make a commit. Only commits are save points.
   - text: Just the last one you saved
-    whyWrong: The latest version is in your working file, but you haven't asked Git to record it.
+    whyWrong: The latest version is in your file, but you haven't asked Git to record it.
   - text: All of them, while the file stays open
     whyWrong: Git doesn't know which files your editor has open. Only commits are save points.
 correctIndex: 0

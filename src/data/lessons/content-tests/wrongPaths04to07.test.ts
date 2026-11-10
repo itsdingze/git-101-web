@@ -94,6 +94,60 @@ describe('lesson 4: one change per commit', () => {
     expect(result.detour).toBe('changes-mixed')
   })
 
+  it('accepts the README committed before the due dates', async () => {
+    const result = await replaySandbox('one-change-per-commit', [
+      ...CHORE,
+      'git add README.md',
+      'git commit -m "docs: add a README"',
+      'git add app.py dates.py',
+      'git commit -m "feat: add due dates"',
+      'git status',
+    ])
+
+    expect(result.completed).toEqual([true, true, true, true])
+    expect(result.detour).toBeNull()
+  })
+
+  it('accepts the due dates committed before the housekeeping', async () => {
+    const result = await replaySandbox('one-change-per-commit', [
+      'git add app.py dates.py',
+      'git commit -m "feat: add due dates"',
+      ...CHORE,
+      'git add README.md',
+      'git commit -m "docs: add a README"',
+      'git status',
+    ])
+
+    expect(result.completed).toEqual([true, true, true, true])
+    expect(result.detour).toBeNull()
+  })
+
+  it('does not read a feature about chores as a chore commit', async () => {
+    const result = await replaySandbox('one-change-per-commit', [...CHORE, 'git add app.py dates.py', 'git commit -m "feat: add due dates to chores"'])
+
+    expect(result.detour).toBeNull()
+  })
+
+  it('explains dates.py put in a chore commit', async () => {
+    const result = await replaySandbox('one-change-per-commit', [
+      ...CHORE,
+      'git add dates.py',
+      'git commit -m "chore: tidy dates"',
+      'git add app.py',
+      'git commit -m "feat: only app"',
+    ])
+
+    expect(result.completed).toEqual([true, true, false, false])
+    expect(result.detour).toBe('changes-mixed')
+  })
+
+  it('explains the due dates split across two commits', async () => {
+    const result = await replaySandbox('one-change-per-commit', [...CHORE, 'git add app.py', 'git commit -m "feat: only app"'])
+
+    expect(result.completed).toEqual([true, true, false, false])
+    expect(result.detour).toBe('due-dates-split')
+  })
+
   it('waits for the docs commit when only due dates are committed', async () => {
     const result = await replaySandbox('one-change-per-commit', [...FEAT, 'git status'])
 
@@ -175,12 +229,73 @@ describe('lesson 5: branch and merge', () => {
     expect(result.completed).toEqual([true, true, true, false, false, false])
   })
 
+  it('accepts a merge with its own message', async () => {
+    const result = await replaySandbox('branch-and-merge', [...SEARCH, ...FIX, 'git merge add-search -m "merge search work"'])
+
+    expect(result.completed).toEqual([true, true, true, true, false, false])
+    expect(result.detour).toBeNull()
+  })
+
+  it('waits for a plain git branch after the branch is deleted', async () => {
+    const result = await replaySandbox('branch-and-merge', [...SEARCH, ...FIX, 'git merge add-search', 'git branch -d add-search'])
+
+    expect(result.completed).toEqual([true, true, true, true, false, false])
+  })
+
+  it('waits for a plain git branch after --delete too', async () => {
+    const result = await replaySandbox('branch-and-merge', [...SEARCH, ...FIX, 'git merge add-search', 'git branch --delete add-search'])
+
+    expect(result.completed).toEqual([true, true, true, true, false, false])
+  })
+
+  it('accepts a scoped feat message', async () => {
+    const result = await replaySandbox('branch-and-merge', ['git switch -c add-search', 'git add search.py app.py', 'git commit -m "feat(search): add search"'])
+
+    expect(result.completed).toEqual([true, true, false, false, false, false])
+    expect(result.detour).toBeNull()
+  })
+
+  it('waits for a plain git branch after a forced delete too', async () => {
+    const result = await replaySandbox('branch-and-merge', [...SEARCH, ...FIX, 'git merge add-search', 'git branch -D add-search'])
+
+    expect(result.completed).toEqual([true, true, true, true, false, false])
+  })
+
+  it('counts the graph with extra flags', async () => {
+    const result = await replaySandbox('branch-and-merge', [
+      ...SEARCH,
+      ...FIX,
+      'git merge add-search',
+      'git branch -d add-search',
+      'git branch',
+      'git log --oneline --all --graph',
+    ])
+
+    expect(result.completed.every(Boolean)).toBe(true)
+    expect(result.detour).toBeNull()
+  })
+
+  it('explains a search commit without a feat: message', async () => {
+    const result = await replaySandbox('branch-and-merge', ['git switch -c add-search', 'git add search.py app.py', 'git commit -m "wip"'])
+
+    expect(result.completed).toEqual([true, false, false, false, false, false])
+    expect(result.detour).toBe('search-message-without-type')
+  })
+
+  it('explains a fix commit without a fix: message', async () => {
+    const result = await replaySandbox('branch-and-merge', [...SEARCH, 'git switch main', 'git add dates.py', 'git commit -m "stuff"'])
+
+    expect(result.completed).toEqual([true, true, false, false, false, false])
+    expect(result.detour).toBe('fix-message-without-type')
+  })
+
   it('accepts the graph flags in either order', async () => {
     const result = await replaySandbox('branch-and-merge', [
       ...SEARCH,
       ...FIX,
       'git merge add-search',
       'git branch -d add-search',
+      'git branch',
       'git log --graph --oneline',
     ])
 

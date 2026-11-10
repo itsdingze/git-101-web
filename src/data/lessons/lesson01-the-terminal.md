@@ -110,7 +110,7 @@ projects/
 A path can take you more than one folder down at once. `cd projects/recipes` goes into `projects`, then into `recipes` inside it.
 
 > [!TIP] Two keys that save typing
-> The up arrow recalls your last command. Tab completes a file or folder name when there is one match. For example, type `cd proj`, then press Tab to complete it to `cd projects`.
+> The up arrow recalls your last command. Tab completes a file or folder name when there is one match. For example, type `cd proj`, then press Tab to complete it to `cd projects/`.
 
 ```quiz
 id: quiz-cd-up

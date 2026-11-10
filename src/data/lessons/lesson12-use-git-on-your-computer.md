@@ -22,7 +22,7 @@ git init
 git status
 ```
 
-Now stage all the files and inspect the staged list and contents, then commit:
+Now stage all the files and inspect the staged files and their contents, then commit:
 
 ```bash
 git add .
@@ -31,6 +31,8 @@ git diff --staged
 git commit -m "feat: add Ticklist"
 git status
 ```
+
+On Windows, Git may warn that LF will be replaced by CRLF. That's expected, so carry on.
 
 The final status should say `nothing to commit, working tree clean`. This is one initial commit containing the downloaded project, ready to send to GitHub.
 
@@ -73,7 +75,7 @@ Add this line at the end, after `Add your tasks to tasks.txt, one per line.`, th
 The examples cover due dates, priorities, search, exports, and reminders.
 ```
 
-The README edit is in the working directory. It hasn't been staged or committed yet.
+The README edit is in the working tree. It hasn't been staged or committed yet.
 
 ## Review and commit the edit {#commit-change}
 
@@ -104,7 +106,7 @@ git push -u origin improve-readme
 gh pr create --base main --title "docs: describe the project examples" --body "Describes the examples included in the project."
 ```
 
-The command prints the pull request's URL. To open it in your browser, run:
+The command prints the pull request's address. To open it in your browser, run:
 
 ```bash
 gh pr view --web
@@ -116,9 +118,9 @@ The `--web` flag opens the pull request on GitHub, where you'll review and merge
 
 This is your own practice repository, so you'll inspect the change yourself before merging. In a team, another person reviews it, as Sam did in the practice lessons.
 
-On the pull request page, open Files changed. Check that `README.md` contains only the line you intended to add.
+On the pull request page, open **Files changed**. Check that `README.md` contains only the line you intended to add.
 
-Return to Conversation. Choose Create a merge commit from the merge options, then select Merge pull request and Confirm merge.
+Return to **Conversation**. Choose **Create a merge commit** from the merge options, then select **Merge pull request** and **Confirm merge**. Select **Delete branch** to tidy up the finished branch on GitHub.
 
 GitHub now includes the README change in `main`. Your computer's `main` still has the initial version, so return to the terminal to bring in the merge.
 
@@ -129,9 +131,12 @@ Switch back to local `main` and pull the commits merged on GitHub:
 ```bash
 git switch main
 git pull
+git branch -d improve-readme
 git status
 git log --oneline -2
 ```
+
+`git branch -d improve-readme` removes your local copy of the branch, now that its work is on `main`.
 
 `git switch` may say `Your branch is up to date with 'origin/main'`. That compares with the last copy Git downloaded, so `git pull` still brings in the merge.
 
@@ -152,7 +157,7 @@ You can now:
 ```bash
 git push -u origin <branch>   # publish and pair a branch
 gh pr create --base main     # propose a merge into main
-gh pr view --web             # open the request on GitHub
+gh pr view --web             # open the pull request on GitHub
 git switch main              # return to local main
 git pull                     # bring in the merged change
 ```

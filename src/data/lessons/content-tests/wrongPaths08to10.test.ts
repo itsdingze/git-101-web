@@ -137,6 +137,7 @@ describe('lesson 8: clone on a laptop', () => {
 
 const ON_BRANCH = ['git pull', 'git switch -c add-export']
 const COMMITTED = [...ON_BRANCH, 'git add export.py app.py', 'git commit -m "feat: add export"']
+const UNTYPED_MESSAGE = [...ON_BRANCH, 'git add export.py app.py', 'git commit -m "wip"']
 const OPENED = [...COMMITTED, 'git push -u origin add-export', 'gh pr create --fill', 'gh pr view']
 
 describe('lesson 9: the team loop', () => {
@@ -145,6 +146,13 @@ describe('lesson 9: the team loop', () => {
 
     expect(result.completed).toEqual([true, false, false, false, false, false])
     expect(result.detour).toBe('export-on-main')
+  })
+
+  it('explains an export commit without a feat: message', async () => {
+    const result = await replaySandbox('export-pull-request', UNTYPED_MESSAGE)
+
+    expect(result.completed).toEqual([true, true, false, false, false, false])
+    expect(result.detour).toBe('export-message-without-type')
   })
 
   it('explains a branch pushed without -u', async () => {

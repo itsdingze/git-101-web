@@ -54,7 +54,7 @@ While preparing search, we noticed that finished tasks still showed due dates. W
 
 To commit search on its own branch, first create that branch with `git switch -c`. The `-c` stands for create, and the command also moves you onto the new branch.
 
-The branch starts from the current commit, and the prepared changes stay in the folder. Stage only `search.py` and `app.py`, check the staged list, then commit the feature:
+The branch starts from the current commit, and the prepared changes stay in the folder. Stage only `search.py` and `app.py`, check the staged files, then commit the feature:
 
 ```terminal
 ~/projects/todo-app (main) $ git switch -c add-search
@@ -71,6 +71,7 @@ Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
   (use "git restore <file>..." to discard changes in working directory)
 	modified:   dates.py
+
 ~/projects/todo-app (add-search) $ git commit -m "feat: add search"
 [add-search 533373d] feat: add search  # on the new branch
  2 files changed, 7 insertions(+)
@@ -84,6 +85,7 @@ The prompt now shows `(add-search)`. Branch names can't have spaces, so use hyph
 
 ```visualization git-graph
 setup:
+  - 'git commit -m "feat: add task list"'
   - 'git commit -m "chore: stop tracking debug.log"'
   - 'git commit -m "feat: add due dates"'
   - 'git commit -m "docs: add a README"'
@@ -98,7 +100,7 @@ Search is now committed on `add-search`. Next, put the due-date fix on `main` so
 
 `git switch` without `-c` moves you to an existing branch. It updates files in the same project folder to match that branch.
 
-Here, `search.py` disappears and `app.py` returns to its version on `main`. The uncommitted `dates.py` fix comes along because switching doesn't overwrite it. Stage `dates.py`, check the staged list, then commit the fix:
+Here, `search.py` disappears and `app.py` returns to its version on `main`. The uncommitted `dates.py` fix comes along because switching doesn't overwrite it. Stage `dates.py`, check the staged files, then commit the fix:
 
 ```terminal
 ~/projects/todo-app (add-search) $ git switch main
@@ -110,6 +112,7 @@ On branch main
 Changes to be committed:
   (use "git restore --staged <file>..." to unstage)
 	modified:   dates.py
+
 ~/projects/todo-app (main) $ git commit -m "fix: hide due dates on finished tasks"
 [main f2b35de] fix: hide due dates on finished tasks
  1 file changed, 1 insertion(+)
@@ -150,6 +153,7 @@ Step through the diagram to see the search and bug-fix commits join in the merge
 
 ```visualization git-graph
 setup:
+  - 'git commit -m "feat: add task list"'
   - 'git commit -m "chore: stop tracking debug.log"'
   - 'git commit -m "feat: add due dates"'
   - 'git commit -m "docs: add a README"'
@@ -280,11 +284,11 @@ goals:
       - Run `git switch -c add-search`.
   - id: search-committed
     label: "Search is committed on `add-search`, without the fix"
-    narration: Stage only `search.py` and `app.py`, check the staged list with `git status`, and make a `feat:` commit.
+    narration: Stage only `search.py` and `app.py`. You can check the staged files with `git status`. Then make a `feat:` commit.
     check:
       kind: all-of
       checks:
-        - { kind: commit-exists, containing: [ search.py ], modifies: [ app.py ], onBranch: add-search }
+        - { kind: commit-exists, containing: [ search.py ], modifies: [ app.py ], onBranch: add-search, messageIncludes: feat }
         - kind: not
           check: { kind: commit-exists, containing: [ search.py ], modifies: [ dates.py ] }
         - kind: not
@@ -295,11 +299,11 @@ goals:
         Run `git add search.py app.py`, then `git status`, then `git commit -m "feat: add search"`.
   - id: fix-on-main
     label: "The fix is committed on `main`"
-    narration: Switch back to `main`. The uncommitted fix comes with you. Stage `dates.py`, check the staged list, then make a `fix:` commit.
+    narration: Switch back to `main`. The uncommitted fix comes with you. Stage `dates.py`, then make a `fix:` commit. You can check the staged files with `git status` first.
     check:
       kind: all-of
       checks:
-        - { kind: commit-exists, modifies: [ dates.py ], onBranch: main }
+        - { kind: commit-exists, modifies: [ dates.py ], onBranch: main, messageIncludes: fix }
         - kind: not
           check: { kind: commit-exists, modifies: [ dates.py ], onBranch: add-search }
     hints:
@@ -315,7 +319,9 @@ goals:
       checks:
         - { kind: on-branch, name: main }
         - { kind: merge-commit-exists, onBranch: main }
-        - { kind: commit-exists, messageIncludes: "Merge branch 'add-search'" }
+        - { kind: commit-exists, containing: [ search.py ], onBranch: main }
+        - kind: not
+          check: { kind: commit-exists, messageIncludes: into add-search }
     hints:
       - Name the branch you want to bring in, not the one you're on.
       - Run `git merge add-search`.
@@ -327,6 +333,10 @@ goals:
       checks:
         - { kind: branch-absent, name: add-search }
         - { kind: last-command, startsWith: git branch }
+        - kind: not
+          check: { kind: last-command, startsWith: git branch -d }
+        - kind: not
+          check: { kind: last-command, startsWith: git branch -D }
     hints:
       - Use `git branch` with the flag that means delete.
       - Run `git branch -d add-search`, then `git branch`.
@@ -344,7 +354,7 @@ goals:
 detours:
   - id: merged-into-branch
     check: { kind: commit-exists, messageIncludes: into add-search }
-    message: You merged while on `add-search`, so `main` came into that branch instead. Press Start over, and merge from `main` this time.
+    message: This merge ran on `add-search`, so `main` came into that branch. Press **Start over**, and merge from `main` this time.
   - id: search-on-main
     check:
       kind: all-of
@@ -352,10 +362,28 @@ detours:
         - { kind: commit-exists, containing: [ search.py ], onBranch: main }
         - kind: not
           check: { kind: merge-commit-exists, onBranch: main }
-    message: "Search reached `main` without a merge. Press Start over: commit search on `add-search` and the fix on `main` before you merge."
+    message: "Search reached `main` without a merge. Press **Start over**: commit search on `add-search` and the fix on `main` before you merge."
   - id: fix-on-search-branch
     check: { kind: commit-exists, modifies: [ dates.py ], onBranch: add-search }
-    message: The due-dates fix was committed on `add-search`, but it belongs on `main`. Press Start over, and leave `dates.py` out of the search commit.
+    message: The due-dates fix was committed on `add-search`, but it belongs on `main`. Press **Start over**, and leave `dates.py` out of the search commit.
+  - id: search-message-without-type
+    untilGoal: search-committed
+    check:
+      kind: all-of
+      checks:
+        - { kind: commit-exists, containing: [ search.py ], modifies: [ app.py ], onBranch: add-search }
+        - kind: not
+          check: { kind: commit-exists, containing: [ search.py ], modifies: [ app.py ], onBranch: add-search, messageIncludes: feat }
+    message: "Your commit was saved. This exercise asks for a `feat:` message. Press **Start over**, and use a message such as `feat: add search`."
+  - id: fix-message-without-type
+    untilGoal: fix-on-main
+    check:
+      kind: all-of
+      checks:
+        - { kind: commit-exists, modifies: [ dates.py ], onBranch: main }
+        - kind: not
+          check: { kind: commit-exists, modifies: [ dates.py ], onBranch: main, messageIncludes: fix }
+    message: "Your commit was saved. This exercise asks for a `fix:` message. Press **Start over**, and use a message such as `fix: hide due dates on finished tasks`."
 completionMessage: Search is on `main`, merged from its own branch, and the fix went straight to `main`. `main` is your only branch again.
 ```
 

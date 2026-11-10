@@ -162,7 +162,7 @@ export const messages = {
     threePlaces: {
       title: "Git's three places",
       startOver: 'Start over',
-      working: 'Working directory',
+      working: 'Working tree',
       staging: 'Staging area',
       repo: 'Repository history',
       untracked: 'untracked',
@@ -170,8 +170,8 @@ export const messages = {
       committed: 'committed',
       ignored: 'ignored',
       explanation:
-        'Your files stay in the working directory. Staging copies their current contents into the staging area. Committing records a project version using those staged contents.',
-      done: 'This commit records the staged files. Your files are still in the working directory.',
+        'Your files stay in the working tree. Staging copies their current contents into the staging area. Committing records a project version using those staged files.',
+      done: 'This commit records the staged files. Your files are still in the working tree.',
       ranCommand: (command: string, staging: readonly string[], repo: readonly string[]) =>
         `Ran ${command}. Staging area: ${fileList(staging)}. Repository history: ${fileList(repo)}.`,
     },

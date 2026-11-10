@@ -61,7 +61,7 @@ Stay on `add-reminders` and run `git pull origin main` to bring GitHub's `main` 
 ~/projects/todo-app (add-reminders) $ git pull origin main
 From https://github.com/your-username/todo-app
  * branch            main       -> FETCH_HEAD
-   78ace23..b91d190  main       -> origin/main
+   3daaf55..823bb46  main       -> origin/main
 Auto-merging app.py
 CONFLICT (content): Merge conflict in app.py
 Automatic merge failed; fix conflicts and then commit the result.
@@ -90,7 +90,7 @@ To resolve the conflict, choose the final text and remove all three marker lines
      # Show all tasks with reminders.
  =======
      # Show only open tasks.
- >>>>>>> b91d1904bee4416e838afa0bcc6d574e449c2d3c
+ >>>>>>> 823bb467b3935c2bda620b2781dfec4d3bd24b5f
      pass
  
  def show_due_dates() -> None:
@@ -113,6 +113,7 @@ All conflicts fixed but you are still merging.
 
 Changes to be committed:
 	modified:   app.py
+
 ~/projects/todo-app (add-reminders) $ git diff --staged
 diff --git a/app.py b/app.py
 index 6e4cec5..d3c9d05 100644
@@ -128,13 +129,16 @@ index 6e4cec5..d3c9d05 100644
 
  def show_due_dates() -> None:
 ~/projects/todo-app (add-reminders) $ git commit --no-edit
-[add-reminders 38fc95a] Merge branch 'main' of https://github.com/your-username/todo-app into add-reminders
+[add-reminders 756747e] Merge branch 'main' of https://github.com/your-username/todo-app into add-reminders
 ~/projects/todo-app (add-reminders) $ git push
 Enumerating objects: 7, done.
 Counting objects: 100% (7/7), done.
-Writing objects: 100% (5/5), done.
+Delta compression using up to 12 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 386 bytes | 386.00 KiB/s, done.
+Total 3 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
 To https://github.com/your-username/todo-app.git
-   a6c0a49..38fc95a  add-reminders -> add-reminders
+   7109485..756747e  add-reminders -> add-reminders
 ~/projects/todo-app (add-reminders) $
 ```
 
@@ -192,7 +196,7 @@ goals:
       - Run `git pull origin main`.
   - id: conflict-settled
     label: "`app.py` keeps both changes, with no markers"
-    narration: Press Open `app.py` above the terminal. Turn the two versions into one line, `# Show only open tasks with reminders.`, delete the marker lines, and save.
+    narration: Press **Open `app.py`** above the terminal. Turn the two versions into one line, `# Show only open tasks with reminders.`, delete the marker lines, and save.
     check: &settled-app-py
       kind: file-matches
       path: app.py
@@ -224,7 +228,7 @@ goals:
       - Keep the four spaces before the comment, so it stays inside the function.
   - id: merge-committed
     label: The merge is committed
-    narration: Stage `app.py`, check `git status` and `git diff --staged`, then finish the merge using Git's prepared message. If you edit the file again, save and run `git add app.py` again before committing.
+    narration: Stage `app.py`, then finish the merge using Git's prepared message. You can check `git status` and `git diff --staged` first. If you edit the file again, save and run `git add app.py` again before committing.
     check:
       kind: all-of
       checks:
@@ -249,10 +253,10 @@ goals:
 detours:
   - id: markers-staged
     check: { kind: markers-staged }
-    message: The staged copy still contains conflict markers. Open `app.py`, correct the marked section if needed, and save. Run `git add app.py` again to update the staged copy.
+    message: The staged version still contains conflict markers. Open `app.py`, correct the marked section if needed, and save. Run `git add app.py` again to update the staged version.
   - id: markers-committed
     check: { kind: markers-committed }
-    message: The merge commit has marker lines in `app.py`. Press Start over, and delete the markers before you stage the file.
+    message: The merge commit has marker lines in `app.py`. Press **Start over**, and delete the markers before you stage the file.
   - id: show-line-lost
     check:
       kind: all-of
@@ -286,7 +290,7 @@ detours:
           check: { kind: merge-in-progress }
         - kind: not
           check: *settled-app-py
-    message: "The merge was committed with a different version of `app.py`. Press Start over, then make `# Show only open tasks with reminders.` the only comment inside `show_tasks` before you commit."
+    message: "The merge was committed with a different version of `app.py`. Press **Start over**, then make `# Show only open tasks with reminders.` the only comment inside `show_tasks` before you commit."
 completionMessage: You resolved the conflict, committed the merge, and pushed the branch with both changes.
 ```
 
@@ -307,8 +311,8 @@ Sam has also merged a README update explaining where tasks go. Before putting th
 ```terminal
 ~/projects/todo-app (main) $ git pull
 From https://github.com/your-username/todo-app
-   c5bdc35..55a78f1  main       -> origin/main
-Updating c5bdc35..55a78f1
+   fc33fb1..c06e911  main       -> origin/main
+Updating fc33fb1..c06e911
 error: Your local changes to the following files would be overwritten by merge:
 	README.md
 Please commit your changes or stash them before you merge.
@@ -320,19 +324,19 @@ Git downloaded Sam's commit but stopped before merging it, because the merge wou
 
 ## Stash before pulling {#stash}
 
-**Stashing** temporarily stores staged and unstaged changes to tracked files, then returns those files to the last commit. Plain `git stash` leaves new, untracked files in the working directory.
+**Stashing** temporarily stores staged and unstaged changes to tracked files, then returns those files to the last commit. Plain `git stash` leaves new, untracked files in the working tree.
 
 Here, the README is tracked. Use `git stash` to set its name change aside without committing it.
 
-`git stash list` shows the stored changes. Once the working directory is clean, run `git pull` again:
+`git stash list` shows the stored changes. Once the working tree is clean, run `git pull` again:
 
 ```terminal
 ~/projects/todo-app (main) $ git stash
-Saved working directory and index state WIP on main: c5bdc35 Merge pull request #3 from your-username/add-reminders
+Saved working directory and index state WIP on main: fc33fb1 Merge pull request #3 from your-username/add-reminders
 ~/projects/todo-app (main) $ git stash list
-stash@{0}: WIP on main: c5bdc35 Merge pull request #3 from your-username/add-reminders
+stash@{0}: WIP on main: fc33fb1 Merge pull request #3 from your-username/add-reminders
 ~/projects/todo-app (main) $ git pull
-Updating c5bdc35..55a78f1
+Updating fc33fb1..c06e911
 Fast-forward
  README.md | 1 +
  1 file changed, 1 insertion(+)
@@ -343,7 +347,7 @@ Fast-forward
 
 ## Bring the edit back {#restore-stashed-work}
 
-Sam's update is now in `main`. Run `git stash pop` to reapply the name change on top of it, then check the working file's status and the stash list:
+Sam's update is now in `main`. Run `git stash pop` to reapply the name change on top of it, then check the file's status and the stash list:
 
 ```terminal
 ~/projects/todo-app (main) $ git stash pop
@@ -357,7 +361,7 @@ Changes not staged for commit:
 	modified:   README.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
-Dropped refs/stash@{0} (ade6535ae15d344b0e480f84e6e9b9ffedd777b0)
+Dropped refs/stash@{0} (e3c2dc1b0999e3b196bc8f594d1f58a3c0d3513d)
 ~/projects/todo-app (main) $ git status
 On branch main
 Your branch is up to date with 'origin/main'.
@@ -380,7 +384,7 @@ Here, Git combines the edits and removes the stash. The empty `git stash list` c
  Add your tasks to tasks.txt, one per line.
 ```
 
-The name change is back in the working file, ready to stage and commit.
+The name change is back in the working tree, ready to stage and commit.
 
 > [!WARNING] A conflicting pop keeps the stash
 > If `git stash pop` reports a conflict, Git keeps the stash. Remove the conflict markers, save, and run `git add <file>`. There's no merge commit to make. Once the file looks right, run `git stash drop` to delete the kept stash.
@@ -391,7 +395,7 @@ question: "`git pull` says your local changes to `README.md` would be overwritte
 options:
   - text: "`git stash`"
   - text: "`git restore README.md`"
-    whyWrong: That discards the working edit. Stash it instead if you want to keep it.
+    whyWrong: That discards the edit. Stash it instead if you want to keep it.
   - text: "`git push`"
     whyWrong: The edit isn't committed, so there's nothing to push, and the pull still fails.
 correctIndex: 0
@@ -454,7 +458,7 @@ goals:
       - Run `git pull`.
   - id: edit-back
     label: The edit is back, on top of Sam's change
-    narration: Reapply the edit with `git stash pop`, then check the result with `git status` and `git stash list`.
+    narration: Reapply the edit with `git stash pop`. You can check the result with `git status` and `git stash list`.
     check:
       kind: all-of
       checks:
@@ -472,7 +476,7 @@ detours:
         - kind: stash-empty
         - kind: not
           check: { kind: file-has-line, path: README.md, line: "# Ticklist" }
-    message: The README edit is gone, and no stash holds it. Press Start over, and set the edit aside with `git stash` instead.
+    message: The README edit is gone, and no stash holds it. Press **Start over**, and set the edit aside with `git stash` instead.
   - id: committed-on-main
     check:
       kind: all-of
@@ -482,7 +486,7 @@ detours:
           check: { kind: commit-count, count: 16 }
         - kind: not
           check: { kind: commit-count, count: 18 }
-    message: The README edit is now committed on `main`. This exercise asks you to set it aside without committing, then bring it back after pulling. Press Start over and use `git stash`.
+    message: The README edit is now committed on `main`. This exercise asks you to set it aside without committing, then bring it back after pulling. Press **Start over** and use `git stash`.
 completionMessage: You stashed the name change, pulled Sam's update, and reapplied the name change. Both are now in the README.
 ```
 

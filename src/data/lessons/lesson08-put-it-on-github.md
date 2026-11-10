@@ -61,19 +61,23 @@ origin	https://github.com/your-username/todo-app.git (push)
 
 Sending commits to a remote is called **pushing**. In `git push -u origin main`, `origin` is the remote and `main` is the branch to send.
 
-The `-u` flag also pairs local `main` with `main` on `origin`. Git calls the paired branch its **upstream**. After that, plain `git push` and `git pull` can use this pairing without naming the remote and branch again:
+The `-u` flag also pairs local `main` with `main` on `origin`. Git calls the paired branch its **upstream**. `git pull`, which you'll use in the next lesson, brings new commits down from the remote. After the first push, plain `git push` and `git pull` can use this pairing without naming the remote and branch again:
 
 ```terminal
 ~/projects/todo-app (main) $ git push -u origin main
-Enumerating objects: 33, done.
-Counting objects: 100% (33/33), done.
-Writing objects: 100% (33/33), done.
+Enumerating objects: 31, done.
+Counting objects: 100% (31/31), done.
+Delta compression using up to 12 threads
+Compressing objects: 100% (28/28), done.
+Writing objects: 100% (31/31), 2.60 KiB | 886.00 KiB/s, done.
+Total 31 (delta 12), reused 0 (delta 0), pack-reused 0 (from 0)
 To https://github.com/your-username/todo-app.git
  * [new branch]      main -> main
 branch 'main' set up to track 'origin/main'.
 ~/projects/todo-app (main) $ git status
 On branch main
 Your branch is up to date with 'origin/main'.
+
 nothing to commit, working tree clean
 ~/projects/todo-app (main) $
 ```
@@ -183,11 +187,12 @@ For this example, the practice terminal represents that computer. It starts in `
 ```terminal
 ~/projects $ gh repo clone your-username/todo-app
 Cloning into 'todo-app'...  # the new folder's name
-remote: Enumerating objects: 33, done.
-remote: Counting objects: 100% (33/33), done.
-remote: Compressing objects: 100% (6/6), done.
-remote: Total 33 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
-Receiving objects: 100% (33/33), done.
+remote: Enumerating objects: 31, done.
+remote: Counting objects: 100% (31/31), done.
+remote: Compressing objects: 100% (28/28), done.
+remote: Total 31 (delta 12), reused 0 (delta 0), pack-reused 0 (from 0)
+Receiving objects: 100% (31/31), done.
+Resolving deltas: 100% (12/12), done.
 ~/projects $ cd todo-app
 ~/projects/todo-app (main) $ ls
 app.py  dates.py  priority.py  README.md  search.py
@@ -273,7 +278,7 @@ goals:
 detours:
   - id: clone-nested
     check: { kind: file-present, path: todo-app/todo-app/README.md }
-    message: That clone landed inside the first `todo-app` folder, because a clone makes its folder wherever you are. Press Start over, and clone from `~/projects`.
+    message: That clone landed inside the first `todo-app` folder, because a clone makes its folder wherever you are. Press **Start over**, and clone from `~/projects`.
 completionMessage: Your laptop has the committed files and history from GitHub, with `origin` already set up.
 ```
 
