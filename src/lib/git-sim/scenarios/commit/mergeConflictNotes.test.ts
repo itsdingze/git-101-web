@@ -25,6 +25,13 @@ async function resolved(): Promise<Sandbox> {
 }
 
 describe('the message after a resolved conflict', () => {
+  it('keeps the conflict notes with git commit --no-edit', async () => {
+    const sandbox = await resolved()
+
+    expect(await textOf(sandbox, 'git commit --no-edit')).toMatch(/^\[main [0-9a-f]{7}\] Merge branch 'o'$/)
+    expect(await textOf(sandbox, 'git log -1 --format=%B')).toBe("Merge branch 'o'\n\n# Conflicts:\n#\tf.txt\n")
+  })
+
   it('drops them with git merge --continue', async () => {
     const sandbox = await resolved()
     await sandbox.run('git merge --continue')

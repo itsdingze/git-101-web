@@ -373,8 +373,9 @@ team-after-reminders-merged:
             # Show a button to export tasks.
             pass
   - run: git add app.py
-  - run: >-
-      git commit -m "Merge branch 'main' of https://github.com/your-username/todo-app into add-reminders"
+  - run: |-
+      git commit -m "Merge branch 'main' of https://github.com/your-username/todo-app into add-reminders" -m "# Conflicts:
+      #	app.py"
   - run: git switch main
   - run: 'git merge --no-ff add-reminders -m "Merge pull request #3 from your-username/add-reminders"'
   - run: 'git commit --amend -m "Merge pull request #3 from your-username/add-reminders" -m "feat: add reminders"'

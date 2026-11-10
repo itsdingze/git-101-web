@@ -129,7 +129,7 @@ index 6e4cec5..d3c9d05 100644
 
  def show_due_dates() -> None:
 ~/projects/todo-app (add-reminders) $ git commit --no-edit
-[add-reminders 756747e] Merge branch 'main' of https://github.com/your-username/todo-app into add-reminders
+[add-reminders e55943e] Merge branch 'main' of https://github.com/your-username/todo-app into add-reminders
 ~/projects/todo-app (add-reminders) $ git push
 Enumerating objects: 7, done.
 Counting objects: 100% (7/7), done.
@@ -138,7 +138,7 @@ Compressing objects: 100% (3/3), done.
 Writing objects: 100% (3/3), 386 bytes | 386.00 KiB/s, done.
 Total 3 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
 To https://github.com/your-username/todo-app.git
-   7109485..756747e  add-reminders -> add-reminders
+   7109485..e55943e  add-reminders -> add-reminders
 ~/projects/todo-app (add-reminders) $
 ```
 
@@ -311,8 +311,8 @@ Sam has also merged a README update explaining where tasks go. Before putting th
 ```terminal
 ~/projects/todo-app (main) $ git pull
 From https://github.com/your-username/todo-app
-   fc33fb1..c06e911  main       -> origin/main
-Updating fc33fb1..c06e911
+   ec578a0..1e6fc3e  main       -> origin/main
+Updating ec578a0..1e6fc3e
 error: Your local changes to the following files would be overwritten by merge:
 	README.md
 Please commit your changes or stash them before you merge.
@@ -332,11 +332,11 @@ Here, the README is tracked. Use `git stash` to set its name change aside withou
 
 ```terminal
 ~/projects/todo-app (main) $ git stash
-Saved working directory and index state WIP on main: fc33fb1 Merge pull request #3 from your-username/add-reminders
+Saved working directory and index state WIP on main: ec578a0 Merge pull request #3 from your-username/add-reminders
 ~/projects/todo-app (main) $ git stash list
-stash@{0}: WIP on main: fc33fb1 Merge pull request #3 from your-username/add-reminders
+stash@{0}: WIP on main: ec578a0 Merge pull request #3 from your-username/add-reminders
 ~/projects/todo-app (main) $ git pull
-Updating fc33fb1..c06e911
+Updating ec578a0..1e6fc3e
 Fast-forward
  README.md | 1 +
  1 file changed, 1 insertion(+)
@@ -361,7 +361,7 @@ Changes not staged for commit:
 	modified:   README.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
-Dropped refs/stash@{0} (e3c2dc1b0999e3b196bc8f594d1f58a3c0d3513d)
+Dropped refs/stash@{0} (7ebce8f2cb2589696939ef1bbfa24b692ae1c64c)
 ~/projects/todo-app (main) $ git status
 On branch main
 Your branch is up to date with 'origin/main'.

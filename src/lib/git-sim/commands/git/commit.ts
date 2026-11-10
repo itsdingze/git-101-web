@@ -76,16 +76,23 @@ async function writeCommit(
   return git.commit({ fs: gitFs(ctx.fs), dir, message, author, committer: author, parent })
 }
 
+function mergeMessageWithConflictNotes(message: string, conflicted: readonly string[]): string {
+  if (conflicted.length === 0) return message
+  return [message, '', '# Conflicts:', ...conflicted.map((path) => `#\t${path}`), ''].join('\n')
+}
+
 async function recordCommit(
   line: CommandLine,
   ctx: CommandContext,
   dir: string,
+  keepConflictNotes = true,
 ): Promise<CommandOutput[]> {
   const merge = await readMergeInProgress(ctx, dir)
   const paths = await namedPaths(line, ctx, dir)
   if (paths.length > 0 && merge) throw new SandboxError('fatal: cannot do a partial commit during a merge.')
 
-  const reused = line.has('--no-edit') ? merge?.message : undefined
+  const prepared = merge && keepConflictNotes ? mergeMessageWithConflictNotes(merge.message, merge.conflicted) : merge?.message
+  const reused = line.has('--no-edit') ? prepared : undefined
   const message = requireMessage(messageOf(line) ?? reused, merge ? NO_EDITOR_MID_MERGE : NO_EDITOR)
 
   if (line.has('-a', '--all')) await stageTrackedChanges(ctx, dir)
@@ -115,7 +122,7 @@ async function recordCommit(
 }
 
 export function concludeMerge(ctx: CommandContext, dir: string): Promise<CommandOutput[]> {
-  return recordCommit(parseCommandLine(['--no-edit'], COMMIT_OPTIONS).line, ctx, dir)
+  return recordCommit(parseCommandLine(['--no-edit'], COMMIT_OPTIONS).line, ctx, dir, false)
 }
 
 async function amendCommit(
