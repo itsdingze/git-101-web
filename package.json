@@ -12,8 +12,12 @@
     "type-check": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@dnd-kit/abstract": "^0.2.4",
+    "@dnd-kit/dom": "^0.2.4",
     "@dnd-kit/helpers": "^0.2.4",
     "@dnd-kit/react": "^0.2.4",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "buffer": "^6.0.3",
     "diff": "^9.0.0",
     "framer-motion": "^12.34.0",
@@ -26,7 +30,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@fontsource/inter": "^5.3.0",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.1.18",
     "@testing-library/dom": "^10.4.2",
