@@ -110,8 +110,14 @@ export const messages = {
     showHint: 'Show hint',
     hideHint: 'Hide hint',
   },
+  feedback: {
+    right: 'Correct.',
+    wrong: 'Incorrect.',
+  },
   quiz: {
     genericWrong: 'Choose another answer, then check it again.',
+    optionWrong: 'Incorrect',
+    optionCorrect: 'Correct',
   },
   blocks: {
     emptyAnswer: 'Select the blocks below, or drag them here, to build the command',

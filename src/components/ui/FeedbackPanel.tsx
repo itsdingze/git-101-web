@@ -1,5 +1,6 @@
 import { CheckCircle, XCircle } from 'lucide-react'
 import { InlineMarkdown } from '@/components/ui/inline-markdown/InlineMarkdown'
+import { messages } from '@/messages/en'
 
 type FeedbackTone = 'right' | 'wrong'
 
@@ -19,6 +20,7 @@ export function FeedbackPanel({ tone, message }: FeedbackPanelProps) {
   return (
     <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm leading-relaxed ${container}`}>
       <Icon size={18} className={`shrink-0 ${icon}`} aria-hidden />
+      <span className="sr-only">{messages.feedback[tone]}</span>
       <InlineMarkdown className="text-text-secondary" value={message} />
     </div>
   )
