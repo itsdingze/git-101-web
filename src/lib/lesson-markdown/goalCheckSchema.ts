@@ -2,7 +2,7 @@ import { z } from 'zod'
 import type { GoalCheck } from '@/lib/git-sim/goals/goalChecks'
 
 const text = z.string().min(1)
-const texts = z.array(text)
+const paths = z.array(text).min(1)
 const count = z.number().int().min(0)
 
 function bare<Kind extends string>(kind: Kind) {
@@ -16,11 +16,12 @@ export const goalCheckSchema: z.ZodType<GoalCheck> = z.lazy(() =>
     bare('no-conflict-markers'),
     bare('markers-committed'),
     bare('markers-staged'),
-    z.strictObject({ kind: z.literal('files-staged'), paths: texts }),
+    z.strictObject({ kind: z.literal('files-staged'), paths }),
     z.strictObject({
       kind: z.literal('commit-exists'),
-      containing: texts.optional(),
-      modifies: texts.optional(),
+      containing: paths.optional(),
+      modifies: paths.optional(),
+      changes: paths.optional(),
       onBranch: text.optional(),
       messageIncludes: text.optional(),
     }),

@@ -252,12 +252,6 @@ goals:
         - kind: last-command
           startsWith: git status
 detours:
-  - id: ignored-file-added
-    check:
-      kind: last-command
-      startsWith: git add tasks.txt
-      allowFailure: true
-    message: Git refused because `.gitignore` lists `tasks.txt`. We've listed it to keep the sample tasks out, so don't force it in with `-f`. Run `git add .` to stage the other files.
   - id: ignored-file-forced
     check:
       kind: any-of
@@ -266,7 +260,13 @@ detours:
           paths: [ tasks.txt ]
         - kind: file-tracked
           path: tasks.txt
-    message: The `-f` flag forced `tasks.txt` in, though `.gitignore` lists it to keep the sample tasks private. Press Start over, then run `git add .`, which leaves it out.
+    message: The `-f` flag forced `tasks.txt` in, though `.gitignore` lists it to keep the sample tasks private. Press **Start over**, then run `git add .`, which leaves it out.
+  - id: ignored-file-added
+    check:
+      kind: last-command
+      startsWith: git add tasks.txt
+      allowFailure: true
+    message: Git refused because `.gitignore` lists `tasks.txt`. We've listed it to keep the sample tasks out, so don't force it in with `-f`. Run `git add .` to stage the other files.
   - id: message-without-type
     check:
       kind: all-of

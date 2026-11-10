@@ -29,6 +29,49 @@ describe('last-command goals', () => {
     expect(await meets(sandbox, { kind: 'last-command', startsWith: 'git status' })).toBe(true)
   })
 
+  it('accept flags in any order, with extra flags among them', async () => {
+    const sandbox = await createSandbox(COMMITTED_SEED)
+    await sandbox.run('git log --graph --all --oneline')
+
+    expect(await meets(sandbox, { kind: 'last-command', startsWith: 'git log --oneline --graph' })).toBe(true)
+  })
+
+  it('accept a flag written after the other words', async () => {
+    const sandbox = await createSandbox(COMMITTED_SEED)
+    await sandbox.run('git branch feature --list')
+
+    expect(await meets(sandbox, { kind: 'last-command', startsWith: 'git branch feature --list', allowFailure: true })).toBe(true)
+    expect(await meets(sandbox, { kind: 'last-command', startsWith: 'git branch --list', allowFailure: true })).toBe(true)
+  })
+
+  it('treat --cached and --staged as the same flag', async () => {
+    const sandbox = await createSandbox(COMMITTED_SEED)
+    await sandbox.run('git diff --cached')
+
+    expect(await meets(sandbox, { kind: 'last-command', startsWith: 'git diff --staged' })).toBe(true)
+  })
+
+  it('treat -l and --list as the same flag', async () => {
+    const sandbox = await createSandbox(COMMITTED_SEED)
+    await sandbox.run('git config -l')
+
+    expect(await meets(sandbox, { kind: 'last-command', startsWith: 'git config --list' })).toBe(true)
+  })
+
+  it('still need every flag the goal names', async () => {
+    const sandbox = await createSandbox(COMMITTED_SEED)
+    await sandbox.run('git log --oneline')
+
+    expect(await meets(sandbox, { kind: 'last-command', startsWith: 'git log --oneline --graph' })).toBe(false)
+  })
+
+  it('still need the other words in order', async () => {
+    const sandbox = await createSandbox(COMMITTED_SEED)
+    await sandbox.run('git status')
+
+    expect(await meets(sandbox, { kind: 'last-command', startsWith: 'status git', allowFailure: true })).toBe(false)
+  })
+
   describe('that must name a commit', () => {
     const NAMES_FIX = { kind: 'last-command', startsWith: 'git show', namesCommit: { messageIncludes: 'fix:' } } as const
 

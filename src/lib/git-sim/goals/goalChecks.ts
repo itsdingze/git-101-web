@@ -12,6 +12,7 @@ export type GoalCheck =
       kind: 'commit-exists'
       containing?: readonly string[]
       modifies?: readonly string[]
+      changes?: readonly string[]
       onBranch?: string
       messageIncludes?: string
     }
@@ -107,16 +108,31 @@ function matchesIgnoringBlankLines(actual: readonly string[] | undefined, expect
   return shown.length === wanted.length && shown.every((line, index) => line === wanted[index])
 }
 
-function startsWithWords(command: string, words: string): boolean {
-  const typed = command.trim().split(/\s+/)
-  const wanted = words.trim().split(/\s+/)
-  return wanted.every((word, index) => typed[index] === word)
+const FLAG_SYNONYMS: Readonly<Record<string, string>> = { '--cached': '--staged', '-l': '--list', '--delete': '-d' }
+
+function isFlag(word: string): boolean {
+  return word.startsWith('-')
+}
+
+function flagsAndWords(command: string): { flags: string[]; words: string[] } {
+  const parts = command.trim().split(/\s+/)
+  return {
+    flags: parts.filter(isFlag).map((flag) => FLAG_SYNONYMS[flag] ?? flag),
+    words: parts.filter((part) => !isFlag(part)),
+  }
+}
+
+function startsWithWords(command: string, expected: string): boolean {
+  const typed = flagsAndWords(command)
+  const wanted = flagsAndWords(expected)
+  return wanted.words.every((word, index) => typed.words[index] === word) && wanted.flags.every((flag) => typed.flags.includes(flag))
 }
 
 function matchesCommit(commit: CommitSummary, check: GoalOfKind<'commit-exists'>): boolean {
-  const { containing, modifies, onBranch, messageIncludes } = check
+  const { containing, modifies, changes, onBranch, messageIncludes } = check
   if (containing && !containing.every((path) => commit.files.includes(path))) return false
   if (modifies && !modifies.every((path) => commit.modified.includes(path))) return false
+  if (changes && !changes.every((path) => commit.changed.includes(path))) return false
   if (onBranch && !commit.branches.includes(onBranch)) return false
   if (messageIncludes && !containsText(commit.message, messageIncludes)) return false
   return true

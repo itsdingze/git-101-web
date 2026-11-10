@@ -19,6 +19,7 @@ import type { CommandContext } from '@/lib/git-sim/types'
 export type CommitSummary = {
   oid: string
   modified: string[]
+  changed: string[]
   message: string
   parents: string[]
   branches: string[]
@@ -106,24 +107,28 @@ const PROJECT_CONFIG_KEYS = ['user.name', 'user.email', 'core.editor', 'pull.reb
 
 const STASH_LOG = '.git/logs/refs/stash'
 
-async function modifiedSinceParent(
+async function changesAgainstParent(
   ctx: CommandContext,
   dir: string,
   oid: string,
   parent: string | undefined,
-): Promise<string[]> {
-  if (!parent) return []
+): Promise<Pick<CommitSummary, 'modified' | 'changed'>> {
+  if (!parent) return { modified: [], changed: [] }
 
-  const changed: unknown = await git.walk({
+  const modified: string[] = []
+  const added: string[] = []
+  await git.walk({
     fs: gitFs(ctx.fs),
     dir,
     trees: [git.TREE({ ref: parent }), git.TREE({ ref: oid })],
     map: async (path, [before, after]) => {
-      if (!before || !after || (await after.type()) !== 'blob') return undefined
-      return (await before.oid()) === (await after.oid()) ? undefined : path
+      if (!after || (await after.type()) !== 'blob') return undefined
+      if (!before) added.push(path)
+      else if ((await before.oid()) !== (await after.oid())) modified.push(path)
+      return undefined
     },
   })
-  return Array.isArray(changed) ? changed.filter((path): path is string => typeof path === 'string') : []
+  return { modified, changed: [...modified, ...added] }
 }
 
 async function collectCommits(
@@ -153,7 +158,7 @@ async function collectCommits(
         parents: [...entry.commit.parent],
         branches: [name],
         files: await git.listFiles({ fs: gitFs(ctx.fs), dir, ref: entry.oid }),
-        modified: await modifiedSinceParent(ctx, dir, entry.oid, entry.commit.parent[0]),
+        ...(await changesAgainstParent(ctx, dir, entry.oid, entry.commit.parent[0])),
       })
     }
   }

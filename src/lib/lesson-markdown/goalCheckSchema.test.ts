@@ -17,6 +17,7 @@ const ONE_OF_EACH_KIND: { [Kind in GoalCheck['kind']]: EveryField<Kind> } = {
     kind: 'commit-exists',
     containing: ['a.txt'],
     modifies: ['b.txt'],
+    changes: ['c.txt'],
     onBranch: 'main',
     messageIncludes: 'Add',
   },
@@ -63,5 +64,14 @@ const ONE_OF_EACH_KIND: { [Kind in GoalCheck['kind']]: EveryField<Kind> } = {
 describe('goalCheckSchema', () => {
   it.each(Object.entries(ONE_OF_EACH_KIND))('accepts a %s check with every field it declares', (_, check) => {
     expect(goalCheckSchema.safeParse(check).error).toBeUndefined()
+  })
+
+  it.each([
+    ['files-staged paths', { kind: 'files-staged', paths: [] }],
+    ['commit-exists containing', { kind: 'commit-exists', containing: [] }],
+    ['commit-exists modifies', { kind: 'commit-exists', modifies: [] }],
+    ['commit-exists changes', { kind: 'commit-exists', changes: [] }],
+  ])('rejects an empty %s list, which every project would satisfy', (_, check) => {
+    expect(goalCheckSchema.safeParse(check).success).toBe(false)
   })
 })
