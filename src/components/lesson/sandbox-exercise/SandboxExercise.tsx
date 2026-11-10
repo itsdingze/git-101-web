@@ -53,7 +53,7 @@ export function SandboxExercise({ step, lessonId }: SandboxExerciseProps) {
         onSaved={() => setTerminalFocusRequest((count) => count + 1)}
       />
 
-      <SandboxTerminal session={terminal} focusRequest={terminalFocusRequest} />
+      <SandboxTerminal session={terminal} focusRequest={terminalFocusRequest} attempt={attempt} />
 
       <ExerciseControls solved={allCompleted} onReset={handleReset}>
         {activeGoal?.hints && <HintButton onHint={showNextHint} />}

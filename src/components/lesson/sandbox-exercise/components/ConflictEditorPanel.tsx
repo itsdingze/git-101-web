@@ -16,7 +16,7 @@ interface ConflictEditorPanelProps {
 
 export function ConflictEditorPanel({ files, projectDir, onSaved }: ConflictEditorPanelProps) {
   const { conflictFiles } = files
-  const { openFile, open, edit, save, close } = useFileEditor(files.read, files.save)
+  const { openFile, open, edit, save, close } = useFileEditor(files.read, files.save, conflictFiles)
   const { editorRef, openButtonRef, returnFocusOnClose } = useConflictEditorFocus(openFile?.path)
   const noteId = useId()
 

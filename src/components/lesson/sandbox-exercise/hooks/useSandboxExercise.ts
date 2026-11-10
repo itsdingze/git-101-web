@@ -9,6 +9,7 @@ import { printedEntries } from '@/components/lesson/sandbox-exercise/model/trans
 import type { TerminalSession } from '@/components/lesson/sandbox-exercise/model/terminalSession'
 import type { SandboxFiles } from '@/components/lesson/sandbox-exercise/model/sandboxFiles'
 import { conflictFiles } from '@/components/lesson/sandbox-exercise/model/conflictFiles'
+import { messages } from '@/messages/en'
 import { useTranscript } from './useTranscript'
 import { useGoalProgress } from './useGoalProgress'
 import { useSandboxSession } from './useSandboxSession'
@@ -125,6 +126,13 @@ export function useSandboxExercise(
     [append],
   )
 
+  const echoCancelled = useCallback(
+    (line: string) => {
+      append([{ kind: 'command', text: `${line}${messages.sandbox.cancelMark}`, prompt: promptRef.current }])
+    },
+    [append],
+  )
+
   const read = useCallback(
     async (path: string) => (await queue.request(async () => sandboxRef.current?.readFile(path))) ?? '',
     [queue, sandboxRef],
@@ -138,7 +146,7 @@ export function useSandboxExercise(
   const reset = useCallback(() => queue.replace(startOver), [queue, startOver])
 
   return {
-    terminal: { ready, failed, retried, retry, lines, prompt, submit, complete, listCompletions },
+    terminal: { ready, failed, retried, retry, lines, prompt, submit, complete, listCompletions, echoCancelled },
     files: { conflictFiles: conflictFiles(snapshot), read, save },
     snapshot,
     allCompleted,

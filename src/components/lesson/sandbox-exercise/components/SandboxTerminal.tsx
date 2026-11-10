@@ -14,6 +14,7 @@ import { messages } from '@/messages/en'
 interface SandboxTerminalProps {
   session: TerminalSession
   focusRequest: number
+  attempt: number
 }
 
 type ShellKind = 'command' | 'stdout' | 'stderr'
@@ -46,9 +47,9 @@ function ShellLine({ kind, text, prompt }: ShellLineProps) {
   return <div className={LINE_CLASSES[kind]}>{text}</div>
 }
 
-export function SandboxTerminal({ session, focusRequest }: SandboxTerminalProps) {
+export function SandboxTerminal({ session, focusRequest, attempt }: SandboxTerminalProps) {
   const { lines, prompt, ready, failed, retried, retry } = session
-  const { inputRef, draft, setDraft, handleKeyDown, pressTouchKey } = useTerminalInput(session)
+  const { inputRef, draft, setDraft, handleKeyDown, pressTouchKey } = useTerminalInput(session, attempt)
   const scrollRef = useRef<HTMLDivElement>(null)
   const reloadRef = useRef<HTMLButtonElement>(null)
 
@@ -61,13 +62,13 @@ export function SandboxTerminal({ session, focusRequest }: SandboxTerminalProps)
     if (document.activeElement === inputRef.current) inputRef.current?.scrollIntoView({ block: 'nearest' })
   }, [lines, inputRef])
 
-  const firstLineId = lines[0]?.id
-
   useEffect(() => {
-    if (ready) inputRef.current?.focus({ preventScroll: true })
-  }, [ready, firstLineId, focusRequest, inputRef])
+    if (focusRequest > 0) inputRef.current?.focus({ preventScroll: true })
+  }, [focusRequest, inputRef])
 
   function revealInput() {
+    const selection = window.getSelection()
+    if (selection && !selection.isCollapsed) return
     inputRef.current?.focus({ preventScroll: true })
     inputRef.current?.scrollIntoView({ block: 'nearest' })
   }
@@ -88,7 +89,7 @@ export function SandboxTerminal({ session, focusRequest }: SandboxTerminalProps)
         </div>
 
         {ready ? (
-          <div className="flex items-baseline gap-2">
+          <div className="flex flex-wrap items-baseline gap-2">
             <PromptLabel prompt={prompt} />
             <input
               ref={inputRef}
@@ -96,7 +97,7 @@ export function SandboxTerminal({ session, focusRequest }: SandboxTerminalProps)
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={handleKeyDown}
-              className="min-w-0 flex-1 bg-transparent text-terminal-text caret-terminal-text outline-none"
+              className="min-w-32 flex-1 bg-transparent text-terminal-text caret-terminal-text outline-none pointer-coarse:text-base"
               aria-label={messages.sandbox.input}
               spellCheck={false}
               autoComplete="off"
@@ -104,13 +105,13 @@ export function SandboxTerminal({ session, focusRequest }: SandboxTerminalProps)
               autoCorrect="off"
             />
           </div>
-        ) : failed ? (
-          <p role="alert" className="font-sans text-terminal-muted">
-            {retried ? messages.sandbox.setupFailedAgain : messages.sandbox.setupFailed}
-          </p>
         ) : (
-          <p className="font-sans text-terminal-muted">{messages.sandbox.settingUp}</p>
+          !failed && <p className="font-sans text-terminal-muted">{messages.sandbox.settingUp}</p>
         )}
+
+        <p role="alert" className="font-sans text-terminal-muted empty:-mt-1">
+          {failed && (retried ? messages.sandbox.setupFailedAgain : messages.sandbox.setupFailed)}
+        </p>
       </TerminalFrame>
 
       {failed && (

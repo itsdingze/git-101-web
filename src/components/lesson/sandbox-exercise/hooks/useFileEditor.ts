@@ -16,8 +16,11 @@ interface FileEditor {
 export function useFileEditor(
   readFile: (path: string) => Promise<string>,
   saveFile: (path: string, contents: string) => void,
+  editablePaths: readonly string[],
 ): FileEditor {
   const [openFile, setOpenFile] = useState<OpenFile | null>(null)
+
+  if (openFile && !editablePaths.includes(openFile.path)) setOpenFile(null)
 
   const open = useCallback(
     (path: string) => {

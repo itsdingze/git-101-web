@@ -6,8 +6,8 @@ import type { Completion } from '@/lib/git-sim/input/completion'
 import type { TerminalSession } from '@/components/lesson/sandbox-exercise/model/terminalSession'
 import { useTerminalInput } from './useTerminalInput'
 
-function TerminalHarness({ session }: { session: TerminalSession }) {
-  const { inputRef, draft, setDraft, handleKeyDown, pressTouchKey } = useTerminalInput(session)
+function TerminalHarness({ session, attempt }: { session: TerminalSession; attempt: number }) {
+  const { inputRef, draft, setDraft, handleKeyDown, pressTouchKey } = useTerminalInput(session, attempt)
   return createElement(
     'div',
     null,
@@ -33,10 +33,12 @@ function openTerminal(complete: TerminalSession['complete'] = () => Promise.reso
     submit: vi.fn<(line: string) => void>(),
     complete,
     listCompletions: vi.fn<(line: string, matches: readonly string[]) => void>(),
+    echoCancelled: vi.fn<(line: string) => void>(),
   }
-  render(createElement(TerminalHarness, { session }))
+  const { rerender } = render(createElement(TerminalHarness, { session, attempt: 0 }))
   const input = screen.getByLabelText<HTMLInputElement>('Command')
-  return { session, input }
+  const restart = () => rerender(createElement(TerminalHarness, { session, attempt: 1 }))
+  return { session, input, restart }
 }
 
 function type(input: HTMLInputElement, line: string) {
@@ -95,6 +97,101 @@ describe('useTerminalInput', () => {
 
     expect(moveFocus).toBe(false)
     expect(input.value).toBe('git init')
+  })
+
+  it('keeps a half-typed line when ArrowDown is pressed with nothing to recall', () => {
+    const { input } = openTerminal()
+    type(input, 'git init')
+    fireEvent.keyDown(input, { key: 'Enter' })
+    type(input, 'git sta')
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+
+    expect(input.value).toBe('git sta')
+  })
+
+  it('restores the line being typed after browsing history', () => {
+    const { input } = openTerminal()
+    type(input, 'git init')
+    fireEvent.keyDown(input, { key: 'Enter' })
+    type(input, 'abc')
+
+    fireEvent.keyDown(input, { key: 'ArrowUp' })
+    expect(input.value).toBe('git init')
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+
+    expect(input.value).toBe('abc')
+  })
+
+  it('does not run a line while an IME is still composing it', () => {
+    const { session, input } = openTerminal()
+    type(input, 'git commit -m "ni')
+
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true })
+
+    expect(session.submit).not.toHaveBeenCalled()
+    expect(input.value).toBe('git commit -m "ni')
+  })
+
+  it('does not run a line on the Enter that WebKit reports just after composition ends', () => {
+    const { session, input } = openTerminal()
+    type(input, 'git commit -m "ni')
+
+    fireEvent.keyDown(input, { key: 'Enter', keyCode: 229 })
+
+    expect(session.submit).not.toHaveBeenCalled()
+  })
+
+  it('clears the half-typed line when the attempt restarts, and keeps earlier commands', () => {
+    const { input, restart } = openTerminal()
+    type(input, 'git init')
+    fireEvent.keyDown(input, { key: 'Enter' })
+    type(input, 'half typed')
+
+    restart()
+
+    expect(input.value).toBe('')
+    fireEvent.keyDown(input, { key: 'ArrowUp' })
+    expect(input.value).toBe('git init')
+  })
+
+  it('cancels the line on Ctrl+C by echoing it and clearing it, without adding it to history', () => {
+    const { session, input } = openTerminal()
+    type(input, 'git init')
+    fireEvent.keyDown(input, { key: 'Enter' })
+    type(input, 'git sta')
+
+    fireEvent.keyDown(input, { key: 'c', ctrlKey: true })
+
+    expect(session.echoCancelled).toHaveBeenCalledWith('git sta')
+    expect(input.value).toBe('')
+    fireEvent.keyDown(input, { key: 'ArrowUp' })
+    expect(input.value).toBe('git init')
+  })
+
+  it('leaves Ctrl+C to copy when part of the line is selected', () => {
+    const { session, input } = openTerminal()
+    type(input, 'git status')
+    input.setSelectionRange(0, 3)
+
+    const keepDefault = fireEvent.keyDown(input, { key: 'c', ctrlKey: true })
+
+    expect(keepDefault).toBe(true)
+    expect(session.echoCancelled).not.toHaveBeenCalled()
+    expect(input.value).toBe('git status')
+  })
+
+  it('forgets the oldest commands of a very long session', () => {
+    const { input } = openTerminal()
+    for (let command = 0; command < 1000; command += 1) {
+      type(input, `command ${command}`)
+      fireEvent.keyDown(input, { key: 'Enter' })
+    }
+
+    for (let press = 0; press < 1000; press += 1) fireEvent.keyDown(input, { key: 'ArrowUp' })
+
+    expect(input.value).not.toBe('command 0')
+    expect(input.value).toMatch(/^command \d+$/)
   })
 
   it('lets go of the keyboard on Escape', () => {

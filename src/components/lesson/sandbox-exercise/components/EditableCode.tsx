@@ -4,7 +4,7 @@ import { CodeText } from '@/components/lesson/editor/components/CodeText'
 import { ConflictLabel } from '@/components/lesson/editor/components/ConflictLabel'
 import { CONFLICT_STYLES } from '@/components/lesson/editor/components/conflictStyles'
 
-const CODE_TYPE = 'font-mono text-xs leading-relaxed whitespace-pre'
+const CODE_TYPE = 'font-mono text-xs leading-relaxed whitespace-pre pointer-coarse:text-base'
 
 interface EditableCodeProps {
   value: string

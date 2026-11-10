@@ -8,7 +8,9 @@ const FILES: Record<string, string> = { 'recipe.txt': 'Flour\n' }
 function renderFileEditor() {
   const readFile = (path: string) => Promise.resolve(FILES[path] ?? '')
   const saveFile = vi.fn<(path: string, contents: string) => void>()
-  const hook = renderHook(() => useFileEditor(readFile, saveFile))
+  const hook = renderHook(({ paths }) => useFileEditor(readFile, saveFile, paths), {
+    initialProps: { paths: ['recipe.txt'] },
+  })
   return { ...hook, saveFile }
 }
 
@@ -42,6 +44,19 @@ describe('useFileEditor', () => {
 
     act(() => result.current.edit('Salt\n'))
     act(() => result.current.close())
+
+    expect(result.current.openFile).toBeNull()
+    expect(saveFile).not.toHaveBeenCalled()
+  })
+
+  it('closes without saving when the open file is no longer in conflict', async () => {
+    const { result, rerender, saveFile } = renderFileEditor()
+    act(() => result.current.open('recipe.txt'))
+    await waitFor(() => expect(result.current.openFile).not.toBeNull())
+    act(() => result.current.edit('<<<<<<< stale\n'))
+
+    rerender({ paths: [] })
+    act(() => result.current.save())
 
     expect(result.current.openFile).toBeNull()
     expect(saveFile).not.toHaveBeenCalled()

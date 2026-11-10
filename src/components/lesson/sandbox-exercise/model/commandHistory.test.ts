@@ -20,8 +20,12 @@ describe('recall', () => {
     expect(recall(HISTORY, 2, 1)).toEqual({ position: NOT_BROWSING, draft: '' })
   })
 
-  it('leaves an empty line empty when stepping forward without browsing', () => {
-    expect(recall(HISTORY, NOT_BROWSING, 1)).toEqual({ position: NOT_BROWSING, draft: '' })
+  it('leaves the line alone when stepping forward without browsing', () => {
+    expect(recall(HISTORY, NOT_BROWSING, 1, 'git sta')).toBeNull()
+  })
+
+  it('brings back the typed line after stepping past the newest command', () => {
+    expect(recall(HISTORY, 2, 1, 'git sta')).toEqual({ position: NOT_BROWSING, draft: 'git sta' })
   })
 
   it('does nothing before any command has run', () => {

@@ -12,4 +12,5 @@ export interface TerminalSession {
   submit: (line: string) => void
   complete: (line: string, cursor: number) => Promise<Completion | null>
   listCompletions: (line: string, matches: readonly string[]) => void
+  echoCancelled: (line: string) => void
 }

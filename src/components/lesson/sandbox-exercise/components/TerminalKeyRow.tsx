@@ -15,7 +15,7 @@ function keepInputFocused(event: MouseEvent<HTMLButtonElement>) {
 
 export function TerminalKeyRow({ onComplete, onPrevious, onNext }: TerminalKeyRowProps) {
   return (
-    <div className="hidden gap-2 pointer-coarse:flex">
+    <div className="hidden flex-wrap gap-2 pointer-coarse:flex">
       <Button variant="outlined" onMouseDown={keepInputFocused} onClick={onComplete} aria-label={messages.sandbox.keys.tabLabel}>
         {messages.sandbox.keys.tab}
       </Button>

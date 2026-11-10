@@ -17,6 +17,16 @@ describe('terminalKeyAction', () => {
     expect(terminalKeyAction({ ...plain, key: 'Tab', ctrlKey: true })).toBeNull()
   })
 
+  it('treats Ctrl+C as cancelling the line, whichever case the key reports', () => {
+    expect(terminalKeyAction({ ...plain, key: 'c', ctrlKey: true })).toBe('cancel')
+    expect(terminalKeyAction({ ...plain, key: 'C', ctrlKey: true })).toBe('cancel')
+  })
+
+  it('leaves other C shortcuts to the browser', () => {
+    expect(terminalKeyAction({ ...plain, key: 'c', metaKey: true })).toBeNull()
+    expect(terminalKeyAction({ ...plain, key: 'c', ctrlKey: true, shiftKey: true })).toBeNull()
+  })
+
   it('ignores typing', () => {
     expect(terminalKeyAction({ ...plain, key: 'g' })).toBeNull()
   })

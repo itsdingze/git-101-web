@@ -16,6 +16,15 @@ describe('transcript', () => {
     expect(new Set(transcript.lines.map((line) => line.id)).size).toBe(2)
   })
 
+  it('keeps only the newest lines of a very long session', () => {
+    const entries = Array.from({ length: 5000 }, (_, index) => ({ kind: 'stdout' as const, text: `line ${index}` }))
+
+    const transcript = appendToTranscript(EMPTY_TRANSCRIPT, entries)
+
+    expect(transcript.lines.length).toBeLessThan(1000)
+    expect(transcript.lines[transcript.lines.length - 1]?.text).toBe('line 4999')
+  })
+
   it('prints what a command wrote, skipping empty output', () => {
     const entries = printedEntries({
       clearScreen: false,

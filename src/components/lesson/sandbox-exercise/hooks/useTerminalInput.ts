@@ -14,9 +14,15 @@ interface TerminalInput {
   pressTouchKey: (key: TouchKey) => void
 }
 
-export function useTerminalInput(session: TerminalSession): TerminalInput {
+function hasSelectedText(input: HTMLInputElement): boolean {
+  const selectedInLine = input.selectionStart !== input.selectionEnd
+  const selection = window.getSelection()
+  return selectedInLine || (selection !== null && !selection.isCollapsed)
+}
+
+export function useTerminalInput(session: TerminalSession, attempt: number): TerminalInput {
   const inputRef = useRef<HTMLInputElement>(null)
-  const { draft, setDraft, previous, next, takeDraft } = useCommandHistory()
+  const { draft, setDraft, previous, next, takeDraft, discardDraft } = useCommandHistory(attempt)
   const completeAtCursor = useTabCompletion({
     inputRef,
     draft,
@@ -34,11 +40,15 @@ export function useTerminalInput(session: TerminalSession): TerminalInput {
       if (line) session.submit(line)
     },
     leave: () => inputRef.current?.blur(),
+    cancel: () => session.echoCancelled(discardDraft()),
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    // WebKit ends composition before keydown, leaving keyCode 229 as the only sign of the confirming Enter.
+    if (event.nativeEvent.isComposing || event.keyCode === 229) return
     const action = terminalKeyAction(event)
     if (!action) return
+    if (action === 'cancel' && hasSelectedText(event.currentTarget)) return
     if (action !== 'leave') event.preventDefault()
     actions[action]()
   }

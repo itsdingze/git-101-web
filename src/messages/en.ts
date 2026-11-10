@@ -185,6 +185,7 @@ export const messages = {
     windowTitle: 'terminal',
     output: 'Terminal output',
     input: 'Terminal command input. Tab completes names. Press Escape to leave the terminal.',
+    cancelMark: '^C',
     settingUp: 'Setting up the practice terminal…',
     setupFailed: "The practice terminal didn't load.",
     setupFailedAgain: "The practice terminal still didn't load. Reload the page to try again.",

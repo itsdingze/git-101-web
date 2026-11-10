@@ -21,6 +21,8 @@ interface SettleCoach {
   coach: readonly CoachLine[]
 }
 
+const MAX_LINES = 500
+
 export const EMPTY_TRANSCRIPT: Transcript = { lines: [], nextId: 0 }
 
 function numbered(entries: readonly TerminalEntry[], firstId: number): TerminalLine[] {
@@ -29,7 +31,7 @@ function numbered(entries: readonly TerminalEntry[], firstId: number): TerminalL
 
 export function appendToTranscript(transcript: Transcript, entries: readonly TerminalEntry[]): Transcript {
   return {
-    lines: [...transcript.lines, ...numbered(entries, transcript.nextId)],
+    lines: [...transcript.lines, ...numbered(entries, transcript.nextId)].slice(-MAX_LINES),
     nextId: transcript.nextId + entries.length,
   }
 }
