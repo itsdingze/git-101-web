@@ -13,7 +13,7 @@ import { watchSystemTheme } from './stores/themeStore'
 
 watchSystemTheme()
 
-const router = createBrowserRouter(routes, { basename: '/git-101-web' })
+const router = createBrowserRouter(routes, { basename: import.meta.env.BASE_URL })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
