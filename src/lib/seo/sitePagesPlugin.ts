@@ -1,5 +1,4 @@
-import type { Plugin } from 'vite'
-import type { RollupFsModule } from 'rollup'
+import type { Plugin, Rollup } from 'vite'
 import { messages } from '../../messages/en'
 import { homeMeta, lessonMeta, notFoundMeta, summaryMeta, type LessonSummary } from './pageMeta'
 import { renderHead } from './renderHead'
@@ -7,14 +6,21 @@ import { renderShareImage, sharePalette, type ShareCard, type ShareImageAssets }
 import { sitemapXml } from './sitemap'
 import { lessonPath, lessonSummaryPath, shareImagePath } from './site'
 import { readLessons } from './readLessons'
+import { homeBody, lessonBody, notFoundBody, summaryBody, type LessonArticle } from './staticBody'
 
 const FONT_FOLDER = 'node_modules/@fontsource/inter/files'
+const EMPTY_ROOT = '<div id="root"></div>'
 
 function withHead(html: string, head: string): string {
   return html.replace('</head>', () => `  ${head}\n  </head>`)
 }
 
-async function readShareAssets(fs: RollupFsModule, root: string): Promise<ShareImageAssets> {
+function withBody(html: string, body: string): string {
+  if (!html.includes(EMPTY_ROOT)) throw new Error('site-pages needs an empty root element in index.html')
+  return html.replace(EMPTY_ROOT, () => `<div id="root">${body}</div>`)
+}
+
+async function readShareAssets(fs: Rollup.RollupFsModule, root: string): Promise<ShareImageAssets> {
   return {
     regularFont: await fs.readFile(`${root}/${FONT_FOLDER}/inter-latin-400-normal.woff`),
     semiboldFont: await fs.readFile(`${root}/${FONT_FOLDER}/inter-latin-600-normal.woff`),
@@ -34,7 +40,7 @@ function shareCards(lessons: readonly LessonSummary[]): [string, ShareCard][] {
 
 export function sitePages(): Plugin {
   let root = ''
-  let lessons: LessonSummary[] = []
+  let lessons: LessonArticle[] = []
 
   return {
     name: 'site-pages',
@@ -54,15 +60,16 @@ export function sitePages(): Plugin {
       const homeHtml = index.source
       const homeHead = renderHead(homeMeta(lessons))
       if (!homeHtml.includes(homeHead)) throw new Error('index.html lost the page head that site-pages added')
-      const pageHtml = (head: string) => homeHtml.replace(homeHead, () => head)
+      const pageHtml = (head: string, body: string) => withBody(homeHtml.replace(homeHead, () => head), body)
 
+      index.source = pageHtml(homeHead, homeBody(lessons))
       for (const lesson of lessons) {
-        const source = pageHtml(renderHead(lessonMeta(lesson)))
+        const source = pageHtml(renderHead(lessonMeta(lesson)), lessonBody(lesson))
         this.emitFile({ type: 'asset', fileName: `${lessonPath(lesson.id)}index.html`, source })
-        const summary = pageHtml(renderHead(summaryMeta(lesson)))
+        const summary = pageHtml(renderHead(summaryMeta(lesson)), summaryBody(lesson))
         this.emitFile({ type: 'asset', fileName: `${lessonSummaryPath(lesson.id)}index.html`, source: summary })
       }
-      this.emitFile({ type: 'asset', fileName: '404.html', source: pageHtml(renderHead(notFoundMeta())) })
+      this.emitFile({ type: 'asset', fileName: '404.html', source: pageHtml(renderHead(notFoundMeta()), notFoundBody()) })
       this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemapXml(lessons) })
 
       const assets = await readShareAssets(this.fs, root)

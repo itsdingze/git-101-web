@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+@custom-variant js (&:where(.js, .js *));
 
 @theme {
   --color-bg-primary: #fcfcfa;

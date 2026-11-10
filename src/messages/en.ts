@@ -50,6 +50,10 @@ export const messages = {
     intro: "A reference for the course's commands. Ticks mark commands from completed lessons.",
     learned: 'Learned',
   },
+  noScript: {
+    practice: 'Turn on JavaScript to use the practice terminal and exercises.',
+    openLesson: 'Open this lesson',
+  },
   notFound: {
     lesson: {
       title: "We couldn't find that lesson",

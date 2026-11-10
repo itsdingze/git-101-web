@@ -3,7 +3,7 @@ import type { PageMeta } from './pageMeta'
 
 export const SHARE_IMAGE_SIZE = { width: 1200, height: 630 } as const
 
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
