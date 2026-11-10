@@ -100,6 +100,18 @@ describe('theme store', () => {
     expect(appliedTheme()).toBe('dark')
   })
 
+  it('colours the browser bar to match a chosen theme', () => {
+    document.head.innerHTML = '<meta name="theme-color" content="old" /><meta name="theme-color" content="old" />'
+    document.body.style.backgroundColor = 'rgb(1, 2, 3)'
+
+    store.chooseTheme('dark')
+
+    expect([...document.querySelectorAll('meta[name="theme-color"]')].map((meta) => meta.getAttribute('content'))).toEqual([
+      'rgb(1, 2, 3)',
+      'rgb(1, 2, 3)',
+    ])
+  })
+
   it('switches the page back to light', () => {
     store.chooseTheme('dark')
     store.chooseTheme('light')

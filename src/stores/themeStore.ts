@@ -37,12 +37,18 @@ function withoutTransitions(change: () => void) {
   setTimeout(() => pause.remove(), 1)
 }
 
+function matchBrowserChrome() {
+  const color = getComputedStyle(document.body).backgroundColor
+  document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => meta.setAttribute('content', color))
+}
+
 function applyTheme(theme: Theme) {
   const root = document.documentElement
   const dark = theme === 'dark'
   if (root.classList.contains('dark') === dark) return
   withoutTransitions(() => {
     root.classList.toggle('dark', dark)
+    matchBrowserChrome()
   })
 }
 

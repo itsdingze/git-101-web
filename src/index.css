@@ -16,7 +16,6 @@
   --color-accent-red: #dc756e;
   --color-accent-blue: #429bcd;
   --color-accent-blue-strong: #0672a2;
-  --color-accent-blue-light: #429bcd;
   --color-accent-orange: #d47c45;
   --color-accent-orange-strong: #a85418;
   --color-accent-green-tint: color-mix(in oklab, var(--color-accent-green) 12%, transparent);
@@ -125,7 +124,6 @@
     --color-accent-red-strong: #e67e80;
     --color-accent-blue: #7fbbb3;
     --color-accent-blue-strong: #7fbbb3;
-    --color-accent-blue-light: #7fbbb3;
     --color-accent-orange: #e69875;
     --color-accent-orange-strong: #e69875;
     --color-text-primary: #e2ded3;
@@ -188,7 +186,18 @@
   }
 }
 
+::selection {
+  background-color: color-mix(in oklab, var(--color-accent-green) 35%, transparent);
+}
+
 /* Scrollbar styling */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-color: var(--color-bg-elevated) transparent;
+    scrollbar-width: thin;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 0.625rem;
   height: 0.5rem;

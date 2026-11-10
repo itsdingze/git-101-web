@@ -5,13 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fcfcfa" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1e2326" />
     <script>
       document.documentElement.classList.add('js')
+      var choice = null
       try {
-        var choice = localStorage.getItem('git-101-theme')
-        var dark = choice === 'dark' || (choice !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
-        document.documentElement.classList.toggle('dark', dark)
+        choice = localStorage.getItem('git-101-theme')
       } catch {}
+      var dark = choice === 'dark' || (choice !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+      document.documentElement.classList.toggle('dark', dark)
+      var themeColors = document.querySelectorAll('meta[name="theme-color"]')
+      var chosenColor = themeColors[dark ? 1 : 0].content
+      themeColors.forEach(function (meta) { meta.content = chosenColor })
     </script>
   </head>
   <body>
