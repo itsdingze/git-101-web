@@ -1,16 +1,16 @@
-import type { Lesson } from '@/types'
+import type { LessonOutline } from '@/types'
 import { useProgressStore } from '@/stores/progressStore'
-import { lessons } from '@/data/lessons/index'
+import { lessonOutlines } from '@/data/lessons/outlines'
 import { courseProgress, lessonStatuses, type LessonStatus } from '@/pages/home/courseProgress'
 
 interface UseHomePageResult {
   lessons: readonly LessonStatus[]
-  nextLesson: Lesson | undefined
+  nextLesson: LessonOutline | undefined
   hasStarted: boolean
 }
 
 export function useHomePage(): UseHomePageResult {
   const completedLessons = useProgressStore((s) => s.completedLessons)
 
-  return { lessons: lessonStatuses(lessons, completedLessons), ...courseProgress(lessons, completedLessons) }
+  return { lessons: lessonStatuses(lessonOutlines, completedLessons), ...courseProgress(lessonOutlines, completedLessons) }
 }

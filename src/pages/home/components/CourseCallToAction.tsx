@@ -1,11 +1,11 @@
 import { messages } from '@/messages/en'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
-import type { Lesson } from '@/types'
+import type { LessonOutline } from '@/types'
 import { Button } from '@/components/ui/Button'
 
 interface CourseCallToActionProps {
-  nextLesson: Lesson | undefined
+  nextLesson: LessonOutline | undefined
   hasStarted: boolean
 }
 

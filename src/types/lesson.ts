@@ -177,3 +177,7 @@ export type Lesson = {
   unlocks: readonly LockableCommand[]
   steps: readonly Step[]
 }
+
+export type LessonOutline = Pick<Lesson, 'id' | 'title' | 'description'> & {
+  steps: readonly Pick<Step, 'type'>[]
+}

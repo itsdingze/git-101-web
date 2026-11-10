@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom'
 import { Check, ChevronRight } from 'lucide-react'
-import type { Lesson } from '@/types'
+import type { LessonOutline } from '@/types'
 import { FOCUS_RING } from '@/components/ui/focusRing'
 import { lessonMinutes } from '@/pages/home/lessonMinutes'
 import { messages } from '@/messages/en'
 
 interface LessonCardProps {
-  lesson: Lesson
+  lesson: LessonOutline
   position: number
   isCompleted: boolean
   isCurrent: boolean

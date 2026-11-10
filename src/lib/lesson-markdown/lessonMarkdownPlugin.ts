@@ -1,18 +1,26 @@
 import type { Plugin } from 'vite'
+import type { Lesson, LessonOutline } from '@/types'
 import { parseLesson } from './parseLesson'
 import { parseStory } from './parseStory'
 
 const STORY_FILE = 'story.yaml'
 const LESSONS_FOLDER = /[/\\]src[/\\]data[/\\]lessons[/\\][^/\\]+$/
+const OUTLINE_QUERY = '?outline'
 
 function storyBeside(id: string): string {
   return id.replace(/[^/\\]+$/, STORY_FILE)
 }
 
+function outlineOf({ id, title, description, steps }: Lesson): LessonOutline {
+  return { id, title, description, steps: steps.map(({ type }) => ({ type })) }
+}
+
 export function lessonMarkdown(): Plugin {
   return {
     name: 'lesson-markdown',
-    async transform(source, id) {
+    async transform(source, moduleId) {
+      const wantsOutline = moduleId.endsWith(OUTLINE_QUERY)
+      const id = wantsOutline ? moduleId.slice(0, -OUTLINE_QUERY.length) : moduleId
       if (!LESSONS_FOLDER.test(id)) return null
       if (id.endsWith(STORY_FILE)) return { code: `export default ${JSON.stringify(parseStory(source))}`, map: null }
       if (!id.endsWith('.md')) return null
@@ -21,7 +29,8 @@ export function lessonMarkdown(): Plugin {
       this.addWatchFile(storyPath)
       const story = parseStory(await this.fs.readFile(storyPath, { encoding: 'utf8' }))
       const fileName = id.replace(/^.*[/\\](src[/\\])/, '$1')
-      return { code: `export default ${JSON.stringify(parseLesson(source, fileName, story))}`, map: null }
+      const lesson = parseLesson(source, fileName, story)
+      return { code: `export default ${JSON.stringify(wantsOutline ? outlineOf(lesson) : lesson)}`, map: null }
     },
   }
 }

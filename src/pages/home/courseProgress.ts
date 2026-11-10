@@ -1,17 +1,17 @@
-import type { Lesson } from '@/types'
+import type { LessonOutline } from '@/types'
 
 interface CourseProgress {
-  nextLesson: Lesson | undefined
+  nextLesson: LessonOutline | undefined
   hasStarted: boolean
 }
 
 export interface LessonStatus {
-  lesson: Lesson
+  lesson: LessonOutline
   isCompleted: boolean
   isCurrent: boolean
 }
 
-export function lessonStatuses(lessons: readonly Lesson[], completedLessons: readonly number[]): LessonStatus[] {
+export function lessonStatuses(lessons: readonly LessonOutline[], completedLessons: readonly number[]): LessonStatus[] {
   const { nextLesson } = courseProgress(lessons, completedLessons)
   return lessons.map((lesson) => ({
     lesson,
@@ -21,7 +21,7 @@ export function lessonStatuses(lessons: readonly Lesson[], completedLessons: rea
 }
 
 export function courseProgress(
-  lessons: readonly Lesson[],
+  lessons: readonly LessonOutline[],
   completedLessons: readonly number[],
 ): CourseProgress {
   return {

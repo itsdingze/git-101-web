@@ -1,9 +1,9 @@
 import { messages } from '@/messages/en'
-import type { Lesson } from '@/types'
+import type { LessonOutline } from '@/types'
 import { CourseCallToAction } from './CourseCallToAction'
 
 interface CourseIntroProps {
-  nextLesson: Lesson | undefined
+  nextLesson: LessonOutline | undefined
   hasStarted: boolean
 }
 

@@ -23,6 +23,7 @@ export type {
   SandboxExerciseStep,
   Step,
   Lesson,
+  LessonOutline,
 } from './lesson'
 
 export type {
